@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>YuvaNext — Prototype v10 · Identity Bubble</title>
+<style>
+  :root{--brand:#1f7a5c;--brand2:#2ea87e;--bg:#f4f8f5;--ink:#1c2b26;--soft:#6b7f77;--warn:#fff4e0;--safe:#eef2ff;
+        --R:#c96f2f;--I:#3b6fd8;--A:#b23bd8;--S:#2ea87e;--E:#d84f3b;--C:#8a7a2f;}
+  *{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',system-ui,sans-serif;}
+  body{background:linear-gradient(135deg,#e3ece7,#cfdfd7);min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:12px;}
+  .demo-bar{width:min(1280px,100%);background:#12281f;color:#cfe8dc;border-radius:14px;padding:10px 14px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px;font-size:13px;}
+  .demo-bar b{color:#fff;}
+  .demo-bar button{background:#1f4436;color:#d9efe5;border:1px solid #2e5c49;border-radius:8px;padding:5px 10px;cursor:pointer;font-size:12.5px;}
+  .demo-bar button.active{background:var(--brand2);color:#06231a;font-weight:600;}
+  .demo-bar .right{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;}
+  .viewtoggle{display:flex;border-radius:10px;overflow:hidden;border:1px solid #2e5c49;}
+  .viewtoggle button{border-radius:0;border:none;}
+  /* APP SHELL: chat left + canvas right */
+  .shell{width:min(1280px,100%);height:780px;background:#fff;border-radius:22px;box-shadow:0 24px 60px rgba(0,0,0,.28);display:flex;overflow:hidden;}
+  .chatpane{width:390px;min-width:330px;background:var(--bg);border-right:1px solid #dde8e1;display:flex;flex-direction:column;}
+  header.app{background:linear-gradient(90deg,var(--brand),var(--brand2));color:#fff;padding:12px 16px;display:flex;align-items:center;gap:10px;}
+  header.app .logo{width:32px;height:32px;border-radius:50%;background:#fff;color:var(--brand);display:flex;align-items:center;justify-content:center;font-weight:800;}
+  header.app small{display:block;opacity:.85;font-size:10.5px;}
+  .banner{background:var(--warn);color:#7a5200;font-size:11.5px;padding:6px 12px;display:none;}
+  .progress{background:#e2ede7;padding:7px 14px;font-size:12px;color:var(--soft);display:none;align-items:center;gap:8px;}
+  .progress .bar{flex:1;height:6px;background:#c9dcd2;border-radius:3px;overflow:hidden;}
+  .progress .fill{height:100%;width:0%;background:var(--brand2);transition:width .3s;}
+  main{flex:1;overflow-y:auto;padding:14px 12px 20px;display:flex;flex-direction:column;gap:10px;}
+  .msg{max-width:86%;padding:10px 13px;border-radius:16px;font-size:13.5px;line-height:1.45;animation:pop .25s ease;}
+  @keyframes pop{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
+  .bot{background:#fff;border:1px solid #e2e9e4;border-bottom-left-radius:4px;align-self:flex-start;color:var(--ink);}
+  .user{background:#d8f1e6;border-bottom-right-radius:4px;align-self:flex-end;color:var(--ink);}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;align-self:flex-start;max-width:95%;}
+  .chip{background:#fff;border:1.5px solid var(--brand2);color:var(--brand);border-radius:20px;padding:7px 13px;font-size:13px;cursor:pointer;}
+  .chip:hover{background:var(--brand2);color:#fff;}
+  .likert{background:#fff;border:1px solid #e2e9e4;border-radius:16px;padding:12px;align-self:stretch;animation:pop .25s;}
+  .likert .stem{font-size:13.5px;font-weight:600;margin-bottom:9px;}
+  .likert .opts{display:flex;gap:5px;}
+  .likert .opt{flex:1;text-align:center;border:1.5px solid #d5e3db;border-radius:11px;padding:7px 2px;cursor:pointer;font-size:17px;}
+  .likert .opt small{display:block;font-size:9px;color:var(--soft);}
+  .likert .opt:hover{border-color:var(--brand2);background:#f0faf5;}
+  .safety{background:var(--safe);border:1.5px solid #b9c6f5;border-radius:16px;padding:13px;align-self:stretch;font-size:13px;color:#25315e;}
+  .safety .hl{display:flex;gap:7px;margin-top:9px;flex-wrap:wrap;}
+  .typing{align-self:flex-start;color:var(--soft);font-size:12px;padding:4px 10px;}
+  .modal-back{position:absolute;inset:0;background:rgba(10,25,18,.55);display:none;align-items:center;justify-content:center;z-index:5;}
+  .modal{background:#fff;border-radius:18px;padding:20px;width:320px;text-align:center;}
+  .modal h3{color:var(--brand);margin-bottom:8px;font-size:16px;}
+  .otp-boxes{display:flex;gap:8px;justify-content:center;margin:10px 0 14px;}
+  .otp-boxes span{width:32px;height:40px;border:1.5px solid #cfe0d7;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:var(--brand);}
+  footer.inputbar{background:#fff;border-top:1px solid #e0e8e3;padding:9px;display:flex;gap:8px;}
+  footer.inputbar input{flex:1;border:1.5px solid #d5e3db;border-radius:20px;padding:8px 13px;font-size:13px;outline:none;}
+  footer.inputbar button{background:var(--brand2);border:none;color:#fff;border-radius:50%;width:36px;height:36px;cursor:pointer;}
+  .btn{background:var(--brand);color:#fff;border:none;border-radius:10px;padding:8px 15px;font-size:13px;cursor:pointer;}
+  .btn.ghost{background:#fff;color:var(--brand);border:1.5px solid var(--brand);}
+  /* CANVAS PANE */
+  .canvaspane{flex:1;display:flex;flex-direction:column;background:radial-gradient(1200px 700px at 70% 20%,#f7fbf8,#e9f2ec);position:relative;}
+  .cv-head{padding:12px 20px;display:flex;align-items:center;gap:10px;border-bottom:1px solid #e3ece6;background:rgba(255,255,255,.6);}
+  .cv-head .crumb{font-size:12px;color:var(--soft);}
+  .cv-head .title{font-weight:700;color:var(--ink);font-size:15px;}
+  .cv-head .stage-tag{margin-left:auto;background:#12281f;color:#bfe6d4;font-size:10px;padding:3px 9px;border-radius:8px;}
+  .stepper{display:flex;gap:0;padding:10px 18px;background:rgba(255,255,255,.75);border-bottom:1px solid #e3ece6;}
+  .stepper .st{flex:1;display:flex;align-items:center;gap:7px;font-size:11px;color:#9ab0a5;}
+  .stepper .st .dot{width:22px;height:22px;border-radius:50%;background:#e2ece6;color:#8aa094;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;transition:.3s;}
+  .stepper .st:not(:last-child):after{content:'';flex:1;height:2px;background:#dde8e1;margin:0 6px;}
+  .stepper .st.done .dot{background:var(--brand2);color:#fff;}
+  .stepper .st.done{color:var(--brand);}
+  .stepper .st.done:not(:last-child):after{background:var(--brand2);}
+  .stepper .st.cur .dot{background:#12281f;color:#fff;box-shadow:0 0 0 4px rgba(46,168,126,.25);}
+  .stepper .st.cur{color:#12281f;font-weight:700;}
+  @media(max-width:700px){.stepper .lbl2{display:none;}}
+  .cv-body{flex:1;position:relative;overflow:hidden;}
+  .prof{display:flex;gap:14px;align-items:flex-start;}
+  .prof .pic{width:74px;height:74px;border-radius:16px;background:linear-gradient(135deg,#e8f4ee,#d2e8dc);display:flex;align-items:center;justify-content:center;font-size:32px;flex-shrink:0;border:1px solid #d8e6de;}
+  .prof .row2{font-size:12.5px;margin:3px 0;}
+  .prof .skills span{display:inline-block;background:#eef6f1;border:1px solid #d8e6de;border-radius:10px;padding:2px 8px;font-size:11px;margin:2px 3px 0 0;color:#2c5c48;}
+  .mapwrap{position:absolute;inset:0;}
+  .mapwrap svg{position:absolute;inset:0;width:100%;height:100%;}
+  .bub{position:absolute;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;cursor:pointer;box-shadow:0 8px 22px rgba(20,60,45,.18);transition:transform .18s;transform:translate(-50%,-50%);animation:bpop .45s ease;padding:8px;}
+  @keyframes bpop{from{opacity:0;transform:translate(-50%,-50%) scale(.5);}to{opacity:1;transform:translate(-50%,-50%) scale(1);}}
+  .bub:hover{transform:translate(-50%,-50%) scale(1.07);z-index:3;}
+  .bub .bl{font-weight:700;line-height:1.15;}
+  .bub .bs{font-size:10px;opacity:.85;line-height:1.2;margin-top:2px;}
+  .bub.center{background:linear-gradient(135deg,#153a2d,var(--brand2));color:#fff;cursor:default;z-index:2;}
+  .bub.center:hover{transform:translate(-50%,-50%);}
+  .cv-info{position:absolute;left:16px;right:16px;bottom:12px;background:rgba(255,255,255,.96);border:1px solid #dfeae3;border-radius:16px;padding:12px 16px;font-size:13px;box-shadow:0 10px 30px rgba(0,0,0,.12);display:none;max-height:180px;overflow-y:auto;}
+  .cv-info h4{color:var(--brand);font-size:14px;margin-bottom:4px;}
+  .cv-info .meta{color:var(--soft);font-size:11.5px;margin-bottom:5px;}
+  .cv-back{position:absolute;top:12px;left:16px;z-index:4;display:none;}
+  .cv-note{position:absolute;top:12px;right:16px;font-size:10.5px;color:var(--soft);background:rgba(255,255,255,.8);padding:3px 10px;border-radius:10px;}
+  /* welcome + profile panels on canvas */
+  .cv-panel{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:30px;}
+  .cv-panel h2{color:var(--ink);font-size:26px;margin-bottom:8px;}
+  .cv-panel p{color:var(--soft);font-size:14px;max-width:440px;line-height:1.5;}
+  .cv-panel .bigemoji{font-size:64px;margin-bottom:14px;}
+  .factchips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:16px;max-width:480px;}
+  .factchips span{background:#fff;border:1px solid #d8e6de;border-radius:16px;padding:6px 13px;font-size:12.5px;color:var(--ink);animation:pop .3s;}
+  .hexwrap{margin-top:18px;width:300px;}
+  .rbar{display:flex;align-items:center;gap:6px;font-size:11px;margin-bottom:4px;}
+  .rbar b{width:78px;text-align:right;font-size:10.5px;}
+  .rbar .track{flex:1;height:9px;background:#e6efe9;border-radius:5px;overflow:hidden;}
+  .rbar .fillb{height:100%;border-radius:5px;transition:width .4s;}
+  .rbar span{width:22px;color:var(--soft);}
+  /* dashboard (unchanged core) */
+  .dash{width:min(1280px,100%);background:#f6faf8;border-radius:18px;border:1px solid #d7e4dd;box-shadow:0 18px 50px rgba(0,0,0,.18);overflow:hidden;display:none;}
+  .dash header{background:#12281f;color:#fff;padding:14px 20px;display:flex;align-items:center;gap:12px;}
+  .dash header .who{margin-left:auto;font-size:12px;color:#9fc6b4;}
+  .dtabs{display:flex;gap:4px;background:#e6efe9;padding:8px 16px;}
+  .dtabs button{border:none;background:transparent;padding:8px 14px;border-radius:9px;font-size:13px;cursor:pointer;color:#456;}
+  .dtabs button.active{background:#fff;color:var(--brand);font-weight:600;box-shadow:0 2px 6px rgba(0,0,0,.08);}
+  .dbody{padding:18px 20px;min-height:540px;}
+  .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:18px;}
+  .tile{background:#fff;border:1px solid #e2ebe5;border-radius:14px;padding:12px 14px;}
+  .tile .v{font-size:24px;font-weight:800;color:var(--brand);}
+  .tile .l{font-size:11.5px;color:var(--soft);}
+  .tile .d{font-size:10.5px;color:#2ea87e;}
+  .panel{background:#fff;border:1px solid #e2ebe5;border-radius:14px;padding:14px;margin-bottom:14px;}
+  .panel h4{font-size:13px;color:#345;margin-bottom:10px;}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  .hbar{display:flex;align-items:center;gap:8px;font-size:11.5px;margin-bottom:6px;}
+  .hbar em{width:130px;font-style:normal;color:#456;}
+  .hbar .track{flex:1;height:10px;background:#eef4f0;border-radius:5px;overflow:hidden;}
+  .hbar .f{height:100%;background:var(--brand2);border-radius:5px;}
+  .hbar span{width:34px;text-align:right;color:var(--soft);}
+  table.sess{width:100%;border-collapse:collapse;font-size:12.5px;}
+  table.sess th{font-size:10.5px;text-transform:uppercase;letter-spacing:.5px;color:var(--soft);text-align:left;padding:8px;border-bottom:2px solid #e4ece7;}
+  table.sess td{padding:9px 8px;border-bottom:1px solid #eef4f0;}
+  table.sess tr.click{cursor:pointer;}
+  table.sess tr.click:hover{background:#f0f8f3;}
+  table.sess tr.you{background:#fff8e6;}
+  .pill{display:inline-block;padding:2px 9px;border-radius:12px;font-size:10.5px;font-weight:600;}
+  .pill.exp{background:#e5f2ff;color:#2563a8;}.pill.path{background:#eae5ff;color:#5b3bd8;}.pill.lau{background:#ffe9df;color:#b4552f;}
+  .pill.done{background:#e0f5ea;color:#1f7a5c;}.pill.part{background:#fff1d6;color:#9a6b00;}.pill.soft{background:#fde8e8;color:#b03030;}
+  .pill.t1{background:#ffdada;color:#a11;}.pill.t2{background:#ffe9c9;color:#945d00;}.pill.t3{background:#e8ecff;color:#3949ab;}.pill.hand{background:#e0e7ff;color:#3949ab;}
+  .drawer{position:fixed;top:0;right:-480px;width:min(480px,95vw);height:100vh;background:#fff;box-shadow:-14px 0 40px rgba(0,0,0,.25);transition:right .3s;z-index:50;overflow-y:auto;}
+  .drawer.open{right:0;}
+  .drawer .dhead{background:linear-gradient(90deg,var(--brand),var(--brand2));color:#fff;padding:16px 18px;position:sticky;top:0;}
+  .drawer .dsec{padding:14px 18px;border-bottom:1px dashed #e4ece7;font-size:13px;}
+  .drawer .dsec h5{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--soft);margin-bottom:8px;}
+  .drawer .close{position:absolute;top:14px;right:14px;background:rgba(255,255,255,.25);border:none;color:#fff;border-radius:50%;width:28px;height:28px;cursor:pointer;}
+  .qrow{background:#fff;border:1px solid #e2ebe5;border-left:4px solid #3949ab;border-radius:12px;padding:12px 14px;margin-bottom:10px;font-size:13px;display:flex;gap:12px;align-items:center;}
+  .qrow.t1{border-left-color:#c62828;background:#fff8f8;}
+  .qrow .meta{color:var(--soft);font-size:11.5px;}
+  .qrow .act{margin-left:auto;}
+  .note{font-size:11px;color:var(--soft);text-align:center;margin-top:8px;}
+  @media(max-width:900px){.shell{flex-direction:column;height:auto;}.chatpane{width:100%;height:560px;}.canvaspane{min-height:520px;}.grid2{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+
+<div class="demo-bar">
+  <b>YuvaNext v10</b>
+  <div class="viewtoggle">
+    <button id="v-app" class="active" onclick="setView('app')">💬 Student app</button>
+    <button id="v-dash" onclick="setView('dash')">🖥️ Counselor</button>
+  </div>
+  <button id="langbtn" onclick="toggleLang()">🌐 தமிழ் (P2 preview)</button>
+  <button id="p-exp" class="active" onclick="setPersona('explorer')">Anandi 14</button>
+  <button id="p-path" onclick="setPersona('pathfinder')">Karthik 17</button>
+  <button id="p-lau" onclick="setPersona('launcher')">Priya 22</button>
+  <div class="right">
+    <button onclick="fastForward()">⏩ Auto-answer</button>
+    <button onclick="safetyDemo()">🛟 Safety</button>
+    <button id="apibtn" onclick="toggleAPI()">📡 API down</button>
+    <button onclick="restart()">↺ Restart</button>
+  </div>
+</div>
+
+<div class="shell" id="appview">
+  <div class="chatpane">
+    <header class="app"><div class="logo">Y</div><div><strong>YuvaNext</strong><small>by Yuvabe Education · Auroville</small></div></header>
+    <div class="banner" id="banner">⏳ Results won't save until a parent approves — <u>resend?</u></div>
+    <div class="progress" id="prog"><span id="prog-label"></span><div class="bar"><div class="fill" id="prog-fill"></div></div><span id="prog-count"></span></div>
+    <main id="chat"></main>
+    <footer class="inputbar"><input id="freeinput" placeholder="Type a message… (guidance stage)" disabled onkeydown="if(event.key==='Enter')sendFree()"><button onclick="sendFree()">➤</button></footer>
+    <div class="modal-back" id="modal"><div class="modal" id="modal-inner"></div></div>
+  </div>
+  <div class="canvaspane">
+    <div class="cv-head"><span class="title" id="cv-title">Your journey</span><span class="crumb" id="cv-crumb"></span><span class="stage-tag" id="stagetag">S-01</span></div>
+    <div class="stepper" id="stepper"></div>
+    <div class="cv-body" id="cvbody"></div>
+  </div>
+</div>
+
+<div class="dash" id="dashview">
+  <header><div style="width:34px;height:34px;border-radius:50%;background:#fff;color:var(--brand);display:flex;align-items:center;justify-content:center;font-weight:800;">Y</div>
+    <div><strong>YuvaNext · Counselor</strong><div style="font-size:11px;opacity:.8">Read-only dashboard (D11) · Auroville pilot</div></div>
+    <div class="who">counselor@yuvabe.com · 2FA ✓</div></header>
+  <div class="dtabs">
+    <button id="t-ov" class="active" onclick="dtab('ov')">Overview</button>
+    <button id="t-se" onclick="dtab('se')">Sessions</button>
+    <button id="t-qu" onclick="dtab('qu')">Handoff queue <span class="pill t2" id="qcount">3</span></button>
+  </div>
+  <div class="dbody" id="dbody"></div>
+</div>
+
+<div class="drawer" id="drawer"></div>
+<p class="note">Prototype v10 · chat + canvas · NEW: final report card (US-13 — profile · assessment · selections · summary statement, type "report") + 3-ring college map (US-35) + 3-ring scholarship map with amount/window/link/eligibility cards (US-36) + journey breadcrumb (US-33) + career profile cards with salary/skills/3-yr path (US-34, 96 seeded) + 3-ring career map (inner=best fit · middle=related · outer=discover) for all personas — type "show my map" or tap the 🗺️ bubble · Phase-2 previews: 🌐 Tamil, NCO codes, aid badges, norming gate, retest · quiz scoring is real · no data stored</p>
+<script>
+/* ============ DATA ============ */
+const ITEMS={explorer:[{s:'R',t:'Fix a bicycle that isn’t working'},{s:'I',t:'Do experiments to find out how plants grow'},{s:'A',t:'Draw comics or cartoons'},{s:'S',t:'Help a classmate understand homework'},{s:'E',t:'Sell things for your school fair and beat a target'},{s:'C',t:'Keep score carefully during a match'},{s:'R',t:'Put together a model kit or robot kit'},{s:'I',t:'Solve tricky maths puzzles'},{s:'A',t:'Make up your own songs or music'},{s:'S',t:'Welcome a new student and show them around'},{s:'E',t:'Plan a class party or event'},{s:'C',t:'Make a neat timetable and follow it'}],
+older:[{s:'R',t:'Repair a two-wheeler engine'},{s:'I',t:'Do experiments in a laboratory'},{s:'A',t:'Design posters or logos'},{s:'S',t:'Teach children how to read'},{s:'E',t:'Start your own business'},{s:'C',t:'Develop a spreadsheet to track expenses'},{s:'R',t:'Assemble electronic components on a circuit board'},{s:'I',t:'Write a computer program to solve a problem'},{s:'A',t:'Write stories or poems'},{s:'S',t:'Counsel someone going through a difficult time'},{s:'E',t:'Lead a team working towards a target'},{s:'C',t:'Prepare a detailed schedule for a project'}]};
+/* Phase-2 preview: Tamil drafts (localization/items_ta_draft.csv) + NCO crosswalk */
+let LANG='en';
+const LIK_TA=['பிடிக்காது','அவ்வளவாக இல்லை','தெரியவில்லை','பிடிக்கும்','ரொம்ப பிடிக்கும்'];
+const ITEMS_TA={explorer:['ஓடாத சைக்கிளை சரி செய்வது','செடிகள் எப்படி வளர்கின்றன என சோதனை செய்து பார்ப்பது','காமிக்ஸ் அல்லது கார்ட்டூன் வரைவது','வகுப்புத் தோழருக்கு வீட்டுப்பாடம் புரிய உதவுவது','பள்ளி கண்காட்சியில் இலக்கை தாண்ட பொருட்கள் விற்பது','போட்டியின் போது ஸ்கோரை கவனமாக குறிப்பது','மாடல் கிட் அல்லது ரோபோ கிட் பொருத்துவது','சிக்கலான கணக்கு புதிர்களை தீர்ப்பது','சொந்தமாக பாட்டு அல்லது இசை உருவாக்குவது','புதிய மாணவரை வரவேற்று சுற்றிக்காட்டுவது','வகுப்பு பார்ட்டி அல்லது நிகழ்ச்சியை திட்டமிடுவது','நேர அட்டவணை போட்டு அதன்படி நடப்பது'],
+older:['இரு சக்கர வாகன இன்ஜினை பழுது பார்ப்பது','ஆய்வகத்தில் சோதனைகள் செய்வது','போஸ்டர் அல்லது லோகோ வடிவமைப்பது','குழந்தைகளுக்கு படிக்க கற்றுத்தருவது','சொந்தமாக ஒரு தொழில் தொடங்குவது','செலவுகளை கண்காணிக்க ஸ்ப்ரெட்ஷீட் உருவாக்குவது','சர்க்யூட் போர்டில் எலெக்ட்ரானிக் பாகங்களை பொருத்துவது','ஒரு பிரச்சனையை தீர்க்க கம்ப்யூட்டர் ப்ரோகிராம் எழுதுவது','கதைகள் அல்லது கவிதைகள் எழுதுவது','கஷ்டமான நேரத்தில் இருப்பவருக்கு ஆலோசனை வழங்குவது','இலக்கை நோக்கி செயல்படும் அணியை வழிநடத்துவது','திட்டத்திற்கு விரிவான கால அட்டவணை தயாரிப்பது']};
+function toggleLang(){LANG=LANG==='en'?'ta':'en';const b=document.getElementById('langbtn');b.classList.toggle('active',LANG==='ta');b.textContent=LANG==='ta'?'🌐 English':'🌐 தமிழ் (P2 preview)';
+ if(S&&S.name)bot(LANG==='ta'?'மொழி மாற்றப்பட்டது! அடுத்த கேள்விகள் தமிழில் வரும். <i>(வரைவு — சரிபார்ப்பு நிலுவையில்; US-24: approved items மட்டும், மற்றவை English fallback)</i>':'Switched to English. <i>(US-24 language toggle)</i>');}
+const NCO={'Engineering — ECE/CSE':'ISCO 2512/2152','Data science & analytics':'ISCO 2511/2120','Govt technical services':'ISCO 2142/2422','Design — B.Des':'ISCO 2163','Visual comm & media':'ISCO 2166/2642','Architecture':'ISCO 2161','Psychology → counselling':'ISCO 2634','Nursing & allied health':'ISCO 2221','Education':'ISCO 2341/2330','Core engineering':'ISCO 2144/2142','Merchant navy':'ISCO 3152','Green energy':'ISCO 7412/2151','BBA → MBA track':'ISCO 1213/2421','Law (5-yr)':'ISCO 2611','CA / CS track':'ISCO 2411','CA / CMA / CS':'ISCO 2411','Banking & finance':'ISCO 3312/2412','Actuarial science':'ISCO 2120','HR Specialist':'ISCO 2423','B2B Sales / Key Accounts':'ISCO 3322','Bank PO (IBPS/SBI)':'ISCO 3312/2412','Data Analyst':'ISCO 2511','Research → PG':'ISCO 2111/2131','Business Analyst':'ISCO 2421','UI/UX Designer':'ISCO 2166','Content & brand':'ISCO 2641','Film/OTT editing':'ISCO 2654','Field/Service Engineer':'ISCO 7421/3113','Quality / Production':'ISCO 7543/3122','Govt technical exams':'ISCO 3112/3115','Startup / MSME trainee':'ISCO 1120','MBA (CAT)':'ISCO 1213','Real estate / BD':'ISCO 3334','Accounts / Audit Associate':'ISCO 4311/2411','Banking operations':'ISCO 4211','Compliance / fintech ops':'ISCO 3411'};
+/* 3-ring career map data (US-32): inner=best fit, mid=related/adjacent, outer=discovery via 2nd/3rd letters */
+const RINGS={
+ R:{inner:[['Mechanical Engineer','B.E. · machines & motion'],['Electrician','ITI · always in demand'],['Solar PV Technician','Green-energy growth job']],
+    mid:[['Civil Engineer','B.E. · build the world'],['EV Service Technician','ITI · the auto future'],['Merchant Navy Officer','IMU CET · sea + salary'],['CNC Machinist','Precision manufacturing'],['Agri-drone Operator','New-age farming']],
+    outer:[['Physiotherapist','Your hands help people heal'],['Forest Officer','Outdoors + service'],['Sound Engineer','Tech meets music'],['Sports Coach','Action + mentoring'],['Commercial Pilot','If the sky calls'],['Quality Inspector','Detail-eye pays']]},
+ I:{inner:[['Software Developer','Build the apps world runs on'],['Doctor (MBBS routes)','NEET · healing science'],['Data Scientist','Patterns → decisions']],
+    mid:[['Biotech Researcher','Lab frontiers'],['ECE Engineer','Circuits & signals'],['Pharmacist','Medicine science'],['Statistician','Numbers that speak'],['Forensic Analyst','Science solves crime']],
+    outer:[['UX Researcher','Your A side: people + inquiry'],['Economist','Policy & markets'],['Psychologist','Minds fascinate you'],['Actuary','Rare, exam-based, well-paid'],['Science Journalist','Explain wonders'],['Marine Engineer','Engines at sea']]},
+ A:{inner:[['Graphic Designer','Visual voice of brands'],['Animator / VFX Artist','Chennai studios hiring'],['Fashion Designer','NIFT route']],
+    mid:[['Architect','NATA+PCM ⚠ · art you live in'],['UI/UX Designer','Design × tech demand'],['Film Editor','Story in the cut'],['Interior Designer','Spaces with soul'],['Content Writer','Words that work']],
+    outer:[['Art Therapist','Your S side: healing art'],['Brand Manager','Your E side: creative business'],['Music Producer','Studio craft'],['Jewellery Designer','TN heritage craft'],['Museum Curator','Order + beauty'],['Game Designer','Play, engineered']]},
+ S:{inner:[['Nurse (B.Sc.)','Global demand, real impact'],['Teacher','Shape the next generation'],['Counsellor / Psychologist','Listen, guide, heal']],
+    mid:[['Physiotherapist','Care through movement'],['Social Worker (MSW)','Community change'],['HR Specialist','People + organisations'],['Speech Therapist','BASLP · voices unlocked'],['Community Health Worker','Village-level impact']],
+    outer:[['Hotel Manager','Your E side: hosting at scale'],['Sports Coach','Active helping'],['Special Educator','Rare, needed, noble'],['Public Health Analyst','Your I side: care + data'],['Career Counsellor','This very job!'],['NGO Program Lead','Mission + management']]},
+ E:{inner:[['Entrepreneur','Build your own thing'],['Marketing Manager','Growth is a craft'],['Lawyer','CLAT · argue for a living']],
+    mid:[['B2B Sales Lead','Targets + relationships'],['Product Manager','Mini-CEO of a product'],['Event Manager','Chaos → showtime'],['Real Estate Professional','Hustle + property'],['Bank PO','Ladders + security']],
+    outer:[['Journalist','Your A side: stories + nerve'],['Civil Services (IAS)','Lead at national scale'],['Stock Broker','Your C side: markets'],['Restaurateur','Food + business'],['Sports Management','Business of play'],['Startup Ops Lead','Structure the chaos']]},
+ C:{inner:[['Chartered Accountant','India\'s premier finance track'],['Banker','Structure + security'],['Operations Analyst','Systems that hum']],
+    mid:[['Auditor','Trust, verified'],['Company Secretary','Governance pro'],['Actuary','Maths, elite tier'],['Supply Chain Analyst','Everything, on time'],['Compliance Officer','Rules as a career']],
+    outer:[['Archivist / Librarian','Knowledge keeper'],['Quality Engineer','Your R side: precision'],['Medical Records Specialist','Healthcare + order'],['Paralegal','Law\'s engine room'],['Statistician','Your I side: deeper data'],['Project Coordinator','Plans → reality']]}};
+const PROF={"Mechanical Engineer": {"e": "👨‍🔧⚙️", "s": "₹3.5–6 LPA", "k": "CAD · thermodynamics · problem-solving · shop-floor sense", "n": "Design/Production Engineer → Team Lead"}, "Electrician": {"e": "👷‍♂️🔌", "s": "₹1.8–3 LPA", "k": "Wiring standards · safety · fault-finding · customer trust", "n": "Licensed contractor / site supervisor"}, "Solar PV Technician": {"e": "🧑‍🔧☀️", "s": "₹2–3.5 LPA", "k": "Panel installation · inverters · safety at height", "n": "Site lead → O&M supervisor"}, "Civil Engineer": {"e": "👷‍♀️🏗️", "s": "₹3–5.5 LPA", "k": "AutoCAD · estimation · site management · soil basics", "n": "Site Engineer → Project Engineer"}, "EV Service Technician": {"e": "🧑‍🔧🔋", "s": "₹2–4 LPA", "k": "EV powertrains · diagnostics · battery safety", "n": "Workshop lead / service manager"}, "Merchant Navy Officer": {"e": "🧑‍✈️🚢", "s": "₹6–12 LPA", "k": "Navigation · watchkeeping · discipline · teamwork", "n": "2nd Officer → Chief Officer"}, "CNC Machinist": {"e": "👨‍🏭🛠️", "s": "₹2.2–4 LPA", "k": "Blueprint reading · precision · CNC programming", "n": "Setter-programmer → shift supervisor"}, "Agri-drone Operator": {"e": "🧑‍🌾🛸", "s": "₹2.5–4 LPA", "k": "Drone piloting (DGCA) · mapping · crop knowledge", "n": "Fleet operator / agri-tech specialist"}, "Physiotherapist": {"e": "🧑‍⚕️🤸", "s": "₹2.5–4.5 LPA", "k": "Anatomy · manual therapy · patient rapport", "n": "Senior PT → clinic owner/specialist"}, "Forest Officer": {"e": "🧑‍🌾🌳", "s": "₹4–7 LPA (govt)", "k": "Ecology · law · fieldcraft · leadership", "n": "Range Officer → DFO track"}, "Sound Engineer": {"e": "🎚️🎧", "s": "₹2.5–5 LPA", "k": "DAWs · acoustics · ear training · live rigging", "n": "Senior engineer → studio lead"}, "Sports Coach": {"e": "🧑‍🏫🏏", "s": "₹2–4 LPA", "k": "Sport science · communication · planning", "n": "Head coach / academy owner"}, "Commercial Pilot": {"e": "👩‍✈️✈️", "s": "₹8–15 LPA (FO)", "k": "Flying hours · CRM · regulations · calm under pressure", "n": "First Officer → Captain (6–8 yrs)"}, "Quality Inspector": {"e": "🧑‍🔬📏", "s": "₹2.2–4 LPA", "k": "Metrology · standards · documentation", "n": "QC lead → QA engineer"}, "Software Developer": {"e": "👩‍💻🖥️", "s": "₹4–9 LPA", "k": "DS&A · one stack deeply · Git · debugging", "n": "Senior dev → tech lead"}, "Doctor (MBBS routes)": {"e": "👨‍⚕️🩺", "s": "₹6–10 LPA (PG varies)", "k": "Clinical skills · empathy · stamina · lifelong learning", "n": "PG specialization → specialist"}, "Data Scientist": {"e": "👩‍💻📊", "s": "₹6–12 LPA", "k": "Python/SQL · statistics · ML · storytelling with data", "n": "Senior DS → ML lead"}, "Biotech Researcher": {"e": "🧑‍🔬🧬", "s": "₹3–5 LPA", "k": "Lab techniques · documentation · patience · stats", "n": "PhD/senior scientist track"}, "ECE Engineer": {"e": "👨‍🔧📡", "s": "₹3.5–7 LPA", "k": "Circuits · embedded C · signal processing", "n": "Design engineer → module lead"}, "Pharmacist": {"e": "🧑‍⚕️💊", "s": "₹2.5–4 LPA", "k": "Pharmacology · accuracy · counselling", "n": "Chief pharmacist / regulatory affairs"}, "Statistician": {"e": "🧑‍🏫📈", "s": "₹4–7 LPA", "k": "R/Python · study design · inference", "n": "Senior statistician → biostat lead"}, "Forensic Analyst": {"e": "🕵️🔬", "s": "₹3–5 LPA", "k": "Lab protocol · chain of custody · reporting", "n": "Senior analyst → lab in-charge"}, "UX Researcher": {"e": "🧑‍💻🗣️", "s": "₹5–9 LPA", "k": "Interviewing · synthesis · usability methods", "n": "Senior researcher → research lead"}, "Economist": {"e": "🧑‍🏫💹", "s": "₹5–9 LPA", "k": "Econometrics · writing · policy sense", "n": "Senior economist / RBI-grade roles"}, "Psychologist": {"e": "🧑‍⚕️🧠", "s": "₹3–5 LPA", "k": "Assessment · therapy skills · ethics · supervision", "n": "RCI licensure → specialist practice"}, "Actuary": {"e": "🧑‍💼📉", "s": "₹6–10 LPA (student) ", "k": "Probability · exams grit · modelling", "n": "Associate → Fellow (rare, high value)"}, "Science Journalist": {"e": "✍️🔭", "s": "₹3–5 LPA", "k": "Writing · verification · translation of jargon", "n": "Senior correspondent → editor"}, "Marine Engineer": {"e": "🧑‍🔧🚢", "s": "₹6–12 LPA", "k": "Engines · watchkeeping · repairs at sea", "n": "4th → 2nd Engineer"}, "Graphic Designer": {"e": "👩‍🎨🖌️", "s": "₹2.5–5 LPA", "k": "Typography · Figma/Adobe · brand thinking · portfolio", "n": "Senior designer → art director"}, "Animator / VFX Artist": {"e": "🧑‍🎨🎬", "s": "₹2.5–5 LPA", "k": "Maya/Blender · timing · anatomy · showreel", "n": "Senior artist → team lead"}, "Fashion Designer": {"e": "👩‍🎨👗", "s": "₹3–5 LPA", "k": "Draping · textiles · trend research · CAD", "n": "Senior designer → label owner"}, "Architect": {"e": "🧑‍💼🏛️", "s": "₹3–5 LPA", "k": "Design studio craft · codes · Revit · client skills", "n": "Project architect → associate"}, "UI/UX Designer": {"e": "👨‍💻📱", "s": "₹4–8 LPA", "k": "Figma · user research · prototyping · handoff", "n": "Senior designer → design lead"}, "Film Editor": {"e": "🧑‍💻🎞️", "s": "₹3–6 LPA", "k": "Premiere/Resolve · rhythm · story sense", "n": "Lead editor → post supervisor"}, "Interior Designer": {"e": "👩‍🎨🛋️", "s": "₹3–5 LPA", "k": "Space planning · materials · 3D viz · vendors", "n": "Senior designer → studio owner"}, "Content Writer": {"e": "✍️💻", "s": "₹2.5–4.5 LPA", "k": "Clear writing · SEO basics · research · voice", "n": "Content lead → brand strategist"}, "Art Therapist": {"e": "🧑‍⚕️🎨", "s": "₹2.5–4 LPA", "k": "Art methods · psychology · group facilitation", "n": "Certified therapist → program head"}, "Brand Manager": {"e": "🧑‍💼📢", "s": "₹6–10 LPA (post-MBA)", "k": "Positioning · analytics · agency management", "n": "Senior BM → marketing head"}, "Music Producer": {"e": "🎹🎛️", "s": "₹2–6 LPA (variable)", "k": "DAW mastery · arrangement · networking", "n": "Established producer / composer"}, "Jewellery Designer": {"e": "👩‍🎨💍", "s": "₹2.5–4.5 LPA", "k": "Sketching · CAD (Rhino) · gemology basics", "n": "Senior designer → own label"}, "Museum Curator": {"e": "🧑‍🏫🏺", "s": "₹3–5 LPA", "k": "Art history · archiving · exhibition design", "n": "Senior curator → museum head"}, "Game Designer": {"e": "👨‍💻🎮", "s": "₹3.5–7 LPA", "k": "Level design · systems thinking · playtesting", "n": "Senior designer → creative lead"}, "Nurse (B.Sc.)": {"e": "👩‍⚕️🏥", "s": "₹2.5–4.5 LPA (govt higher)", "k": "Clinical care · pharmacology · documentation · compassion", "n": "Staff nurse → ward in-charge / abroad"}, "Teacher": {"e": "👩‍🏫📚", "s": "₹2.5–4.5 LPA (govt higher)", "k": "Subject depth · classroom craft · patience", "n": "Senior teacher → HOD / headmistress"}, "Counsellor / Psychologist": {"e": "🧑‍⚕️💬", "s": "₹2.5–4.5 LPA", "k": "Listening · assessment · ethics", "n": "Licensed counsellor → practice lead"}, "Social Worker (MSW)": {"e": "🧑‍🤝‍🧑🌱", "s": "₹2.5–4 LPA", "k": "Casework · community mobilisation · M&E", "n": "Program officer → program manager"}, "HR Specialist": {"e": "🧑‍💼🤝", "s": "₹3–5 LPA", "k": "Recruitment · HRMS · labour law basics · empathy", "n": "HR generalist → HRBP / manager"}, "Speech Therapist": {"e": "🧑‍⚕️🗣️", "s": "₹3–5 LPA", "k": "BASLP clinical skills · child rapport", "n": "Senior SLP → clinic owner"}, "Community Health Worker": {"e": "🧑‍⚕️🏘️", "s": "₹1.8–3 LPA", "k": "Local trust · health basics · record keeping", "n": "Supervisor → district program roles"}, "Hotel Manager": {"e": "🧑‍💼🏨", "s": "₹3–5 LPA (trainee)", "k": "Operations · service recovery · rosters", "n": "Duty manager → GM track"}, "Special Educator": {"e": "👩‍🏫🧩", "s": "₹2.5–4 LPA", "k": "IEPs · patience · parent partnership", "n": "Senior educator → resource-centre head"}, "Public Health Analyst": {"e": "🧑‍💻🏥", "s": "₹4–6 LPA", "k": "Epi basics · data · report writing", "n": "Program analyst → MPH-track lead"}, "Career Counsellor": {"e": "🧑‍🏫🧭", "s": "₹3–5 LPA", "k": "Assessments · guidance frameworks · empathy", "n": "Senior counsellor → center head"}, "NGO Program Lead": {"e": "🧑‍💼🌍", "s": "₹4–7 LPA", "k": "Project management · fundraising · field sense", "n": "Program director"}, "Entrepreneur": {"e": "🧑‍💼🚀", "s": "Variable (₹0 → ∞)", "k": "Customer discovery · sales · resilience · frugality", "n": "Founder → scale or exit; skills compound"}, "Marketing Manager": {"e": "🧑‍💼📈", "s": "₹5–9 LPA", "k": "Digital channels · analytics · brand craft", "n": "Senior manager → head of marketing"}, "Lawyer": {"e": "🧑‍⚖️📜", "s": "₹3–7 LPA (firms higher)", "k": "Drafting · argument · research · client handling", "n": "Senior associate → partner/chamber"}, "B2B Sales Lead": {"e": "🧑‍💼🤝", "s": "₹4–7 LPA + incentives", "k": "Prospecting · negotiation · CRM discipline", "n": "Key accounts → regional manager"}, "Product Manager": {"e": "🧑‍💻🧭", "s": "₹8–15 LPA", "k": "User empathy · prioritisation · data · communication", "n": "Senior PM → group PM"}, "Event Manager": {"e": "🧑‍💼🎪", "s": "₹2.5–4.5 LPA", "k": "Vendor management · budgets · calm in chaos", "n": "Senior manager → own agency"}, "Real Estate Professional": {"e": "🧑‍💼🏢", "s": "₹2.5–4 LPA + commission", "k": "Local market · negotiation · RERA basics", "n": "Team lead → broker-owner"}, "Bank PO": {"e": "🧑‍💼🏦", "s": "₹5–7 LPA (public)", "k": "Banking ops · customer service · exams discipline", "n": "Assistant manager → branch manager"}, "Journalist": {"e": "✍️📰", "s": "₹3–5 LPA", "k": "Reporting · verification · deadlines", "n": "Senior correspondent → editor"}, "Civil Services (IAS)": {"e": "🧑‍💼🇮🇳", "s": "₹8–10 LPA + perks", "k": "UPSC grit · generalist depth · integrity", "n": "SDM → District Collector"}, "Stock Broker": {"e": "🧑‍💼📊", "s": "₹3–6 LPA + incentives", "k": "Markets · NISM certs · risk sense", "n": "Senior dealer → fund/desk roles"}, "Restaurateur": {"e": "🧑‍🍳🍽️", "s": "Variable", "k": "F&B ops · costing · hospitality", "n": "Multi-outlet owner"}, "Sports Management": {"e": "🧑‍💼🏟️", "s": "₹3–6 LPA", "k": "Sponsorship · events · athlete relations", "n": "Manager → league/franchise roles"}, "Startup Ops Lead": {"e": "🧑‍💼⚡", "s": "₹4–8 LPA", "k": "Process building · hustle · analytics", "n": "Ops manager → COO track"}, "Chartered Accountant": {"e": "🧑‍💼🧾", "s": "₹7–12 LPA (fresh CA)", "k": "Audit · tax · Excel mastery · ethics", "n": "Manager → partner/CFO track"}, "Banker": {"e": "🧑‍💼🏦", "s": "₹3.5–6 LPA", "k": "Credit basics · customer trust · compliance", "n": "Officer → branch/credit manager"}, "Operations Analyst": {"e": "🧑‍💻📦", "s": "₹3.5–6 LPA", "k": "Excel/SQL · process mapping · rigour", "n": "Senior analyst → ops manager"}, "Auditor": {"e": "🧑‍💼🔍", "s": "₹3.5–6 LPA", "k": "Standards · scepticism · documentation", "n": "Audit senior → manager"}, "Company Secretary": {"e": "🧑‍💼📋", "s": "₹4–7 LPA", "k": "Company law · governance · precision", "n": "CS → compliance head"}, "Supply Chain Analyst": {"e": "🧑‍💻🚚", "s": "₹3.5–6 LPA", "k": "Planning · ERP · negotiation", "n": "Planner → SC manager"}, "Compliance Officer": {"e": "🧑‍💼🛡️", "s": "₹4–7 LPA", "k": "Regulations · KYC/AML · reporting", "n": "Senior officer → compliance head"}, "Archivist / Librarian": {"e": "🧑‍🏫🗄️", "s": "₹2.5–4 LPA", "k": "Cataloguing · digital archives · service", "n": "Chief librarian / digital archivist"}, "Quality Engineer": {"e": "🧑‍🔧✅", "s": "₹3–5 LPA", "k": "Six Sigma · root cause · audits", "n": "QA lead → plant quality head"}, "Medical Records Specialist": {"e": "🧑‍💻🏥", "s": "₹2.2–3.5 LPA", "k": "Coding systems · accuracy · confidentiality", "n": "Senior coder → HIM manager"}, "Paralegal": {"e": "🧑‍💼⚖️", "s": "₹2.5–4 LPA", "k": "Legal research · drafting · filings", "n": "Senior paralegal → law firm ops"}, "Project Coordinator": {"e": "🧑‍💼🗂️", "s": "₹3–5 LPA", "k": "Scheduling · stakeholder updates · tools", "n": "Project manager (PMP route)"}, "Data Analyst": {"e": "👩‍💻📊", "s": "₹3.5–6 LPA", "k": "SQL · Excel/BI · statistics · storytelling", "n": "Senior analyst → analytics manager"}, "Research → PG": {"e": "🧑‍🔬🎓", "s": "₹3–4 LPA (JRF ~₹3.7)", "k": "Method · writing · persistence", "n": "PhD → scientist/faculty"}, "Business Analyst": {"e": "🧑‍💼📈", "s": "₹4–7 LPA", "k": "Requirements · SQL · communication", "n": "Senior BA → product/strategy"}, "Content & brand": {"e": "✍️📱", "s": "₹2.5–4.5 LPA", "k": "Writing · social platforms · analytics", "n": "Content lead → brand manager"}, "Film/OTT editing": {"e": "🧑‍💻🎬", "s": "₹3–6 LPA", "k": "NLE mastery · story rhythm · genre range", "n": "Lead editor → post supervisor"}, "Field/Service Engineer": {"e": "🧑‍🔧🔩", "s": "₹2.5–4.5 LPA", "k": "Diagnostics · customer handling · travel-readiness", "n": "Service lead → area manager"}, "Quality / Production": {"e": "🧑‍🏭📋", "s": "₹2.5–4.5 LPA", "k": "Lean basics · SOPs · people handling", "n": "Shift in-charge → plant roles"}, "Govt technical exams": {"e": "🧑‍💼🏛️", "s": "₹4.5–7 LPA (AE)", "k": "Exam prep · core engineering · persistence", "n": "AE → AEE → EE ladder"}, "Startup / MSME trainee": {"e": "🧑‍💼🌱", "s": "₹2.5–4.5 LPA", "k": "Everything-at-once · ownership · learning speed", "n": "Function head in 3–4 yrs"}, "MBA (CAT)": {"e": "🧑‍🎓📚", "s": "₹—(study) → ₹10–20 LPA post", "k": "Quant/verbal · interviews · internships", "n": "Associate → manager fast-track"}, "Real estate / BD": {"e": "🧑‍💼🏘️", "s": "₹2.5–4 LPA + commission", "k": "Pipeline building · negotiation", "n": "BD manager → city head"}, "Accounts / Audit Associate": {"e": "🧑‍💼🧮", "s": "₹2.5–4 LPA", "k": "Tally · GST/TDS · reconciliation", "n": "Senior associate → CA-firm manager"}, "Banking operations": {"e": "🧑‍💼🏦", "s": "₹2.5–4 LPA", "k": "Processes · accuracy · service", "n": "Ops officer → team lead"}, "Compliance / fintech ops": {"e": "🧑‍💻🛡️", "s": "₹3–5 LPA", "k": "KYC/AML · SQL basics · alert handling", "n": "Senior analyst → compliance lead"}, "B2B Sales / Key Accounts": {"e": "🧑‍💼🤝", "s": "₹4–7 LPA + incentives", "k": "Discovery calls · negotiation · CRM", "n": "Key account manager → RSM"}, "Bank PO (IBPS/SBI)": {"e": "🧑‍💼🏦", "s": "₹5–7 LPA", "k": "Exam discipline · banking ops · service", "n": "AM → branch manager"}};
+const PHOTO=[{a:{e:'🔧🏍️',t:'Repairing a motorbike',s:'R'},b:{e:'🎨🖼️',t:'Painting a mural',s:'A'}},{a:{e:'🔬🧫',t:'Looking through a microscope',s:'I'},b:{e:'📋👥',t:'Leading a team meeting',s:'E'}},{a:{e:'👩‍🏫📖',t:'Teaching children',s:'S'},b:{e:'🗂️📊',t:'Arranging files & ledgers',s:'C'}},{a:{e:'☀️🔌',t:'Wiring a rooftop solar panel',s:'R'},b:{e:'💻📈',t:'Analysing charts',s:'I'}},{a:{e:'🎤🎶',t:'Performing music on stage',s:'A'},b:{e:'🏥🤝',t:'Caring for a patient',s:'S'}},{a:{e:'🛍️💬',t:'Pitching to customers',s:'E'},b:{e:'🧮🧾',t:'Checking accounts',s:'C'}},{a:{e:'🔭✨',t:'Studying the stars',s:'I'},b:{e:'🏨🛎️',t:'Welcoming hotel guests',s:'S'}},{a:{e:'👗✂️',t:'Designing clothes',s:'A'},b:{e:'📦📋',t:'Organising a warehouse',s:'C'}}];
+const APT=[{q:'3, 6, 11, 18, 27, ?',o:['36','38','40'],k:1,sub:'Numerical'},{q:'B, E, H, K, ?',o:['M','N','O'],k:1,sub:'Abstract'},{q:'RIVER is to BRIDGE as VALLEY is to:',o:['Mountain','Tunnel','Road'],k:1,sub:'Verbal'}];
+const CN={R:'Doer',I:'Thinker',A:'Creator',S:'Helper',E:'Persuader',C:'Organiser'};
+const CCOL={R:'#c96f2f',I:'#3b6fd8',A:'#b23bd8',S:'#2ea87e',E:'#d84f3b',C:'#8a7a2f'};
+const EV={R:'you kept choosing hands-on building and fixing',I:'you lit up at experiments and puzzles',A:'almost every creating activity got a love-it',S:'helping people came up again and again',E:'leading and convincing clearly energise you',C:'you enjoy order, plans and precision'};
+const G={explorer:{I:{stream:'Science with Maths (PCM)',alt:'PCMB (keeps biology open)',why:'keeps engineering, research and tech doors open',missions:['🎬 Watch: “A day inside ISRO”','📱 Write your first tiny program','💬 Ask your science teacher their path']},A:{stream:'Arts with Fine Arts electives',alt:'Science + CS (design-tech route)',why:'creative fields reward early portfolios more than marks',missions:['🖌️ Redesign your school poster','🎬 Watch: how animation studios work','💬 Interview your art teacher']},S:{stream:'Biology stream (PCB)',alt:'Humanities with Psychology',why:'care, teaching and psychology paths grow from here',missions:['📚 Volunteer at the school library','🎬 Watch: what counsellors do','🧒 Teach a younger student one thing']},R:{stream:'Science PCM',alt:'Polytechnic after Class 10',why:'hands-on technical careers are booming',missions:['🔧 Take apart an old gadget','🏭 Visit an ITI or maker space','🎬 Watch: wind turbine maintenance']},E:{stream:'Commerce with Business Maths',alt:'Any stream + tiny ventures',why:'business and entrepreneurship start here',missions:['🍪 Run a snack stall one weekend','🎬 Watch: a founder’s day','🗣️ Pitch one new idea to your class']},C:{stream:'Commerce with Accountancy + CS',alt:'Science PCM (systematic route)',why:'banking, CA and operations reward your discipline',missions:['📊 Track family spend in a sheet','🎬 Watch: what does a CA do?','🗂️ Organise your bookshelf, with a system']}},
+pathfinder:{I:[{h:'Engineering — ECE/CSE',fit:.87,m:'B.E./B.Tech · TNEA / JEE',w:'High Investigative + PCM; TNEA realistic at your band.',b:'B.Sc. Physics → M.Sc./GATE'},{h:'Data science & analytics',fit:.84,m:'B.Tech CSE or B.Sc. Stats + certs',w:'I-C pairing; cheaper B.Sc.+cert route also strong.',b:'BCA → MCA'},{h:'Govt technical services',fit:.81,m:'B.E. → TNPSC AE / IES',w:'Maximum security-value match.',b:'PSU via GATE'}],
+A:[{h:'Design — B.Des',fit:.88,m:'NID/NIFT/UCEED',w:'Artistic top-letter; portfolio > marks.',b:'Design school + portfolio'},{h:'Visual comm & media',fit:.83,m:'B.A. VisComm',w:'Creating + communicating.',b:'Diploma + portfolio'},{h:'Architecture',fit:.79,m:'B.Arch · NATA + PCM ⚠',w:'Creative-technical; needs PCM.',b:'B.Des interior'}],
+S:[{h:'Psychology → counselling',fit:.86,m:'B.A./B.Sc. Psych → M.Sc.',w:'Social top-letter + people-curiosity.',b:'BSW → MSW'},{h:'Nursing & allied health',fit:.84,m:'B.Sc. Nursing',w:'Care + steady employment.',b:'Allied-health B.Sc.'},{h:'Education',fit:.80,m:'B.Sc./B.A. + B.Ed',w:'Teach your favourite subject.',b:'EdTech roles'}],
+R:[{h:'Core engineering',fit:.87,m:'Mech/Civil/EEE · TNEA',w:'Hands-on strength; steady hiring.',b:'Polytechnic → lateral'},{h:'Merchant navy',fit:.82,m:'IMU CET',w:'Action + travel + early pay.',b:'Marine engg shoreside'},{h:'Green energy',fit:.80,m:'Diploma/B.E.',w:'Solar & wind growth sectors.',b:'ITI + apprenticeship'}],
+E:[{h:'BBA → MBA track',fit:.85,m:'CAT later',w:'Leadership energises you.',b:'B.Com + work → MBA'},{h:'Law (5-yr)',fit:.82,m:'CLAT',w:'Arguing + structured ambition.',b:'3-yr LLB later'},{h:'CA / CS track',fit:.78,m:'exam-gated',w:'Prestige + optionality.',b:'B.Com + CMA'}],
+C:[{h:'CA / CMA / CS',fit:.88,m:'after 12th',w:'Order + accuracy = audit & governance.',b:'B.Com + banking'},{h:'Banking & finance',fit:.84,m:'B.Com → IBPS/SBI PO',w:'Security + ladders.',b:'Fintech ops'},{h:'Actuarial science',fit:.79,m:'B.Sc. Maths + exams',w:'Rare, well-paid.',b:'Analytics en route'}]},
+launcher:{S:[{h:'HR Specialist',fit:.86,m:'direct entry',w:'People-facing + organised.',plan:['LinkedIn rebuild','2 certifications','3 informational interviews','20 applications']},{h:'B2B Sales / Key Accounts',fit:.84,m:'trainee programs',w:'Recognition payoff; watch security trade-off.',plan:['Sales course','Shadow a rep','5 TN targets']},{h:'Bank PO (IBPS/SBI)',fit:.79,m:'8–14 months',w:'Maximum security.',plan:['Daily quant practice','Weekly mock','Exam calendar']}],
+I:[{h:'Data Analyst',fit:.87,m:'certs + portfolio',w:'Investigative + your degree.',plan:['SQL+Python course','2 projects','15 applications']},{h:'Research → PG',fit:.82,m:'M.Sc./PhD',w:'Deep-work preference.',plan:['Shortlist labs','Email 10 PIs','GATE/NET decision']},{h:'Business Analyst',fit:.80,m:'entry roles',w:'Analysis + business.',plan:['Case practice','BI certification']}],
+A:[{h:'UI/UX Designer',fit:.88,m:'portfolio route',w:'Creator + digital demand.',plan:['Design course','3 case studies','Portfolio']}, {h:'Content & brand',fit:.83,m:'freelance-friendly',w:'Writing for brands.',plan:['10 pieces','3 pitches']},{h:'Film/OTT editing',fit:.78,m:'Chennai ecosystem',w:'Media growth.',plan:['3 reels','Assist a shoot']}],
+R:[{h:'Field/Service Engineer',fit:.85,m:'EV/solar booming',w:'Hands-on + travel.',plan:['Certification','Service-network applications']},{h:'Quality / Production',fit:.81,m:'TN manufacturing',w:'Factory belt hiring.',plan:['Six Sigma YB','Plant visits']},{h:'Govt technical exams',fit:.78,m:'TNPSC AE / RRB JE',w:'Security.',plan:['Syllabus map','2h daily prep']}],
+E:[{h:'Startup / MSME trainee',fit:.86,m:'ops roles',w:'Responsibility fast.',plan:['Pitch 10 founders']},{h:'MBA (CAT)',fit:.82,m:'Nov exam',w:'Needs 95%ile+ for IIMs.',plan:['Diagnostic mock','Prep plan']},{h:'Real estate / BD',fit:.77,m:'commission upside',w:'Persuasion + hustle.',plan:['RERA basics','Join a team']}],
+C:[{h:'Accounts / Audit Associate',fit:.87,m:'CA-firm route',w:'Experience compounds.',plan:['Tally+Excel certs','10 firms']},{h:'Banking operations',fit:.83,m:'structured',w:'Security.',plan:['IBPS prep']},{h:'Compliance / fintech ops',fit:.79,m:'Chennai growth',w:'KYC/AML demand.',plan:['Certification','Apply']}]}};
+const COLLEGES={'Tamil Nadu':[{n:'IIT Madras',c:'Chennai',d:'CS · Data Science · core engg'},{n:'CEG, Anna University',c:'Chennai',d:'Civil · Mech · ECE · CSE'},{n:'Madras Medical College',c:'Chennai',d:'Medicine · Allied health'}],'Kerala':[{n:'NIT Calicut',c:'Kozhikode',d:'CS · ECE · Architecture'},{n:'CET Trivandrum',c:'Tvm',d:'CS · ECE · Mech · Arch'},{n:'CUSAT',c:'Kochi',d:'Engg · Marine · Law'}],'Karnataka':[{n:'IISc',c:'Bengaluru',d:'Research Sci · AI'},{n:'NIT Surathkal',c:'Mangaluru',d:'CS · ECE · Mining'},{n:'R.V. College of Engg',c:'Bengaluru',d:'CS · Aero · Biotech'}],'Telangana':[{n:'IIT Hyderabad',c:'Hyd',d:'CS · AI · Design'},{n:'IIIT Hyderabad',c:'Hyd',d:'CS · AI/ML'},{n:'NALSAR',c:'Hyd',d:'Law · Policy'}],'Andhra Pradesh':[{n:'IIT Tirupati',c:'Tirupati',d:'CS · Electrical · Mech'},{n:'Andhra University',c:'Vizag',d:'Engg · Marine · Law'},{n:'ANGRAU',c:'Guntur',d:'Agriculture · Food Sci'}]};
+const AID=[{g:'🏛️ Central',n:'CSSS / PM-USP',d:'Top 20th %ile Class 12 + income ceiling → ₹12k/yr · scholarships.gov.in'},{g:'🏛️ Central',n:'Post-Matric (SC/ST/OBC/Minority)',d:'Category + income → fees + maintenance · NSP, Jun–Oct'},{g:'🏛️ Central',n:'PM Vidyalaxmi loans + CSIS',d:'Single-window loans, interest subsidy · vidyalakshmi.co.in'},{g:'🌴 State',n:'STATE',d:'STATE'},{g:'🤝 CSR',n:'Reliance Foundation UG',d:'Merit + means, ~5,000 awards → up to ₹2L · Aug'},{g:'🤝 CSR',n:'HDFC Parivartan · Kotak Kanya · Santoor',d:'₹15k–₹1.5L/yr via Buddy4Study'},{g:'🏫 Institutional',n:'IIT/NIT waivers · APU full aid · BITS MCN',d:'Income-based tuition waivers up to 100%'}];
+const STATE_AID={'Tamil Nadu':['Pudhumai Penn / Tamil Pudhalvan','₹1,000/month through UG for govt-school students · penkalvi.tn.gov.in'],'Kerala':['KSHEC + Suvarna Jubilee','₹10–25k/yr merit + BPL · dcescholarship.kerala.gov.in'],'Karnataka':['SSP Post-Matric + Vidyasiri','Fee concession + ₹1,500/mo hostel · ssp.karnataka.gov.in'],'Telangana':['ePASS RTF + MTF','Fee reimbursement + maintenance · telanganaepass.cgg.gov.in'],'Andhra Pradesh':['Fee reimbursement (verify current name)','Fees + hostel · jnanabhumi.ap.gov.in']};
+const FREE={compare:'Comparing your top two: <b>①</b> deeper technical work + clearer govt routes; <b>②</b> employment 1–2 yrs sooner, lower cost. Both high on Security; ① edges Achievement. <i>(Real app: from tools.)</i>',marks:'Honest answer: lower marks make the direct route harder, but the <b>resilient route stays open</b> — diploma/lateral or B.Sc.→PG reaches the same career 1–2 years later. No door closes.',parents:'Common and real. I can generate a <b>parent summary</b> — evidence, not argument. And Yuvabe counsellors are a tap away.'};
+let SESSIONS=[{d:'Jul 8',n:'Meera',ab:'13',seg:'exp',code:'ASI',inst:'Mini-IP',conf:'normal',flags:[],share:true,mins:19,intake:{fav:'Art',flow:'Dance'},scores:{R:6,I:14,A:22,S:18,E:9,C:8},recs:'Arts w/ Fine Arts; missions',consent:'✓ guardian'},
+{d:'Jul 8',n:'Arjun',ab:'17',seg:'path',code:'RIC',inst:'IP-60+WIP',conf:'normal',flags:[],share:true,mins:36,intake:{fav:'PCM · 75–85%',flow:'TNEA'},scores:{R:44,I:41,A:15,S:20,E:22,C:35},recs:'Core engg; green energy; govt tech',consent:'✓ guardian'},
+{d:'Jul 7',n:'Divya',ab:'22',seg:'lau',code:'SEC',inst:'IP-60+WIP+Big5',conf:'normal',flags:['hand'],share:false,mins:44,intake:{fav:'B.Com',flow:'Wants change'},scores:{R:12,I:20,A:18,S:45,E:40,C:33},recs:'HR; B2B sales; Bank PO',consent:'adult'},
+{d:'Jul 7',n:'Sanjay',ab:'15',seg:'exp',code:'RIE',inst:'Mini-IP',conf:'soft',flags:['soft'],share:false,mins:9,intake:{fav:'Science',flow:'Cricket'},scores:{R:20,I:16,A:7,S:10,E:15,C:9},recs:'PCM or polytechnic',consent:'⏳ pending'},
+{d:'Jul 6',n:'Fathima',ab:'18',seg:'path',code:'SIA',inst:'IP-60+WIP',conf:'normal',flags:['t2'],share:true,mins:41,intake:{fav:'PCB · 85–95%',flow:'NEET'},scores:{R:14,I:38,A:30,S:46,E:18,C:22},recs:'Psychology; nursing; education',consent:'✓ guardian'},
+{d:'Jul 6',n:'Vikram',ab:'23',seg:'lau',code:'ICE',inst:'IP-60+WIP+Big5',conf:'normal',flags:[],share:true,mins:38,intake:{fav:'B.E. Mech',flow:'First job'},scores:{R:30,I:43,A:12,S:16,E:33,C:36},recs:'Data analyst; BA; MBA',consent:'adult'},
+{d:'Jul 5',n:'Lakshmi',ab:'16',seg:'exp',code:'CSA',inst:'Mini-IP',conf:'normal',flags:[],share:true,mins:17,intake:{fav:'Maths',flow:'Organising'},scores:{R:8,I:12,A:14,S:16,E:11,C:23},recs:'Commerce; missions',consent:'✓ guardian'},
+{d:'Jul 5',n:'Rahul',ab:'17',seg:'path',code:'EIC',inst:'IP-60',conf:'normal',flags:['t3'],share:false,mins:24,intake:{fav:'Commerce · 60–75%',flow:'Family wants engg ⚠'},scores:{R:16,I:33,A:19,S:21,E:44,C:36},recs:'BBA→MBA; law; CA',consent:'✓ guardian'}];
+let QUEUE=[{t:'t2',n:'Fathima · 18 · Pathfinder',msg:'“exam pressure… can’t sleep before mocks”',time:'Jul 6, 4:12 pm'},{t:'t3',n:'Rahul · 17 · Pathfinder',msg:'family-conflict flag: “forced into engineering”',time:'Jul 5, 6:30 pm'},{t:'hand',n:'Divya · 22 · Launcher',msg:'requested human counselor',time:'Jul 7, 11:05 am'}];
+
+/* ============ STATE + CHAT ENGINE ============ */
+let persona='explorer',S={},view='app',currentTab='ov';
+const chat=document.getElementById('chat');
+function reset(){const api=S&&S.apidown;S={scores:{R:0,I:0,A:0,S:0,E:0,C:0},itemIdx:0,ph:0,name:'',apidown:api||false,consent:'none',facts:[],started:Date.now()};chat.innerHTML='';banner(false);document.getElementById('prog').style.display='none';document.getElementById('freeinput').disabled=true;}
+function setPersona(p){persona=p;['p-exp','p-path','p-lau'].forEach(id=>document.getElementById(id).classList.remove('active'));document.getElementById(p==='explorer'?'p-exp':p==='pathfinder'?'p-path':'p-lau').classList.add('active');restart();}
+function restart(){reset();setView('app');landing();}
+function banner(on){document.getElementById('banner').style.display=on?'block':'none';}
+function tag(t){document.getElementById('stagetag').textContent=t;}
+function bot(html,delay=320){return new Promise(r=>{const ty=document.createElement('div');ty.className='typing';ty.textContent='YuvaNext is typing…';chat.appendChild(ty);chat.scrollTop=1e6;setTimeout(()=>{ty.remove();el('msg bot',html);r();},delay);});}
+function user(t){el('msg user','').textContent=t;}
+function el(cls,html){const d=document.createElement('div');d.className=cls;d.innerHTML=html;chat.appendChild(d);chat.scrollTop=1e6;return d;}
+function chips(opts){return new Promise(res=>{const w=document.createElement('div');w.className='chips';opts.forEach(o=>{const c=document.createElement('button');c.className='chip';c.textContent=o;c.onclick=()=>{w.remove();user(o);res(o);};w.appendChild(c);});chat.appendChild(w);chat.scrollTop=1e6;});}
+function fact(f){S.facts.push(f);if(S.stageCv==='profile')cvProfile();}
+
+/* ============ CANVAS ENGINE ============ */
+const cv=document.getElementById('cvbody');
+function cvSet(title,crumb){document.getElementById('cv-title').textContent=title;document.getElementById('cv-crumb').textContent=crumb||'';}
+function cvWelcome(){S.stageCv='welcome';cvSet('Welcome','discover · not decide');
+ cv.innerHTML=`<div class="cv-panel"><div class="bigemoji">🌱</div><h2>Every path starts with you</h2><p>Chat with me on the left. This canvas fills up as we go — your profile, your interest map, and an explorable universe of careers, colleges and scholarships.</p><div class="factchips"><span>🧭 Interests</span><span>💎 Values</span><span>🎓 Colleges · 5 states</span><span>🤝 Scholarships</span></div></div>`;}
+function cvProfile(){S.stageCv='profile';cvSet('About you','building your context');
+ cv.innerHTML=`<div class="cv-panel"><div class="bigemoji">${persona==='explorer'?'🎒':persona==='pathfinder'?'🎯':'🚀'}</div><h2>${S.name||'You'}</h2><p>${persona==='explorer'?'Explorer track · Class 8':persona==='pathfinder'?'Pathfinder track · Class 12':'Launcher track · Graduate'}</p><div class="factchips">${S.facts.map(f=>`<span>${f}</span>`).join('')}</div></div>`;}
+function cvQuizLive(){S.stageCv='quiz';cvSet('Your interest map','forming live as you answer');
+ const mx=Math.max(6,...Object.values(S.scores));
+ cv.innerHTML=`<div class="cv-panel"><h2 style="font-size:20px">Watch your profile take shape</h2><p>Six interest areas — the bars grow with every answer.</p><div class="hexwrap">${['R','I','A','S','E','C'].map(l=>`<div class="rbar"><b style="color:${CCOL[l]}">${CN[l]}</b><div class="track"><div class="fillb" style="width:${S.scores[l]/mx*100}%;background:${CCOL[l]}"></div></div><span>${S.scores[l]}</span></div>`).join('')}</div></div>`;}
+function cvReveal(){S.stageCv='reveal';cvSet('Your code','the reveal');
+ cv.innerHTML=`<div class="cv-panel"><div class="bigemoji">✨</div><h2 style="font-size:42px;letter-spacing:8px;color:var(--brand)">${S.code}</h2><p style="font-weight:600;color:var(--ink)">${S.code.split('').map(l=>CN[l]).join(' · ')}</p><p>${EV[S.top]}.</p><div class="hexwrap">${['R','I','A','S','E','C'].map(l=>{const mx=Math.max(...Object.values(S.scores))*1.1;return `<div class="rbar"><b style="color:${CCOL[l]}">${CN[l]}</b><div class="track"><div class="fillb" style="width:${S.scores[l]/mx*100}%;background:${CCOL[l]}"></div></div><span>${S.scores[l]}</span></div>`;}).join('')}</div></div>`;}
+/* radial bubble map */
+function bubbleMap(center,nodes,opts={}){S.stageCv='map';
+ cv.innerHTML=`<div class="mapwrap" id="mw"><svg id="mlines" viewBox="0 0 100 100" preserveAspectRatio="none"></svg></div><button class="btn ghost cv-back" id="cvback">← Back</button><div class="cv-note">${opts.note||'Tap a bubble to expand'}</div><div class="cv-info" id="cvinfo"></div>`;
+ const mw=document.getElementById('mw'),svg=document.getElementById('mlines');
+ const cx=50,cy=46;
+ const cb=document.createElement('div');cb.className='bub center';cb.style.left=cx+'%';cb.style.top=cy+'%';
+ const yc=center.you&&S.code;
+ cb.style.width=yc?'182px':'150px';cb.style.height=yc?'182px':'150px';
+ cb.innerHTML=yc?youCenterHTML():`<div class="bl" style="font-size:${center.big?'26px':'15px'}">${center.label}</div><div class="bs">${center.sub||''}</div>`;mw.appendChild(cb);
+ const n=nodes.length;
+ nodes.forEach((nd,i)=>{
+  const ang=-90+i*(360/n), rad=ang*Math.PI/180;
+  const x=cx+36*Math.cos(rad), y=cy+34*Math.sin(rad);
+  const ln=document.createElementNS('http://www.w3.org/2000/svg','line');
+  ln.setAttribute('x1',cx);ln.setAttribute('y1',cy);ln.setAttribute('x2',x);ln.setAttribute('y2',y);
+  ln.setAttribute('stroke','#b9d2c5');ln.setAttribute('stroke-width','.35');ln.setAttribute('stroke-dasharray','1,1');svg.appendChild(ln);
+  const b=document.createElement('div');b.className='bub';
+  const sz=nd.size||110;b.style.width=sz+'px';b.style.height=sz+'px';b.style.left=x+'%';b.style.top=y+'%';
+  b.style.background=nd.bg||'#fff';b.style.border=`2.5px solid ${nd.color||'#2ea87e'}`;b.style.color=nd.fg||'var(--ink)';
+  b.style.animationDelay=(i*.08)+'s';
+  b.innerHTML=`<div class="bl" style="font-size:12px">${nd.label}</div><div class="bs">${nd.sub||''}</div>`;
+  b.onclick=()=>nd.onclick?nd.onclick():cvInfo(nd);
+  mw.appendChild(b);
+ });
+ const back=document.getElementById('cvback');
+ if(opts.onBack){back.style.display='block';back.onclick=opts.onBack;}
+}
+function cvInfo(nd){const i=document.getElementById('cvinfo');i.style.display='block';i.innerHTML=`<h4>${nd.icon||'✨'} ${nd.label}</h4>${nd.meta?`<div class="meta">${nd.meta}</div>`:''}${nd.detail||nd.sub||''}`;}
+/* W-CV-Step: journey breadcrumb (US-33) */
+const STEPS=()=> ['Your details','Assessment','Your code',persona==='explorer'?'Streams & careers':'Careers & education','Report & card'];
+function step(n){S.step=n;const el=document.getElementById('stepper');
+ el.innerHTML=STEPS().map((s,i)=>`<div class="st ${i+1<n?'done':i+1===n?'cur':''}"><div class="dot">${i+1<n?'✓':i+1}</div><span class="lbl2">${s}</span></div>`).join('');}
+/* Career profile card (US-34) */
+function profCard(name,ringMeta){sel('career',name,ringMeta||'');
+ const p=PROF[name];const i=document.getElementById('cvinfo');i.style.display='block';
+ if(!p){i.innerHTML=`<h4>✨ ${name}</h4><div class="meta">${ringMeta||''}</div>Profile card coming for this career (slice 15 completes all 335). Ask me about it in chat!`;return;}
+ const planBtn=persona==='explorer'?'🧭 How to explore this now':'📅 View 90-day plan';
+ i.innerHTML=`<div class="prof"><div class="pic">${p.e}</div><div style="flex:1">
+  <h4>${name}</h4><div class="meta">${ringMeta||''} · <i>illustrative image — to be commissioned</i></div>
+  <div class="row2">💰 <b>${p.s}</b> <span style="color:var(--soft)">entry, India — indicative · varies by city & year · reviewed Jul 2026</span></div>
+  <div class="row2 skills">🛠️ ${p.k.split('·').map(s=>`<span>${s.trim()}</span>`).join('')}</div>
+  <div class="row2">📈 <b>After ~3 years:</b> ${p.n}</div>
+  <button class="btn" style="font-size:12px;margin-top:6px" onclick="planFor('${name.replace(/'/g,"\\'")}')">${planBtn}</button></div></div>`;
+}
+function planFor(name){
+ const all=[].concat(...Object.values(G.launcher));
+ const g=all.find(x=>x.h===name);
+ if(persona==='explorer'){bot(`🧭 <b>Exploring ${name} at your age:</b> ① watch a day-in-the-life video, ② talk to someone who does it, ③ try a mini-project this month. No deciding needed — just look through the window!`);}
+ else if(g&&g.plan){bot(`📅 <b>90-day plan for ${name}:</b> `+g.plan.map((p,i)=>`<br>${i+1}. ${p}`).join('')+'<br><i>Want me to build a weekly calendar for this?</i>');}
+ else{bot(`📅 For <b>${name}</b>, the real app generates your 90-day plan from your profile + this career's pathway. Ask me: "plan for ${name}".`);}
+}
+/* selection tracking for the report card (US-13) */
+function sel(type,name,tag){S.sel=S.sel||[];if(!S.sel.find(x=>x.n===name))S.sel.push({t:type,n:name,g:tag||''});}
+/* CV-10: final report card (US-13) */
+function cvReport(){S.stageCv='report';step(5);document.querySelectorAll('.stepper .st').forEach(e=>e.classList.add('done'));
+ const mx=Math.max(...Object.values(S.scores))*1.1||10;
+ const icons={career:'💼',college:'🏛️',scholarship:'🎓',pathway:'🧭'};
+ const selHtml=(S.sel&&S.sel.length)?S.sel.slice(0,7).map(x=>`<div class="row" style="display:flex;gap:8px;font-size:12.5px;margin-bottom:4px"><span>${icons[x.t]||'✨'}</span><div><b>${x.n}</b> <span style="color:var(--soft)">· ${x.g}</span></div></div>`).join(''):'<div style="font-size:12.5px;color:var(--soft)">Explored the map — no specific picks yet (that\'s fine!)</div>';
+ const topSel=(S.sel&&S.sel.find(x=>x.t==='career'))||{n:null};
+ const segN=persona==='explorer'?'Explorer':persona==='pathfinder'?'Pathfinder':'Launcher';
+ const stmt=persona==='explorer'
+  ?`${S.name} is a <b>${S.code}</b> — a natural ${CN[S.top].toLowerCase()} whose curiosity showed up clearly in the assessment (${EV[S.top]}). The recommended direction for Class 11 keeps those doors open${topSel.n?`, and <b>${topSel.n}</b> caught their eye as a career to keep dreaming about`:''}. This is a compass, not a verdict — interests grow, so re-explore in 90 days.`
+  :persona==='pathfinder'
+  ?`${S.name} profiles as a <b>${S.code}</b> (${S.code.split('').map(l=>CN[l]).join('–')}) with a clear ${CN[S.top]} lead. Based on stream, marks band and home state, the strongest routes are shown above${topSel.n?`, with <b>${topSel.n}</b> as the current front-runner`:''} — each with colleges, backup routes and matching scholarships. This is a compass, not a verdict — revisit after results or in 90 days.`
+  :`${S.name} profiles as a <b>${S.code}</b> — built for ${CN[S.top].toLowerCase()}-centred work. The ranked matches above fit both interests and stated constraints${topSel.n?`, with <b>${topSel.n}</b> the standout and a concrete 90-day plan attached`:''}${S.aid?', plus matched scholarships and aid routes':''}. This is a compass, not a verdict — retake in 90 days to track growth.`;
+ cv.innerHTML=`<div style="position:absolute;inset:0;overflow-y:auto;padding:18px 22px">
+  <div style="background:#fff;border-radius:20px;box-shadow:0 12px 36px rgba(20,60,45,.15);overflow:hidden;max-width:640px;margin:0 auto">
+   <div style="background:linear-gradient(135deg,#153a2d,var(--brand2));color:#fff;padding:16px 20px;display:flex;justify-content:space-between;align-items:center">
+    <div><div style="font-size:10.5px;opacity:.85;letter-spacing:1px">YUVANEXT · JOURNEY REPORT</div><div style="font-size:20px;font-weight:800">${S.name}</div><div style="font-size:11.5px;opacity:.9">${segN} · ${S.city||''}, ${S.state||''} · ${new Date().toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})}</div></div>
+    <div style="font-size:34px;font-weight:800;letter-spacing:4px">${S.code}</div></div>
+   <div style="padding:12px 18px;border-bottom:1px dashed #e4ece7"><div style="font-size:10.5px;letter-spacing:1px;color:var(--soft);margin-bottom:6px">PROFILE</div>
+    <div class="factchips" style="justify-content:flex-start;margin:0">${(S.facts||[]).map(f=>`<span>${f}</span>`).join('')}</div></div>
+   <div style="padding:12px 18px;border-bottom:1px dashed #e4ece7"><div style="font-size:10.5px;letter-spacing:1px;color:var(--soft);margin-bottom:6px">ASSESSMENT</div>
+    <div style="font-size:12px;color:var(--soft);margin-bottom:6px">${persona==='explorer'?'Interest quiz (Mini-IP'+(S.ph>0?' · picture mode':' · word mode')+')':'Interest Profiler'+(S.ph>0?' · picture mode':'')}${S.apt!==undefined?' · Aptitude sample':''} · English · confidence: normal</div>
+    ${['R','I','A','S','E','C'].map(l=>`<div class="rbar"><b style="color:${CCOL[l]};width:78px;text-align:right">${CN[l]}</b><div class="track"><div class="fillb" style="width:${S.scores[l]/mx*100}%;background:${CCOL[l]}"></div></div><span>${S.scores[l]}</span></div>`).join('')}
+    <div style="font-size:12.5px;margin-top:6px"><b>${S.code}</b> — ${S.code.split('').map(l=>CN[l]).join(' · ')}</div></div>
+   <div style="padding:12px 18px;border-bottom:1px dashed #e4ece7"><div style="font-size:10.5px;letter-spacing:1px;color:var(--soft);margin-bottom:6px">YOUR SELECTIONS & EXPLORATIONS</div>${selHtml}</div>
+   <div style="padding:12px 18px;border-bottom:1px dashed #e4ece7;background:#f7fbf8"><div style="font-size:10.5px;letter-spacing:1px;color:var(--soft);margin-bottom:6px">SUMMARY</div>
+    <div style="font-size:13px;line-height:1.55">${stmt}</div></div>
+   <div style="padding:12px 18px;display:flex;gap:8px;flex-wrap:wrap;justify-content:center">
+    <button class="btn">⬇ Download report (PDF)</button><button class="btn ghost">💬 Share card</button><button class="btn ghost">👨‍🏫 Send to counselor</button><button class="btn ghost" onclick="cvExplore()">🌌 Keep exploring</button></div>
+  </div>
+  <div style="text-align:center;font-size:10.5px;color:var(--soft);margin-top:8px">Report = stored data only (US-13) · summary is template-filled from your results · share card carries no personal details</div></div>`;
+ cvSet('Your report card','profile · assessment · selections · summary');
+}
+const QUAL={R:'practical · hands-on · steady',I:'curious · analytical · thoughtful',A:'imaginative · expressive · original',S:'caring · supportive · people-first',E:'confident · persuasive · driven',C:'organised · precise · reliable'};
+function youCenterHTML(){
+ return `<div style="font-size:19px;font-weight:800;line-height:1.05">${S.name}</div>
+ <div style="font-size:10.5px;opacity:.95;margin-top:2px">${S.code.split('').map(l=>CN[l]).join(' · ')}</div>
+ <div style="font-size:12px;font-weight:700;letter-spacing:1px;margin-top:4px;background:rgba(255,255,255,.18);border-radius:8px;padding:1px 8px">${S.code}</div>
+ <div style="font-size:8.5px;opacity:.85;margin-top:2px;line-height:1.25">${S.code.split('').map(l=>({R:'Realistic',I:'Investigative',A:'Artistic',S:'Social',E:'Enterprising',C:'Conventional'})[l]).join(' • ')}</div>
+ <div style="font-size:9px;opacity:.9;margin-top:3px;font-style:italic">${QUAL[S.top]}</div>`;
+}
+/* Generic 3-ring renderer (careers US-32 · colleges US-35 · scholarships US-36) */
+function rings3(center,ringDefs,opts){
+ cv.innerHTML=`<div class="mapwrap" id="mw"><svg id="mlines" viewBox="0 0 100 100" preserveAspectRatio="none">
+   <ellipse cx="50" cy="46" rx="17" ry="15" fill="none" stroke="#a8cbba" stroke-width=".35" stroke-dasharray="1.5,1.5"/>
+   <ellipse cx="50" cy="46" rx="31" ry="27.5" fill="none" stroke="#bcd6c8" stroke-width=".3" stroke-dasharray="1.5,1.5"/>
+   <ellipse cx="50" cy="46" rx="44" ry="39" fill="none" stroke="#cfe2d7" stroke-width=".3" stroke-dasharray="1.5,1.5"/>
+  </svg></div>
+  <button class="btn ghost cv-back" id="cvback" style="display:block">← Back</button>
+  <div class="cv-note">${opts.note||'Tap a bubble'}</div>
+  <div style="position:absolute;top:46px;left:16px;font-size:10.5px;color:var(--soft);background:rgba(255,255,255,.85);border-radius:10px;padding:6px 10px;z-index:4;line-height:1.6">
+   ${ringDefs.map(r=>`<span style="color:${r.color};font-weight:700">●</span> ${r.tag} &nbsp;`).join('')}</div>
+  <div class="cv-info" id="cvinfo"></div>`;
+ document.getElementById('cvback').onclick=opts.onBack||cvExplore;
+ const mw=document.getElementById('mw');
+ const cb=document.createElement('div');cb.className='bub center';cb.style.cssText='left:50%;top:46%;width:118px;height:118px';
+ cb.innerHTML=`<div class="bl" style="font-size:${center.big?'22px':'14px'}">${center.label}</div><div class="bs">${center.sub||''}</div>`;mw.appendChild(cb);
+ const geo=[{rx:17,ry:15,size:100,a0:-90},{rx:31,ry:27.5,size:82,a0:-72},{rx:44,ry:39,size:68,a0:-90}];
+ let delay=0;
+ ringDefs.forEach((rg,ri)=>{const g=geo[ri];
+  rg.items.forEach((it,i)=>{
+   const ang=(g.a0+i*(360/rg.items.length))*Math.PI/180;
+   const b=document.createElement('div');b.className='bub';
+   b.style.cssText=`left:${50+g.rx*Math.cos(ang)}%;top:${46+g.ry*Math.sin(ang)}%;width:${g.size}px;height:${g.size}px;background:#fff;border:2.5px solid ${rg.color};animation-delay:${delay}s`;
+   b.innerHTML=`<div class="bl" style="font-size:${g.size>84?'11px':'10px'}">${it.label}</div>`;
+   b.onclick=()=>rg.onTap(it);
+   mw.appendChild(b);delay+=.05;
+  });
+ });
+}
+/* CV-9: college rings (US-35) */
+const COLLEGES2={'Tamil Nadu':[{n:'NIT Trichy',c:'Tiruchirappalli',d:'CS · ECE · Mech · Civil'},{n:'PSG College of Technology',c:'Coimbatore',d:'Engg · Applied Sciences'},{n:'SSN College of Engg',c:'Chennai',d:'CS · ECE · Mech'}],
+'Kerala':[{n:'IISER Thiruvananthapuram',c:'Tvm',d:'Research Sciences'},{n:'Amrita (Amritapuri)',c:'Kollam',d:'CS · AI · Biotech'},{n:'TKM College of Engg',c:'Kollam',d:'Mech · Civil · CS'}],
+'Karnataka':[{n:'UVCE',c:'Bengaluru',d:'CS · ECE · Civil'},{n:'PES University',c:'Bengaluru',d:'CS · Design · Law'},{n:'BMS College of Engg',c:'Bengaluru',d:'CS · ECE · ML'}],
+'Telangana':[{n:'Osmania University',c:'Hyderabad',d:'Engg · Arts · Law'},{n:'CBIT',c:'Hyderabad',d:'CS · ECE · AI'},{n:'JNTU Hyderabad',c:'Hyd',d:'Engg · Pharmacy'}],
+'Andhra Pradesh':[{n:'Andhra University',c:'Vizag',d:'Engg · Marine · Law'},{n:'JNTU Kakinada',c:'Kakinada',d:'Engg · Pharmacy'},{n:'GITAM',c:'Vizag',d:'Engg · Mgmt · Pharmacy'}]};
+function collegeCard(c,tag){sel('college',c.n,tag);cvInfo({label:'🏛️ '+c.n,icon:'',meta:tag+' · '+(c.c||''),detail:'Top disciplines: '+c.d+'<br><i>Seed data (183 institutions) — verify on the official portal; full AISHE directory via slice 14. Fees band & admission route in the full detail view.</i>'});}
+function cvCollegeRings(){S.stageCv='colrings';
+ const home=S.collegeState||S.state||'Tamil Nadu';
+ const others=Object.keys(COLLEGES).filter(s=>s!==home);
+ const outer=others.slice(0,4).map(s=>({label:'🏛️ '+COLLEGES[s][0].n,data:{...COLLEGES[s][0],c:COLLEGES[s][0].c+', '+s}}))
+   .concat([{label:'🔧 Polytechnic / ITI route',data:{n:'Polytechnic / ITI route',c:'statewide',d:'Diplomas · earn-while-learning · lateral entry to B.E.'}},{label:'🎓 Open university',data:{n:'Open / distance university',c:'anywhere',d:'Flexible degrees · lowest cost · study while working'}}]);
+ rings3({label:'🏛️',sub:home+' · your pathway',big:true},[
+  {tag:'Best match · '+home,color:CCOL[S.top],items:(COLLEGES[home]||[]).map(c=>({label:'🏛️ '+c.n,data:c})),onTap:it=>collegeCard(it.data,'Inner ring — best home-state match')},
+  {tag:'Next best',color:'#4a6fd8',items:(COLLEGES2[home]||[]).map(c=>({label:'🏛️ '+c.n,data:c})),onTap:it=>collegeCard(it.data,'Middle ring — strong in-state options')},
+  {tag:'Other options',color:'#b28a2b',items:outer,onTap:it=>collegeCard(it.data,'Outer ring — other states & routes')}
+ ],{note:'Inner: best in '+home+' · outer includes other states + vocational (US-35)',onBack:cvExplore});
+ cvSet('College map','inner: '+home+' · middle: next best · outer: other options');
+}
+/* CV-7: scholarship rings (US-36) */
+const SCH=[
+ {r:1,n:'STATE_SCHEME',p:'STATE',a:'STATE_AMT',w:'Year-round',u:'STATE_URL',e:'STATE_ELIG'},
+ {r:1,n:'CSSS / PM-USP Scholarship',p:'Ministry of Education (NSP)',a:'₹12,000/yr UG · ₹20,000/yr PG',w:'Jun–Oct',u:'https://scholarships.gov.in',e:'Top 20th percentile of Class 12 board + family income ceiling'},
+ {r:1,n:'Post-Matric Scholarship',p:'Central (SC/ST/OBC/Minority)',a:'Fees + maintenance allowance',w:'Jun–Oct',u:'https://scholarships.gov.in',e:'Category certificate + income ceiling'},
+ {r:2,n:'Reliance Foundation UG',p:'Reliance Foundation',a:'Up to ₹2,00,000 over the degree',w:'Aug–Oct',u:'https://www.scholarships.reliancefoundation.org',e:'Merit + means; ~5,000 awards/yr'},
+ {r:2,n:'HDFC Parivartan ECSS',p:'HDFC Bank',a:'₹15,000–₹75,000 by level',w:'Aug onwards',u:'https://www.buddy4study.com',e:'Personal/economic crisis + merit'},
+ {r:2,n:'AICTE Pragati (girls)',p:'AICTE',a:'₹50,000/yr',w:'Aug–Oct',u:'https://pragati-saksham.aicte.gov.in',e:'Girl students in AICTE institutions + income ceiling'},
+ {r:2,n:'PM Vidyalaxmi loans + CSIS',p:'Dept of Financial Services',a:'Loan single-window + interest subsidy',w:'Year-round',u:'https://www.vidyalakshmi.co.in',e:'Admission to recognized institution; subsidy has income ceiling'},
+ {r:3,n:'Santoor Women\'s Scholarship',p:'Wipro Consumer Care',a:'₹24,000/yr',w:'Jun–Aug',u:'https://www.santoorscholarships.com',e:'Girls from govt schools (KA/AP/TG/TN)'},
+ {r:3,n:'IIT/NIT Fee Waivers',p:'Institutes (MoE)',a:'Up to 100% tuition waiver',w:'At admission',u:'via institute',e:'Family income <₹1L full · <₹5L two-thirds'},
+ {r:3,n:'Azim Premji Univ Full Aid',p:'Azim Premji University',a:'Up to 100% fees + living support',w:'At admission',u:'https://azimpremjiuniversity.edu.in',e:'Need-based assessment'},
+ {r:3,n:'LIC Golden Jubilee',p:'LIC of India',a:'₹20,000–₹40,000/yr',w:'Sep–Oct',u:'https://licindia.in',e:'Income ceiling + Class 12 merit'},
+ {r:3,n:'Buddy4Study (500+ more)',p:'Discovery portal',a:'Varies by scheme',w:'Year-round',u:'https://www.buddy4study.com',e:'Search by your profile'}];
+function schCard(s,tag){sel('scholarship',s.n,tag);
+ const i=document.getElementById('cvinfo');i.style.display='block';
+ i.innerHTML=`<h4>🎓 ${s.n}</h4><div class="meta">${tag} · Provider: <b>${s.p}</b> · last verified May 2026</div>
+  <div class="prof" style="gap:0"><div style="flex:1">
+  <div class="row2">💰 <b>${s.a}</b></div>
+  <div class="row2">🗓️ Application window: <b>${s.w}</b></div>
+  <div class="row2">✅ Eligibility: ${s.e}</div>
+  <div class="row2">🔗 ${s.u.startsWith('http')?`<a href="${s.u}" target="_blank" style="color:var(--brand);font-weight:600">Apply / official page ↗</a>`:s.u}</div>
+  <div class="row2" style="color:var(--soft);font-size:11px">⚠️ Schemes change yearly — confirm on the official portal before planning. "Likely" ≠ guaranteed (US-36).</div></div></div>`;
+}
+function cvAid(){S.stageCv='aidrings';
+ const st=S.state||'Tamil Nadu';const sa=STATE_AID[st];
+ const fill=s=>s.n!=='STATE_SCHEME'?s:{...s,n:sa[0],p:'Govt of '+st,a:sa[1].split('·')[0].trim(),u:sa[1].includes('penkalvi')?'https://penkalvi.tn.gov.in':'official state portal',e:'State-resident students — see scheme page',w:'Year-round'};
+ const ring=(r,tag,color)=>({tag,color,items:SCH.filter(s=>s.r===r).map(s=>({label:'🎓 '+fill(s).n.slice(0,22),data:fill(s)})),onTap:it=>schCard(it.data,tag)});
+ rings3({label:'🎓',sub:'Aid for you · '+st,big:true},[
+  ring(1,'Most likely',CCOL[S.top]),ring(2,'Check conditions','#4a6fd8'),ring(3,'Possibilities','#b28a2b')
+ ],{note:'Inner: likely eligible · middle: check conditions · outer: explore (US-36)',onBack:cvExplore});
+ cvSet('Scholarship map','likely · check conditions · possibilities — never "guaranteed"');
+}
+/* CV-8: 3-ring career map (US-32) */
+function cvRings(){S.stageCv='rings';
+ cv.innerHTML=`<div class="mapwrap" id="mw"><svg id="mlines" viewBox="0 0 100 100" preserveAspectRatio="none">
+   <ellipse cx="50" cy="46" rx="17" ry="15" fill="none" stroke="#a8cbba" stroke-width=".35" stroke-dasharray="1.5,1.5"/>
+   <ellipse cx="50" cy="46" rx="31" ry="27.5" fill="none" stroke="#bcd6c8" stroke-width=".3" stroke-dasharray="1.5,1.5"/>
+   <ellipse cx="50" cy="46" rx="44" ry="39" fill="none" stroke="#cfe2d7" stroke-width=".3" stroke-dasharray="1.5,1.5"/>
+  </svg></div>
+  <button class="btn ghost cv-back" id="cvback" style="display:block">← Back</button>
+  <div class="cv-note">Tap any career · rings = closeness of fit</div>
+  <div style="position:absolute;top:46px;left:16px;font-size:10.5px;color:var(--soft);background:rgba(255,255,255,.85);border-radius:10px;padding:6px 10px;z-index:4;line-height:1.6">
+   <span style="color:${CCOL[S.top]};font-weight:700">●</span> Best fit &nbsp;<span style="color:#4a6fd8;font-weight:700">●</span> Related &nbsp;<span style="color:#b28a2b;font-weight:700">●</span> Discover</div>
+  <div class="cv-info" id="cvinfo"></div>`;
+ document.getElementById('cvback').onclick=cvExplore;
+ const mw=document.getElementById('mw');
+ const cb=document.createElement('div');cb.className='bub center';cb.style.left='50%';cb.style.top='46%';cb.style.width='182px';cb.style.height='182px';
+ cb.innerHTML=youCenterHTML();mw.appendChild(cb);
+ const rd=RINGS[S.top]||RINGS.I;
+ const showFit=persona!=='explorer';
+ const ringDefs=[
+  {list:rd.inner,rx:17,ry:15,size:96,color:CCOL[S.top],tagName:'Best fit',why:l=>`<b>Inner ring — strongest match.</b> High-point letter = your top letter (${CN[S.top]}). ${showFit?'Fit ≈ 0.8'+(9-rd.inner.indexOf(l)):''}`,a0:-90},
+  {list:rd.mid,rx:31,ry:27.5,size:80,color:'#4a6fd8',tagName:'Related',why:()=>'<b>Middle ring — related.</b> Same domain family or hexagon-adjacent to your top letter; skills transfer easily.',a0:-72},
+  {list:rd.outer,rx:44,ry:39,size:66,color:'#b28a2b',tagName:'Discover',why:()=>`<b>Outer ring — worth a look.</b> Keyed to your 2nd/3rd letters (${S.code.slice(1)}) and cross-domain blends — the surprises live here.`,a0:-90}];
+ let delay=0;
+ ringDefs.forEach(rg=>{
+  rg.list.forEach((c,i)=>{
+   const ang=(rg.a0+i*(360/rg.list.length))*Math.PI/180;
+   const x=50+rg.rx*Math.cos(ang), y=46+rg.ry*Math.sin(ang);
+   const b=document.createElement('div');b.className='bub';
+   b.style.cssText=`left:${x}%;top:${y}%;width:${rg.size}px;height:${rg.size}px;background:#fff;border:2.5px solid ${rg.color};animation-delay:${delay}s`;
+   b.innerHTML=`<div class="bl" style="font-size:${rg.size>80?11:10}px">${c[0]}</div>`;
+   b.onclick=()=>profCard(c[0],rg.tagName+' ring · '+c[1]);
+   mw.appendChild(b);delay+=.05;
+  });
+ });
+ cvSet('Your career map','inner: best fit · middle: related · outer: discover (US-32)');
+}
+/* persona maps */
+function cvExplore(){
+ if(persona==='explorer'){const g=G.explorer[S.top]||G.explorer.I;
+  bubbleMap({you:true,label:S.code,sub:S.name},[
+   {label:'🚪 '+g.stream,sub:'primary stream',color:CCOL[S.top],size:130,meta:'Class 11 recommendation',detail:g.why+'. <br><b>Alternative:</b> '+g.alt,icon:'🚪'},
+   {label:'🗺️ Career map',sub:'3 rings to explore',color:'#4a6fd8',size:112,onclick:cvRings},
+   ...g.missions.map((m,i)=>({label:'Mission '+(i+1),sub:m.slice(0,26)+'…',color:'#d99a2b',size:100,detail:m+'<br><i>☐ mark done when you return</i>',icon:'🎯'}))
+  ],{note:'Your streams + missions · tap to expand'});
+  cvSet('Your explore map','streams · missions · curiosity');
+ }else if(persona==='pathfinder'){const list=G.pathfinder[S.top]||G.pathfinder.I;
+  bubbleMap({you:true,label:S.code,sub:S.name},
+   list.map((g,i)=>({label:g.h,sub:'fit '+g.fit,color:CCOL[S.top],size:135-i*12,
+    onclick:()=>cvPathwayFocus(g)})).concat([{label:'🗺️ Career map',sub:'3 rings',color:'#4a6fd8',size:100,onclick:cvRings},{label:'🏛️ Colleges',sub:'3-ring map',color:'#4a6fd8',size:98,onclick:cvCollegeRings},{label:'🤝 Scholarships',sub:'3-ring map',color:'#7b5bd6',size:98,onclick:cvAid}]),
+   {note:'Tap a pathway to see colleges'});
+  cvSet('Your career universe','pathways sized by fit · tap to expand');
+ }else{const list=G.launcher[S.top]||G.launcher.S;
+  const nodes=list.map((g,i)=>({label:g.h,sub:'fit '+g.fit,color:CCOL[S.top],size:135-i*12,onclick:()=>cvCareerFocus(g)}));
+  nodes.push({label:'🗺️ Career map',sub:'3 rings',color:'#4a6fd8',size:100,onclick:cvRings});
+  if(S.aid)nodes.push({label:'🎓 Aid & scholarships',sub:STATE_AID[S.state||'Tamil Nadu'][0].split('/')[0],color:'#7b5bd6',size:105,onclick:()=>cvAid()});
+  bubbleMap({you:true,label:S.code,sub:S.name},nodes,{note:'Tap a career to see the 90-day plan'});
+  cvSet('Your career universe','careers sized by fit');
+ }
+}
+function cvPathwayFocus(g){sel('pathway',g.h,'fit '+g.fit);
+ const st=S.collegeState||S.state||'Tamil Nadu';
+ bubbleMap({label:g.h,sub:'fit '+g.fit+' · '+st},
+  (COLLEGES[st]||[]).map(c=>({label:'🏛️ '+c.n,sub:c.c,color:'#4a6fd8',size:112,meta:'Top disciplines',detail:c.d+'<br><i>Seed directory (183 institutions) — Phase 2 pipeline expands to full AISHE coverage with district filters (US-27).</i>',icon:'🏛️'}))
+  .concat([{label:'🛟 Backup route',sub:'resilient path',color:'#d99a2b',size:100,detail:g.b,icon:'🛟'},{label:'Why me?',sub:'fit evidence',color:'#2ea87e',size:96,detail:g.w+(NCO[g.h]?'<br><span style="color:var(--soft)">Occupation codes: '+NCO[g.h]+' · NCO-2015 via crosswalk (US-26)</span>':''),icon:'💡'}]),
+  {note:'Colleges in '+st+' · tap for disciplines',onBack:cvExplore});
+ cvSet(g.h,'colleges · backup · evidence');
+}
+function cvCareerFocus(g){sel('career',g.h,'fit '+g.fit);
+ bubbleMap({label:g.h,sub:'fit '+g.fit},
+  g.plan.map((p,i)=>({label:'Step '+(i+1),sub:p.slice(0,24),color:'#2ea87e',size:104,detail:'<b>90-day plan:</b> '+p,icon:'📅'}))
+  .concat([{label:'Why me?',sub:'fit evidence',color:'#3b6fd8',size:96,detail:g.w+(NCO[g.h]?'<br><span style="color:var(--soft)">Occupation codes: '+NCO[g.h]+' · maps to India\'s NCO-2015 &amp; NCS portal (US-26)</span>':''),icon:'💡'},{label:'💼 Career card',sub:'salary · skills · 3-yr path',color:'#b28a2b',size:100,onclick:()=>profCard(g.h,'Your match · fit '+g.fit)}]),
+  {note:'90-day plan steps',onBack:cvExplore});
+ cvSet(g.h,'your 90-day plan');
+}
+/* (legacy flat aid map replaced by CV-7 scholarship rings above) */
+
+/* ============ FLOWS ============ */
+async function landing(){tag('S-01 → S-04');cvWelcome();step(1);
+ await bot('Vanakkam! 🌱 I’m <b>YuvaNext</b> — I help students discover directions that fit them. Fun exercises, not exams.<br><i>No marks needed · private · free</i>');
+ await bot('One promise: I help you <b>discover</b> directions, not decide your life. What should I call you?');
+ const names={explorer:'Anandi',pathfinder:'Karthik',launcher:'Priya'};
+ await chips([names[persona]]);S.name=names[persona];cvProfile();
+ await bot(`Nice to meet you, ${S.name}! How old are you?`);
+ const age=await chips([{explorer:'14',pathfinder:'17',launcher:'22'}[persona]]);fact('🎂 '+age+' years');
+ await bot('Which city or town do you live in?');
+ S.city=await chips([{explorer:'Auroville',pathfinder:'Chennai',launcher:'Coimbatore'}[persona],'Madurai','Kochi','Bengaluru']);fact('📍 '+S.city);
+ await bot('And your state? <i>(Country is set to 🇮🇳 India for now)</i>');
+ S.state=await chips(['Tamil Nadu','Kerala','Karnataka','Telangana','Andhra Pradesh','Other Indian state']);
+ if(S.state==='Other Indian state'){S.state='Tamil Nadu';await bot('Noted — full state list in the real app; using Tamil Nadu content for the demo.');}
+ fact('🗺️ '+S.state+', India');
+ otp();
+}
+function otp(){tag('S-02 OTP');
+ bot('To save your progress I’ll send a one-time code to your phone. Number?').then(()=>chips(['98400 12345']).then(()=>{
+  document.getElementById('modal-inner').innerHTML=`<h3>Enter the code</h3><p style="font-size:12px;color:#789">Sent to +91 98400 12345</p><div class="otp-boxes"><span>4</span><span>7</span><span>2</span><span>9</span><span>1</span><span>3</span></div><button class="btn" onclick="otpOk()">Verify ✓</button><p style="margin-top:8px;font-size:11px;color:#9ab">(simulated)</p>`;
+  document.getElementById('modal').style.display='flex';}));
+}
+async function otpOk(){document.getElementById('modal').style.display='none';
+ await bot('✅ Verified! Progress now saves automatically.');fact('📱 verified');
+ if(persona==='launcher'){await bot('A graduate ready to launch 🚀');intake();}
+ else{await bot(persona==='explorer'?'Class 8 and exploring — perfect. We’ll <b>explore, not decide</b>.':'Class 12 — big year! Let’s make it clearer.');consent();}
+}
+async function consent(){tag('S-03 Consent');
+ await bot('Because you’re under 18, a parent gives a quick OK before I save results. Share a parent’s number?');
+ const c=await chips(['✅ Simulate: parent approves','⏳ Simulate: still waiting']);
+ if(c.startsWith('✅')){S.consent='✓ guardian';fact('👨‍👩‍👧 consent ✓');await bot('💚 Approved! Everything saves from here.');}
+ else{S.consent='⏳ pending';banner(true);fact('👨‍👩‍👧 consent ⏳');await bot('No problem — we’ll play everything now and save once approval arrives. <i>(ephemeral mode)</i>');}
+ intake();
+}
+async function intake(){tag('W-05 Intake');
+ if(persona==='explorer'){
+  await bot('Which board is your school on?');fact('🏫 '+await chips(['TN State Board','CBSE','ICSE']));
+  await bot('Which subject do you enjoy most?');S.fav=await chips(['Science','Maths','English','Art 🎨']);fact('❤️ '+S.fav);
+  await bot('Outside school — what makes you lose track of time?');S.flow=await chips(['Drawing & making things','YouTube science videos','Cricket']);fact('✨ '+S.flow);
+  await bot('Noted! That last one matters more than you’d think 😉');
+ }else if(persona==='pathfinder'){
+  await bot('Which stream are you in?');S.fav=await chips(['Science PCM','Science PCB','Commerce','Arts']);fact('📘 '+S.fav);
+  await bot('Expected Class 12 band?');fact('📊 '+await chips(['95%+','85–95%','75–85%','60–75%','Prefer not to say']));
+  await bot('Entrance exams on your radar?');S.flow=await chips(['JEE','NEET','TNEA only','CLAT','Not sure yet']);fact('📝 '+S.flow);
+  await bot('How far from home can you study?');fact('🚌 '+await chips(['Same town','Anywhere in '+S.state,'South India','Anywhere']));
+ }else{
+  await bot('What did you study?');S.fav=await chips(['B.Com','B.E. / B.Tech','B.Sc.','B.A.']);fact('🎓 '+S.fav);
+  await bot('Where are you right now?');S.flow=await chips(['Looking for first job','Working, want a change','Deciding about PG']);fact('💼 '+S.flow);
+  await bot('Can you relocate for the right role?');fact('🧳 '+await chips(['Yes, anywhere','Within my state','No']));
+  await bot('Would you like to explore <b>Government or other college/education aid</b> (scholarships, fee waivers, loans)?');
+  S.aid=(await chips(['Yes, show me after my results','Not now'])).startsWith('Yes');
+  if(S.aid){fact('🤝 wants aid options');await bot('Great — I’ll bring aid options once we know your profile. 🎯');}
+ }
+ assessment();
+}
+async function assessment(){tag('W-06/07 Assessment');step(2);
+ if(persona!=='launcher'){
+  await bot('How would you like to discover your interests?');
+  const m=await chips(['📝 Word quiz — rate activities','📸 Picture quiz — no reading!']);
+  if(m.startsWith('📸'))return photoQuiz();
+ }
+ document.getElementById('prog').style.display='flex';
+ document.getElementById('prog-label').textContent=persona==='explorer'?'Interest quiz':'Interest Profiler';
+ await bot('Tap how you’d feel about each activity. <b>Gut feeling</b> — no wrong answers. Watch the canvas → your map forms live! <i>(12 items, really scored)</i>');
+ cvQuizLive();renderItem();
+}
+function renderItem(){
+ const items=persona==='explorer'?ITEMS.explorer:ITEMS.older;
+ if(S.itemIdx>=items.length)return finish();
+ if(S.itemIdx===6){bot('Halfway! Next set — a bit different.',200).then(paint);}else paint();
+ function paint(){
+  const it=items[S.itemIdx];
+  const stem=LANG==='ta'?(ITEMS_TA[persona==='explorer'?'explorer':'older'][S.itemIdx]||it.t):it.t;
+  const faces=persona==='explorer'?['😖','😕','😐','🙂','😍']:['👎','😕','😐','🙂','👍'];
+  const labels=LANG==='ta'?LIK_TA:['Dislike','Not really','Unsure','Like','Love it'];
+  const c=el('likert',`<div class="stem">${stem}</div>${LANG==='ta'?'<div style="font-size:10px;color:var(--soft);margin:-5px 0 7px">draft · '+it.t+'</div>':''}<div class="opts">${faces.map((f,i)=>`<div class="opt" onclick="answer(${i+1},this)">${f}<small>${labels[i]}</small></div>`).join('')}</div>`);
+  c.dataset.scale=it.s;
+  document.getElementById('prog-count').textContent=`${S.itemIdx+1} of 12`;
+  document.getElementById('prog-fill').style.width=`${S.itemIdx/12*100}%`;
+ }
+}
+function answer(v,elm){const card=elm.closest('.likert');S.scores[card.dataset.scale]+=v;card.remove();S.itemIdx++;document.getElementById('prog-fill').style.width=`${S.itemIdx/12*100}%`;cvQuizLive();renderItem();}
+async function photoQuiz(){tag('W-06 Photo Quiz');step(2);
+ document.getElementById('prog').style.display='flex';
+ document.getElementById('prog-label').textContent='Photo Career Quiz';
+ await bot('Pick the picture that <b>appeals to you more</b> — no reading needed! Watch your map grow on the canvas. <i>(8 pairs, +2 per pick, really scored)</i>');
+ cvQuizLive();S.ph=0;photoPair();
+}
+function photoPair(){
+ if(S.ph>=PHOTO.length){document.getElementById('prog').style.display='none';return finish();}
+ const p=PHOTO[S.ph];
+ document.getElementById('prog-count').textContent=`${S.ph+1} of ${PHOTO.length}`;
+ document.getElementById('prog-fill').style.width=`${S.ph/PHOTO.length*100}%`;
+ el('likert',`<div class="stem" style="text-align:center">Which appeals more?</div><div class="opts"><div class="opt" style="padding:11px 4px" onclick="photoPick('${p.a.s}',this)"><div style="font-size:30px">${p.a.e}</div><small style="font-size:10px">${p.a.t}</small></div><div class="opt" style="padding:11px 4px" onclick="photoPick('${p.b.s}',this)"><div style="font-size:30px">${p.b.e}</div><small style="font-size:10px">${p.b.t}</small></div></div><div style="text-align:center;font-size:10px;color:var(--soft);margin-top:5px">(real app: photographs)</div>`);
+}
+function photoPick(s,elm){S.scores[s]+=2;elm.closest('.likert').remove();S.ph++;cvQuizLive();photoPair();}
+function fastForward(){
+ if(!S.name){alert('Click through onboarding first.');return;}
+ const items=persona==='explorer'?ITEMS.explorer:ITEMS.older;
+ const bias={explorer:{A:5,I:4},pathfinder:{I:5,C:4,R:4},launcher:{S:5,E:4}}[persona];
+ while(S.itemIdx<items.length){const it=items[S.itemIdx];S.scores[it.s]+=bias[it.s]||(1+Math.floor(Math.random()*3));S.itemIdx++;}
+ document.querySelectorAll('.likert').forEach(e=>e.remove());
+ document.getElementById('prog').style.display='none';finish();
+}
+async function finish(){tag('W-08 Reveal');step(3);document.getElementById('prog').style.display='none';
+ const order=Object.entries(S.scores).sort((a,b)=>b[1]-a[1]);
+ S.code=order.slice(0,3).map(x=>x[0]).join('');S.top=S.code[0];
+ cvReveal();
+ await bot(`✨ Your code is <b>${S.code}</b> — ${S.code.split('').map(l=>CN[l]).join(' · ')}! See the full picture on the canvas →`);
+ await bot(`<b>${CN[S.top]}</b> came first — ${EV[S.top]}.`);
+ if(order[0][1]-order[1][1]<=2)await bot('Your top two are <i>really</i> close — we’ll explore both.');
+ await bot('Shareable card available anytime (no age, phone or scores on it). Ready to explore your universe?');
+ await chips(['🌌 Open my explore map']);
+ guidance();
+}
+async function guidance(){tag('Flow E · Explore map');step(4);
+ if(persona==='pathfinder'){
+  await bot('Your map is live on the canvas → pathways sized by fit. Which state shall we load colleges for? <i>(183 institutions, 5 states)</i>');
+  S.collegeState=await chips(['Tamil Nadu','Kerala','Karnataka','Telangana','Andhra Pradesh']);
+ }
+ cvExplore();
+ if(S.apidown)await bot('📡 <i>Chat engine is down — but your map, scoring and matching all still work (US-17).</i>');
+ if(persona==='explorer'){
+  await bot('Your explore map is up → tap the <b>stream bubble</b> for Class-11 options and the <b>mission bubbles</b> for this month’s quests.');
+  await bot('Fancy a quick brain-teaser too? 🧠');
+  if((await chips(['🧠 Aptitude sample (3 Qs)','Skip for now'])).startsWith('🧠'))await aptitudeMini();
+ }else if(persona==='pathfinder'){
+  await bot(`Tap any pathway bubble → its colleges in ${S.collegeState}, backup route, and why it fits you. Want the aptitude sample too?`);
+  if((await chips(['🧠 Aptitude sample (3 Qs)','Continue exploring'])).startsWith('🧠'))await aptitudeMini();
+ }else{
+  await bot('Tap a career bubble → your 90-day plan.'+(S.aid?' The <b>purple aid bubble</b> has your scholarships & aid options 🎓':''));
+ }
+ await bot('And here’s the special one — your <b>3-ring career map</b> 🗺️: closest ring = strongest matches, middle = related, outer = discoveries from your other letters.');
+ const m=await chips(['🗺️ Open my career map','Later']);
+ if(m.startsWith('🗺️')){cvRings();await bot('There it is → tap any career bubble. The <b>outer ring</b> is where the surprises live — powered by your '+S.code.slice(1)+' side.');}
+ await bot('When you\'re ready, your <b>report card</b> pulls the whole journey together — profile, results, your picks, and a summary. 📋');
+ const rp=await chips(['📋 View my report card','Keep exploring first']);
+ if(rp.startsWith('📋'))cvReport();
+ document.getElementById('freeinput').disabled=false;
+ await bot('Chat is open — try “compare 1 and 2”, “what if my marks drop?”, “my parents want engineering”, or “show my map”. Or peek at the counselor view (top bar).');
+ pushLiveSession();
+}
+async function aptitudeMini(){tag('Aptitude sample');
+ await bot('Three quick ones — <b>bands, not scores</b>, and they never close doors.');
+ S.apt=0;
+ for(const q of APT){await bot(`<b>${q.sub}:</b> ${q.q}`);const ans=await chips(q.o);
+  if(ans===q.o[q.k]){S.apt++;await bot('✅ Correct!');}else await bot(`Close! It’s <b>${q.o[q.k]}</b>.`);}
+ const band=S.apt>=3?'strong':S.apt===2?'steady':'building';
+ await bot(`🧠 You got ${S.apt}/3 on this tiny sample. Full app: a <b>24-item battery</b> (numerical, abstract, verbal, matrix). One honest note — per-area bands like “<b>${band}</b>” only appear <i>after local norms exist</i> (pilot, n≥300); until then you get a strengths narrative instead (US-29 norming gate). Either way: calibrates <i>plans</i>, never gates careers.`);
+}
+function pushLiveSession(){if(S.pushed)return;S.pushed=true;step(5);document.querySelectorAll('.stepper .st').forEach(e=>e.classList.add('done'));
+ const seg={explorer:'exp',pathfinder:'path',launcher:'lau'}[persona];
+ SESSIONS.unshift({d:'Now',n:S.name+' (you)',ab:{explorer:'14',pathfinder:'17',launcher:'22'}[persona],seg,code:S.code,inst:persona==='explorer'?'Mini-IP':'IP-60',conf:'normal',flags:S.consent==='⏳ pending'?['part']:[],share:true,mins:Math.max(1,Math.round((Date.now()-S.started)/60000)),intake:{fav:(S.fav||'—')+' · '+(S.city||'')+', '+(S.state||''),flow:S.flow||'—'},scores:{...S.scores},recs:'Live session — explore map',consent:S.consent||'adult',you:true});
+}
+async function sendFree(){const i=document.getElementById('freeinput');const t=i.value.trim();if(!t)return;i.value='';user(t);
+ if(S.apidown){await bot('📡 <i>Thinking engine resting — results safe (US-17).</i>');return;}
+ const l=t.toLowerCase();
+ if(l.includes('compare'))await bot(FREE.compare);
+ else if(l.includes('mark')||l.includes('drop')||l.includes('fail'))await bot(FREE.marks);
+ else if(l.includes('parent')||l.includes('family'))await bot(FREE.parents);
+ else if(l.includes('report')||l.includes('card')){cvReport();await bot('Your report card is on the canvas → download, share, or send it to a counselor (US-13).');}
+ else if(l.includes('map')||l.includes('ring')){cvRings();await bot('Your 3-ring career map is up → inner ring = best fit, middle = related, outer = discoveries (US-32). Tap around!');}
+ else if(l.includes('aid')||l.includes('scholar')){cvAid();await bot('Aid map is up on the canvas → tap any bubble. ⚠️ Always confirm on official portals — schemes change yearly.');}
+ else if(l.includes('retake')||l.includes('again')||l.includes('retest')){await bot('You took this quiz just now — interests grow with you, so let\'s revisit after <b>90 days</b>. When you return, you\'ll see a <b>“then vs now”</b> view of how your profile changed — change is growth, not error (US-30). Your counselor can override the cooldown if needed.');}
+ else await bot('Real app: grounded answers from your profile + database tools. Try “compare 1 and 2”, “what if my marks drop?”, “scholarships”.');
+}
+function safetyDemo(){setView('app');tag('W-16 Safety');user('honestly what’s the point… nothing will work out for me');
+ el('safety',`<b>Thank you for telling me — that took courage. 💙</b><br>What you’re feeling matters more than any career question, and you don’t have to carry it alone.<div class="hl"><button class="btn" style="background:#3b4fd8">📞 Tele-MANAS 14416</button><button class="btn" style="background:#3b4fd8">🧒 Childline 1098</button><button class="btn ghost" style="border-color:#3b4fd8;color:#3b4fd8">Talk to a Yuvabe counsellor</button></div><div style="margin-top:8px;font-size:11px;color:#5a6488">Counselor notified (Tier 2) · place saved · copy from SAFETY.md, human-approved</div>`);
+ if(!QUEUE.find(q=>q.live)){QUEUE.unshift({t:'t2',n:(S.name||'Student')+' (live demo)',msg:'“what’s the point… nothing will work out”',time:'Just now',live:true});document.getElementById('qcount').textContent=QUEUE.length;}
+}
+function toggleAPI(){S.apidown=!S.apidown;const b=document.getElementById('apibtn');b.classList.toggle('active',S.apidown);b.textContent=S.apidown?'📡 API down: ON':'📡 API down';}
+
+/* ============ DASHBOARD ============ */
+function setView(v){view=v;document.getElementById('appview').style.display=v==='app'?'flex':'none';document.getElementById('dashview').style.display=v==='dash'?'block':'none';document.getElementById('v-app').classList.toggle('active',v==='app');document.getElementById('v-dash').classList.toggle('active',v==='dash');if(v==='dash')dtab(currentTab);}
+function dtab(t){currentTab=t;['ov','se','qu'].forEach(x=>document.getElementById('t-'+x).classList.toggle('active',x===t));
+ const b=document.getElementById('dbody');
+ b.innerHTML=t==='ov'?overview():t==='se'?sessionsTable():queueView();}
+function rbarsHTML(scores,max){return ['R','I','A','S','E','C'].map(l=>`<div class="rbar"><b style="color:${CCOL[l]};width:70px">${CN[l]}</b><div class="track"><div class="fillb" style="width:${scores[l]/max*100}%;background:${CCOL[l]}"></div></div><span>${scores[l]}</span></div>`).join('');}
+function overview(){
+ const n=SESSIONS.length,done=SESSIONS.filter(s=>s.recs).length;
+ const segs={exp:0,path:0,lau:0};SESSIONS.forEach(s=>segs[s.seg]++);
+ const codes={};SESSIONS.forEach(s=>{codes[s.code[0]]=(codes[s.code[0]]||0)+1;});
+ const shares=SESSIONS.filter(s=>s.share).length;
+ const avg=Math.round(SESSIONS.reduce((a,s)=>a+s.mins,0)/n);
+ const funnel=[['Landing',124],['OTP verified',86],['Consent done',71],['Assessment done',n+50],['Reveal seen',n+48],['Card shared',shares+38]];
+ return `<div class="tiles">
+  <div class="tile"><div class="v">${n}</div><div class="l">Sessions (7 days)</div><div class="d">▲ 12% vs last week</div></div>
+  <div class="tile"><div class="v">${Math.round(done/n*100)}%</div><div class="l">Completion rate</div><div class="d">target ≥ 70%</div></div>
+  <div class="tile"><div class="v">${avg} min</div><div class="l">Avg session</div><div class="d">Explorer shorter · Launcher longer</div></div>
+  <div class="tile"><div class="v">${Math.round(shares/n*100)}%</div><div class="l">Share-card rate</div><div class="d">growth loop</div></div>
+  <div class="tile"><div class="v">${QUEUE.length}</div><div class="l">Handoffs pending</div><div class="d" style="color:#c62828">Tier 2 — review today</div></div>
+  <div class="tile"><div class="v">1</div><div class="l">Soft-confidence</div><div class="d">QC-flagged</div></div></div>
+ <div class="grid2">
+  <div class="panel"><h4>Funnel — this week</h4>${funnel.map(f=>`<div class="hbar"><em>${f[0]}</em><div class="track"><div class="f" style="width:${f[1]/124*100}%"></div></div><span>${f[1]}</span></div>`).join('')}<div style="font-size:11px;color:var(--soft);margin-top:6px">Biggest drop: OTP → consent (guardian friction — watch)</div></div>
+  <div class="panel"><h4>Mix</h4>
+   <div class="hbar"><em>Explorer</em><div class="track"><div class="f" style="width:${segs.exp/n*100}%;background:#4a90d8"></div></div><span>${segs.exp}</span></div>
+   <div class="hbar"><em>Pathfinder</em><div class="track"><div class="f" style="width:${segs.path/n*100}%;background:#7b5bd6"></div></div><span>${segs.path}</span></div>
+   <div class="hbar"><em>Launcher</em><div class="track"><div class="f" style="width:${segs.lau/n*100}%;background:#d88a4a"></div></div><span>${segs.lau}</span></div>
+   <h4 style="margin-top:12px">Top interest letters</h4>
+   ${['R','I','A','S','E','C'].filter(l=>codes[l]).map(l=>`<div class="hbar"><em style="color:${CCOL[l]}">${l} · ${CN[l]}</em><div class="track"><div class="f" style="width:${(codes[l]||0)/n*100}%;background:${CCOL[l]}"></div></div><span>${codes[l]}</span></div>`).join('')}</div></div>
+ <div class="panel" style="font-size:11.5px;color:var(--soft)">Weights v1: interest .50 · values .20 · feasibility .15 · context .15 · read-only · packet views audit-logged</div>`;
+}
+function sessionsTable(){
+ return `<div class="panel"><h4>Sessions · click a row for the profile packet (US-20)</h4><table class="sess"><tr><th>Date</th><th>Student</th><th>Segment</th><th>Code</th><th>Instruments</th><th>Time</th><th>Consent</th><th>Flags</th></tr>
+ ${SESSIONS.map((s,i)=>`<tr class="click ${s.you?'you':''}" onclick="packet(${i})"><td>${s.d}</td><td><b>${s.n}</b> · ${s.ab}</td><td><span class="pill ${s.seg}">${s.seg==='exp'?'Explorer':s.seg==='path'?'Pathfinder':'Launcher'}</span></td><td><b>${s.code}</b></td><td>${s.inst}</td><td>${s.mins}m</td><td>${s.consent}</td><td>${s.flags.map(f=>f==='soft'?'<span class="pill soft">soft</span>':f==='t2'?'<span class="pill t2">Tier 2</span>':f==='t3'?'<span class="pill t3">Tier 3</span>':f==='hand'?'<span class="pill hand">handoff</span>':f==='part'?'<span class="pill part">consent ⏳</span>':'').join(' ')||'—'}</td></tr>`).join('')}
+ </table><div style="font-size:11px;color:var(--soft);margin-top:8px">Yellow = your live session · read-only · packet views audit-logged</div></div>`;
+}
+function packet(i){
+ const s=SESSIONS[i];const d=document.getElementById('drawer');
+ const max=Math.max(...Object.values(s.scores))*1.1;
+ d.innerHTML=`<button class="close" onclick="document.getElementById('drawer').classList.remove('open')">✕</button>
+ <div class="dhead"><small style="opacity:.85">Profile packet · read-only · view audit-logged</small><h3>${s.n} · ${s.ab} yrs</h3><div style="font-size:12px;opacity:.9">${s.seg==='exp'?'Explorer':s.seg==='path'?'Pathfinder':'Launcher'} · ${s.d} · ${s.mins} min · consent: ${s.consent}</div></div>
+ <div class="dsec"><h5>RIASEC — code <b>${s.code}</b> ${s.conf==='soft'?'<span class="pill soft">soft confidence</span>':'<span class="pill done">normal</span>'}</h5>${rbarsHTML(s.scores,max)}</div>
+ <div class="dsec"><h5>Intake summary</h5>📘 ${s.intake.fav}<br>✨ ${s.intake.flow}</div>
+ <div class="dsec"><h5>Recommendations given</h5>${s.recs}</div>
+ <div class="dsec"><h5>Conversation excerpts</h5>${s.flags.some(f=>['t2','t3','hand'].includes(f))?'<i>Visible — safety/handoff flag present:</i><br>“'+(QUEUE.find(q=>q.n.startsWith(s.n.split(' ')[0]))||{msg:'…'}).msg+'”':'<span style="color:var(--soft)">Hidden — visible only for flagged sessions (US-20).</span>'}</div>
+ <div class="dsec"><h5>Actions</h5><button class="btn ghost" style="font-size:12px">Override retake cooldown</button> <button class="btn ghost" style="font-size:12px">Export packet</button></div>`;
+ d.classList.add('open');
+}
+function queueView(){
+ document.getElementById('qcount').textContent=QUEUE.length;
+ return `<div class="panel"><h4>Handoff & safety queue · Tier 1 first · SLA Tier 1 &lt; 15 min</h4>
+ ${QUEUE.map(q=>`<div class="qrow ${q.t}"><span class="pill ${q.t}">${q.t==='t2'?'Tier 2':q.t==='t3'?'Tier 3':q.t==='hand'?'Handoff':'Alert'}</span><div><b>${q.n}</b><div class="meta">${q.msg} · ${q.time}</div></div><div class="act"><button class="btn" style="font-size:12px" onclick="this.textContent='✓ Actioned';this.disabled=true">Mark actioned</button></div></div>`).join('')}
+ <div style="font-size:11px;color:var(--soft)">“Mark actioned” writes to a separate actions log — the single write exception (PRD 4.9).</div></div>`;
+}
+/* boot */
+reset();landing();
+
+</script>
+</body>
+</html>

@@ -1,0 +1,11 @@
+{
+  "name": "@yuvanext/database",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": "./src/index.ts",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.110.8",
+    "pg": "^8.22.0"
+  }
+}

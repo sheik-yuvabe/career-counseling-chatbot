@@ -1,0 +1,26 @@
+{
+  "name": "@yuvanext/api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/server.ts"
+  },
+  "dependencies": {
+    "@asteasolutions/zod-to-openapi": "^9.1.0",
+    "@yuvanext/assessment": "workspace:*",
+    "@yuvanext/contracts": "workspace:*",
+    "@yuvanext/counselor": "workspace:*",
+    "@yuvanext/database": "workspace:*",
+    "@yuvanext/evaluation": "workspace:*",
+    "@yuvanext/knowledge": "workspace:*",
+    "@yuvanext/recommendations": "workspace:*",
+    "@yuvanext/safety": "workspace:*",
+    "cors": "^2.8.6",
+    "express": "^5.2.1",
+    "helmet": "^8.3.0",
+    "pino": "^10.3.1",
+    "swagger-ui-express": "^5.0.1",
+    "zod": "^4.4.3"
+  }
+}
