@@ -123,6 +123,8 @@ importers:
         specifier: workspace:*
         version: link:../database
 
+  packages/config: {}
+
   packages/contracts:
     dependencies:
       '@asteasolutions/zod-to-openapi':
@@ -185,6 +187,8 @@ importers:
       '@yuvanext/database':
         specifier: workspace:*
         version: link:../database
+
+  packages/test-fixtures: {}
 
 packages:
 

@@ -18,6 +18,7 @@ If two documents conflict, stop and raise the conflict. Do not silently invent a
 
 - `apps/api` is the thin Express composition root.
 - `packages/contracts` owns shared Zod schemas and API types.
+- `packages/config` owns stable shared constants; `packages/test-fixtures` contains synthetic fixtures only.
 - Domain logic belongs in the module package, never in route handlers.
 - Repository code owns SQL; domain code must not depend on Express or Supabase clients.
 - Module packages communicate through contracts/ports, not another module's repository.
