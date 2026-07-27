@@ -20,7 +20,6 @@ This directory is the canonical design source for the single Supabase PostgreSQL
 | [Module 4 counselor storage flow](module-4-counselor-storage-flow.md)                     | Conversation, grounding, journey and report persistence                | Module 4 and frontend integration   |
 | [Module 5 Safety and Operations MVP DBML](module-5-safety-operations-mvp.dbml)            | Complete Safety/Operations fields, documented rules and relationships  | Module 5                            |
 | [Module 5 safety and operations storage flow](module-5-safety-operations-storage-flow.md) | Safety, handoff, audit, privacy and evaluation                         | Module 5 and integration            |
-| [Decisions and freeze register](yuvanext-data-model-decisions-v1.md)                      | Cross-project decisions, assessment rules and unresolved launch gates  | Integration owner                   |
 | [Module 1: Assessment](module-1-assessment-data-model.md)                                 | Identity projection, consent, intake, assessment and profile snapshots | Module 1                            |
 | [Module 2: Recommendations](module-2-recommendation-data-model.md)                        | Matching configuration, recommendation runs, rings and plans           | Module 2                            |
 | [Module 3: Knowledge](module-3-knowledge-data-model.md)                                   | Versioned careers, pathways, colleges, aid and source provenance       | Module 3                            |

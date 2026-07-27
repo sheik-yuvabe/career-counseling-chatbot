@@ -14,7 +14,7 @@ Related specifications:
 
 - [Five-module POC master plan](../poc/README.md)
 - [System and AI workflow](yuvanext-system-workflow.md)
-- [Canonical PRD user flow](../ux/yuvanext-prd-user-flow.md)
+- [Phase 1 PRD](../reference/prd-phase1.md.docx)
 
 ## 1. Target repository shape
 

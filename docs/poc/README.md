@@ -6,7 +6,7 @@ This directory contains independently assignable Proof of Concept specifications
 
 For colleague ownership, branch rules, contract changes, and merge sequencing, use the [Collaboration and Integration Plan](../architecture/yuvanext-collaboration-integration-plan.md). This README defines what must be built; the integration plan defines how five people build it without creating five competing applications.
 
-Backend database design is indexed in the [YuvaNext Data Model](../data-model/README.md). The [Data Model and Assessment Decisions v1](../data-model/yuvanext-data-model-decisions-v1.md) freeze register must be reviewed before physical Supabase migrations begin.
+Backend database design is indexed in the [YuvaNext Data Model](../data-model/README.md). Review the [Phase A MVP data model](../data-model/phase-a-mvp-data-model.md) before changing Supabase migrations.
 
 The selected implementation stack is:
 
