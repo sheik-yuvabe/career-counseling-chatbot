@@ -14,6 +14,7 @@ let sql = exporter.export(dbml, "postgres");
 // auth.users is shown in DBML only to visualize Supabase-owned relationships.
 // Supabase manages the real table, so our migration must never recreate it.
 sql = sql.replace(/CREATE TABLE "auth"\."users"\s*\([\s\S]*?\);\s*/m, "");
+sql = sql.replace(/COMMENT ON (?:TABLE|COLUMN) "auth"\."users"(?:\."[^"]+")? IS [^;]*;\s*/g, "");
 sql = sql.replace(/CREATE SCHEMA "[^"]+";\s*/g, "");
 
 const header = `-- Generated from docs/data-model/yuvanext-phase-a-mvp.dbml.

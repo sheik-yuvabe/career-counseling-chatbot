@@ -350,11 +350,10 @@ CREATE TABLE "knowledge"."stream_maps" (
 );
 
 CREATE TABLE "knowledge"."stream_map_items" (
-  "map_id" uuid,
-  "stream_option_id" uuid,
+  "map_id" uuid NOT NULL,
+  "stream_option_id" uuid NOT NULL,
   "rank" smallint UNIQUE NOT NULL,
   "reason_key" text NOT NULL,
-  PRIMARY KEY ("map_id", "stream_option_id"),
   PRIMARY KEY ("map_id", "stream_option_id")
 );
 
@@ -399,11 +398,10 @@ CREATE TABLE "knowledge"."college_programs" (
 );
 
 CREATE TABLE "knowledge"."pathway_disciplines" (
-  "pathway_id" uuid,
-  "discipline_id" uuid,
+  "pathway_id" uuid NOT NULL,
+  "discipline_id" uuid NOT NULL,
   "relevance_weight" numeric(6,5) NOT NULL,
   "mapping_version" text NOT NULL,
-  PRIMARY KEY ("pathway_id", "discipline_id"),
   PRIMARY KEY ("pathway_id", "discipline_id")
 );
 
@@ -966,8 +964,6 @@ CREATE UNIQUE INDEX ON "operations"."evaluation_cases" ("case_key", "version");
 
 CREATE UNIQUE INDEX ON "operations"."evaluation_results" ("evaluation_run_id", "evaluation_case_id");
 
-COMMENT ON COLUMN "auth"."users"."id" IS 'Supabase-managed external identity';
-
 COMMENT ON COLUMN "assessment"."user_profiles"."user_id" IS 'PK, FK to auth.users(id) on delete cascade';
 
 COMMENT ON COLUMN "assessment"."user_profiles"."first_name" IS 'Required after onboarding; trimmed; bounded length';
@@ -1484,9 +1480,9 @@ COMMENT ON COLUMN "knowledge"."stream_maps"."dataset_version_id" IS 'FK; require
 
 COMMENT ON COLUMN "knowledge"."stream_maps"."status" IS 'Required';
 
-COMMENT ON COLUMN "knowledge"."stream_map_items"."map_id" IS 'PK/FK; required';
+COMMENT ON COLUMN "knowledge"."stream_map_items"."map_id" IS 'FK; required; part of composite PK';
 
-COMMENT ON COLUMN "knowledge"."stream_map_items"."stream_option_id" IS 'PK/FK; required';
+COMMENT ON COLUMN "knowledge"."stream_map_items"."stream_option_id" IS 'FK; required; part of composite PK';
 
 COMMENT ON COLUMN "knowledge"."stream_map_items"."rank" IS 'Positive and unique within map';
 
@@ -1554,9 +1550,9 @@ COMMENT ON COLUMN "knowledge"."college_programs"."last_verified_at" IS 'Nullable
 
 COMMENT ON COLUMN "knowledge"."college_programs"."dataset_version_id" IS 'FK';
 
-COMMENT ON COLUMN "knowledge"."pathway_disciplines"."pathway_id" IS 'PK/FK; required';
+COMMENT ON COLUMN "knowledge"."pathway_disciplines"."pathway_id" IS 'FK; required; part of composite PK';
 
-COMMENT ON COLUMN "knowledge"."pathway_disciplines"."discipline_id" IS 'PK/FK; required';
+COMMENT ON COLUMN "knowledge"."pathway_disciplines"."discipline_id" IS 'FK; required; part of composite PK';
 
 COMMENT ON COLUMN "knowledge"."pathway_disciplines"."relevance_weight" IS 'Check 0..1; required';
 

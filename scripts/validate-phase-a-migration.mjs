@@ -10,16 +10,28 @@ const migrationPath = path.join(
 );
 const sql = await readFile(migrationPath, "utf8");
 
+const tablePrimaryKeyCounts = [
+  ...sql.matchAll(/CREATE TABLE\s+"[^"]+"\."[^"]+"\s*\(([\s\S]*?)\);/g),
+].map((match) => (match[1].match(/PRIMARY KEY/g) ?? []).length);
+
 const assertions = [
   [
     (sql.match(/^CREATE TABLE/gm) ?? []).length === 69,
     "Migration must create exactly 69 project-owned tables.",
   ],
   [!/^CREATE TABLE "auth"\."users"/m.test(sql), "Migration must not recreate auth.users."],
+  [
+    !/COMMENT ON (?:TABLE|COLUMN) "auth"\."users"/m.test(sql),
+    "Migration must not modify comments on Supabase-managed auth.users.",
+  ],
   [sql.includes('REFERENCES "auth"."users"'), "Migration must retain auth.users foreign keys."],
   [!sql.includes("student_profiles"), "Old student_profiles identifier is forbidden."],
   [!sql.includes("student_sessions"), "Old student_sessions identifier is forbidden."],
   [!sql.includes("state_code"), "Old state_code identifier is forbidden."],
+  [
+    tablePrimaryKeyCounts.every((count) => count <= 1),
+    "A table must not contain more than one PRIMARY KEY constraint.",
+  ],
 ];
 
 for (const schema of [

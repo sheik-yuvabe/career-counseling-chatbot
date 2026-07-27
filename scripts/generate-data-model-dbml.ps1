@@ -137,7 +137,7 @@ foreach ($documentName in $moduleDocuments) {
       continue
     }
 
-    if ($currentTable -and $line -match '^\| `([^`]+)` \| `([^`]+)` \| (.*) \|$') {
+    if ($currentTable -and $line -match '^\|\s*`([^`]+)`\s*\|\s*`([^`]+)`\s*\|\s*(.*?)\s*\|$') {
       $definitions[$currentTable].Add([pscustomobject]@{
         Name = $Matches[1]
         Type = $Matches[2]
@@ -180,8 +180,8 @@ Add-ManualTableDefinition 'knowledge.stream_maps' @(
 )
 
 Add-ManualTableDefinition 'knowledge.stream_map_items' @(
-  @('map_id', 'uuid', 'PK/FK; required'),
-  @('stream_option_id', 'uuid', 'PK/FK; required'),
+  @('map_id', 'uuid', 'FK; required; part of composite PK'),
+  @('stream_option_id', 'uuid', 'FK; required; part of composite PK'),
   @('rank', 'smallint', 'Positive and unique within map'),
   @('reason_key', 'text', 'Approved reason key; required')
 )
@@ -195,8 +195,8 @@ Add-ManualTableDefinition 'knowledge.disciplines' @(
 )
 
 Add-ManualTableDefinition 'knowledge.pathway_disciplines' @(
-  @('pathway_id', 'uuid', 'PK/FK; required'),
-  @('discipline_id', 'uuid', 'PK/FK; required'),
+  @('pathway_id', 'uuid', 'FK; required; part of composite PK'),
+  @('discipline_id', 'uuid', 'FK; required; part of composite PK'),
   @('relevance_weight', 'numeric(6,5)', 'Check 0..1; required'),
   @('mapping_version', 'text', 'Required')
 )
@@ -273,7 +273,10 @@ function Get-FieldAttributes {
   $attributes = [System.Collections.Generic.List[string]]::new()
   $existing = $existingAttributes[$key]
 
-  $isPrimaryKey = ($existing -and $existing.pk) -or ($Field.Rules -match '(?i)(?:^|[/ ])PK(?:$|[/,; ])')
+  $isCompositePrimaryKeyMember = $Field.Rules -match '(?i)part of composite PK'
+  $isPrimaryKey = -not $isCompositePrimaryKeyMember -and (
+    ($existing -and $existing.pk) -or ($Field.Rules -match '(?i)(?:^|[/ ])PK(?:$|[/,; ])')
+  )
   $isNullable = $Field.Rules -match '(?i)nullable'
   $isRequired = $Field.Rules -match '(?i)required'
 

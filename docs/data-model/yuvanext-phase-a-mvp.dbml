@@ -391,8 +391,8 @@ Table knowledge.stream_maps {
 }
 
 Table knowledge.stream_map_items {
-  map_id uuid [pk, ref: > knowledge.stream_maps.id, note: 'PK/FK; required']
-  stream_option_id uuid [pk, ref: > knowledge.stream_options.id, note: 'PK/FK; required']
+  map_id uuid [not null, ref: > knowledge.stream_maps.id, note: 'FK; required; part of composite PK']
+  stream_option_id uuid [not null, ref: > knowledge.stream_options.id, note: 'FK; required; part of composite PK']
   rank smallint [not null, unique, note: 'Positive and unique within map']
   reason_key text [not null, note: 'Approved reason key; required']
 
@@ -443,8 +443,8 @@ Table knowledge.college_programs {
 }
 
 Table knowledge.pathway_disciplines {
-  pathway_id uuid [pk, ref: > knowledge.pathways.id, note: 'PK/FK; required']
-  discipline_id uuid [pk, ref: > knowledge.disciplines.id, note: 'PK/FK; required']
+  pathway_id uuid [not null, ref: > knowledge.pathways.id, note: 'FK; required; part of composite PK']
+  discipline_id uuid [not null, ref: > knowledge.disciplines.id, note: 'FK; required; part of composite PK']
   relevance_weight numeric(6,5) [not null, note: 'Check 0..1; required']
   mapping_version text [not null, note: 'Required']
 

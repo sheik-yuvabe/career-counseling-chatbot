@@ -9,6 +9,7 @@ export default tseslint.config(
       "**/dist/**",
       "coverage/**",
       "docs/**",
+      "packages/database/src/database.types.ts",
       "eslint.config.js",
       "scripts/**/*.mjs",
     ],
