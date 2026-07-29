@@ -2,17 +2,12 @@ import { CollegeSchema } from "@yuvanext/contracts";
 import { describe, expect, it } from "vitest";
 import { collegeFixtures } from "../../test-fixtures/src/index.js";
 import {
-  type CollegeRepository,
+  InMemoryCollegeRepository,
   listColleges,
 } from "../src/index.js";
 
 const colleges = CollegeSchema.array().parse(collegeFixtures);
-
-const repository: CollegeRepository = {
-  list() {
-    return Promise.resolve(colleges);
-  },
-};
+const repository = new InMemoryCollegeRepository(colleges);
 
 describe("listColleges", () => {
   it("returns only verified colleges", async () => {
