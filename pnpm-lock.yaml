@@ -163,12 +163,22 @@ importers:
 
   packages/knowledge:
     dependencies:
+      '@asteasolutions/zod-to-openapi':
+        specifier: ^9.1.0
+        version: 9.1.0(zod@4.4.3)
       '@yuvanext/contracts':
         specifier: workspace:*
         version: link:../contracts
       '@yuvanext/database':
         specifier: workspace:*
         version: link:../database
+      express:
+        specifier: ^5.2.1
+        version: 5.2.1
+    devDependencies:
+      '@types/express':
+        specifier: ^5.0.6
+        version: 5.0.6
 
   packages/recommendations:
     dependencies:
