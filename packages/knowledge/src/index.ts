@@ -11,6 +11,7 @@ export * from "./infrastructure/in-memory-college-repository.js";
 export * from "./infrastructure/in-memory-career-repository.js";
 export * from "./infrastructure/postgres-college-repository.js";
 export * from "./infrastructure/postgres-college-dataset-publisher.js";
+export * from "./infrastructure/postgres-career-repository.js";
 export * from "./http/register-knowledge-routes.js";
 
 export const knowledgeModule: ModuleDescriptor = {
