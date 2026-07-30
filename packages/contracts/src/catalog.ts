@@ -223,3 +223,22 @@ export const CareerProfileSchema = z
   });
 
 export type CareerProfile = z.infer<typeof CareerProfileSchema>;
+
+export const CareerDetailsSchema = z.object({
+  career: CareerSchema,
+  interestProfile: CareerInterestProfileSchema.nullable(),
+  profile: CareerProfileSchema.nullable(),
+});
+
+export type CareerDetails = z.infer<typeof CareerDetailsSchema>;
+
+export const CareerToolResultSchema = z.object({
+  data: CareerDetailsSchema,
+  sourceDataVersions: z.record(z.string(), z.string()),
+  retrievedAt: IsoTimestampSchema,
+  caveats: z.array(z.string()),
+});
+
+export type CareerToolResult = z.infer<
+  typeof CareerToolResultSchema
+>;
