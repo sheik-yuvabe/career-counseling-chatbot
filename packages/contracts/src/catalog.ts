@@ -233,3 +233,36 @@ export const CareerSearchResponseSchema = z.object({
 });
 
 export type CareerSearchResponse = z.infer<typeof CareerSearchResponseSchema>;
+
+export const CareerDatasetRecordsSchema = z.object({
+  careers: z.array(CareerSchema),
+  interestProfiles: z.array(CareerInterestProfileSchema),
+  profiles: z.array(CareerProfileSchema),
+});
+
+export type CareerDatasetRecords = z.infer<
+  typeof CareerDatasetRecordsSchema
+>;
+
+export const CareerDatasetManifestSchema = z.object({
+  schemaVersion: z.literal(1),
+  datasetKey: z.string().trim().min(1).max(160),
+  version: z.string().trim().min(1).max(80),
+  datasetVersionId: UuidSchema,
+  recordsFile: z
+    .string()
+    .regex(/^[a-zA-Z0-9][a-zA-Z0-9._-]*\.json$/),
+  recordCounts: z.object({
+    careers: z.number().int().nonnegative(),
+    interestProfiles: z.number().int().nonnegative(),
+    profiles: z.number().int().nonnegative(),
+  }),
+  checksumSha256: z.string().regex(/^[a-f0-9]{64}$/),
+  reviewStatus: z.literal("approved"),
+  createdAt: IsoTimestampSchema,
+  source: KnowledgeSourceManifestSchema,
+});
+
+export type CareerDatasetManifest = z.infer<
+  typeof CareerDatasetManifestSchema
+>;
