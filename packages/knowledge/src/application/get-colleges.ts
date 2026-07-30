@@ -15,7 +15,10 @@ export async function getColleges(
   options: GetCollegesOptions = {},
 ): Promise<CollegeListResponse> {
   const colleges = (
-    await listColleges(repository, { state: query.state })
+    await listColleges(repository, {
+      state: query.state,
+      limit: query.limit,
+    })
   ).slice(0, query.limit);
   const datasetVersionIds = [
     ...new Set(colleges.map((college) => college.datasetVersionId)),

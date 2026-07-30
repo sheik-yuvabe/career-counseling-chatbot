@@ -2,6 +2,7 @@ import type { College } from "@yuvanext/contracts";
 
 export type CollegeFilters = {
   state?: string;
+  limit?: number;
 };
 
 export interface CollegeRepository {

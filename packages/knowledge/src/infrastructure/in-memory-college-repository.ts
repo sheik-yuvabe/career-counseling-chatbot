@@ -9,17 +9,17 @@ export class InMemoryCollegeRepository implements CollegeRepository {
 
   list(filters: CollegeFilters): Promise<readonly College[]> {
     const requestedState = filters.state?.trim().toLowerCase();
+    const limit = filters.limit ?? this.colleges.length;
 
     if (requestedState === undefined) {
-      return Promise.resolve([...this.colleges]);
+      return Promise.resolve(this.colleges.slice(0, limit));
     }
 
     return Promise.resolve(
       this.colleges.filter(
         (college) =>
           college.state.trim().toLowerCase() === requestedState,
-      ),
+      ).slice(0, limit),
     );
   }
 }
-

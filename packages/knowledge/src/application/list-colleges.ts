@@ -24,5 +24,6 @@ export async function listColleges(
         first.name.localeCompare(second.name) ||
         first.city.localeCompare(second.city) ||
         first.id.localeCompare(second.id),
-    );
+    )
+    .slice(0, filters.limit);
 }

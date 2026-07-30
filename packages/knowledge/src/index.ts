@@ -4,6 +4,7 @@ export * from "./domain/college.js";
 export * from "./application/get-colleges.js";
 export * from "./application/list-colleges.js";
 export * from "./infrastructure/in-memory-college-repository.js";
+export * from "./infrastructure/postgres-college-repository.js";
 export * from "./http/register-knowledge-routes.js";
 
 export const knowledgeModule: ModuleDescriptor = {
