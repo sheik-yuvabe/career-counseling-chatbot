@@ -9,6 +9,7 @@ import { describe, expect, it } from "vitest";
 import { collegeFixtures } from "../../test-fixtures/src/index.js";
 import {
   InMemoryCareerRepository,
+  InMemoryCareerSearchRepository,
   InMemoryCollegeRepository,
   registerKnowledgeRoutes,
 } from "../src/index.js";
@@ -19,6 +20,7 @@ const createTestApp = () => {
 
   registerKnowledgeRoutes(app, createOpenApiRegistry(), {
     careerRepository: new InMemoryCareerRepository([]),
+    careerSearchRepository: new InMemoryCareerSearchRepository([]),
     collegeRepository: new InMemoryCollegeRepository(colleges),
   });
 

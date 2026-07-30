@@ -3,6 +3,7 @@ import {
   CareerInterestProfileSchema,
   CareerProfileSchema,
   CareerSchema,
+  CareerSearchResponseSchema,
   CareerToolResultSchema,
   createOpenApiRegistry,
 } from "@yuvanext/contracts";
@@ -16,6 +17,7 @@ import {
 } from "../../test-fixtures/src/index.js";
 import {
   InMemoryCareerRepository,
+  InMemoryCareerSearchRepository,
   InMemoryCollegeRepository,
   registerKnowledgeRoutes,
 } from "../src/index.js";
@@ -40,6 +42,7 @@ const createTestApp = () => {
         profile: null,
       },
     ]),
+    careerSearchRepository: new InMemoryCareerSearchRepository(careers),
     collegeRepository: new InMemoryCollegeRepository([]),
   });
 
@@ -81,5 +84,25 @@ describe("career routes", () => {
       code: "INVALID_CATALOG_QUERY",
       message: "Career slug is invalid",
     });
+  });
+
+  it("searches only published careers", async () => {
+    const response = await request(createTestApp())
+      .get("/api/v1/catalog/careers/search")
+      .query({ q: "data" })
+      .expect(200);
+    const body = CareerSearchResponseSchema.parse(response.body);
+
+    expect(body.data.map((career) => career.slug)).toEqual(["data-scientist"]);
+  });
+
+  it("rejects an invalid search cursor", async () => {
+    const response = await request(createTestApp())
+      .get("/api/v1/catalog/careers/search")
+      .query({ cursor: "invalid-cursor" })
+      .expect(400);
+    const error = ApiErrorSchema.parse(response.body);
+
+    expect(error.code).toBe("INVALID_CATALOG_CURSOR");
   });
 });

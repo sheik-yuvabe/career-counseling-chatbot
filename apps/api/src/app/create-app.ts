@@ -2,10 +2,13 @@ import { createOpenApiRegistry, generateOpenApiDocument } from "@yuvanext/contra
 import { createDatabasePool } from "@yuvanext/database";
 import {
   InMemoryCareerRepository,
+  InMemoryCareerSearchRepository,
   InMemoryCollegeRepository,
   type CareerRepository,
+  type CareerSearchRepository,
   type CollegeRepository,
   PostgresCareerRepository,
+  PostgresCareerSearchRepository,
   PostgresCollegeRepository,
   registerKnowledgeRoutes,
 } from "@yuvanext/knowledge";
@@ -22,11 +25,13 @@ import { modules } from "./modules.js";
 export type CreateAppOptions = {
   logging?: boolean;
   careerRepository?: CareerRepository;
+  careerSearchRepository?: CareerSearchRepository;
   collegeRepository?: CollegeRepository;
 };
 
 type KnowledgeRepositories = {
   careerRepository: CareerRepository;
+  careerSearchRepository: CareerSearchRepository;
   collegeRepository: CollegeRepository;
 };
 
@@ -34,6 +39,7 @@ const createDefaultKnowledgeRepositories = (): KnowledgeRepositories => {
   if (env.DATABASE_URL === undefined) {
     return {
       careerRepository: new InMemoryCareerRepository([]),
+      careerSearchRepository: new InMemoryCareerSearchRepository([]),
       collegeRepository: new InMemoryCollegeRepository([]),
     };
   }
@@ -45,6 +51,7 @@ const createDefaultKnowledgeRepositories = (): KnowledgeRepositories => {
 
   return {
     careerRepository: new PostgresCareerRepository(pool),
+    careerSearchRepository: new PostgresCareerSearchRepository(pool),
     collegeRepository: new PostgresCollegeRepository(pool),
   };
 };
@@ -66,11 +73,15 @@ export const createApp = (options: CreateAppOptions = {}): Express => {
 
   registerHealthRoute(app, registry, modules);
   const defaultKnowledgeRepositories =
-    options.careerRepository === undefined || options.collegeRepository === undefined
+    options.careerRepository === undefined ||
+    options.careerSearchRepository === undefined ||
+    options.collegeRepository === undefined
       ? createDefaultKnowledgeRepositories()
       : undefined;
   registerKnowledgeRoutes(app, registry, {
     careerRepository: options.careerRepository ?? defaultKnowledgeRepositories!.careerRepository,
+    careerSearchRepository:
+      options.careerSearchRepository ?? defaultKnowledgeRepositories!.careerSearchRepository,
     collegeRepository: options.collegeRepository ?? defaultKnowledgeRepositories!.collegeRepository,
   });
 

@@ -202,3 +202,34 @@ export const CareerSlugParamsSchema = z.object({
 });
 
 export type CareerSlugParams = z.infer<typeof CareerSlugParamsSchema>;
+
+export const CareerSearchQuerySchema = z.object({
+  q: z.string().trim().min(1).max(120).optional(),
+  domain: z.string().trim().min(1).max(80).optional(),
+  cursor: z.string().trim().min(1).max(500).optional(),
+  limit: z.coerce.number().int().min(1).max(50).default(20),
+});
+
+export type CareerSearchQuery = z.infer<typeof CareerSearchQuerySchema>;
+
+export const CareerSearchItemSchema = z.object({
+  id: UuidSchema,
+  slug: z.string(),
+  title: z.string(),
+  shortDescription: z.string().nullable(),
+  domainCode: z.string(),
+  detailAvailability: z.enum(["rich", "restricted"]),
+  datasetVersionId: UuidSchema,
+});
+
+export type CareerSearchItem = z.infer<typeof CareerSearchItemSchema>;
+
+export const CareerSearchResponseSchema = z.object({
+  data: z.array(CareerSearchItemSchema),
+  nextCursor: z.string().nullable(),
+  sourceDataVersions: z.record(z.string(), z.string()),
+  retrievedAt: IsoTimestampSchema,
+  caveats: z.array(z.string()),
+});
+
+export type CareerSearchResponse = z.infer<typeof CareerSearchResponseSchema>;

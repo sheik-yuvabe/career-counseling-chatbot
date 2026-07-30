@@ -1,6 +1,8 @@
 import type { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
 import {
   ApiErrorSchema,
+  CareerSearchQuerySchema,
+  CareerSearchResponseSchema,
   CareerSlugParamsSchema,
   CareerToolResultSchema,
   CollegeListQuerySchema,
@@ -9,11 +11,14 @@ import {
 import type { Express } from "express";
 import { getCareer } from "../application/get-career.js";
 import { getColleges } from "../application/get-colleges.js";
+import { searchCareers } from "../application/search-careers.js";
 import { CatalogEntityNotFoundError, type CareerRepository } from "../domain/career.js";
+import { InvalidCatalogCursorError, type CareerSearchRepository } from "../domain/career-search.js";
 import type { CollegeRepository } from "../domain/college.js";
 
 export type RegisterKnowledgeRoutesDependencies = {
   careerRepository: CareerRepository;
+  careerSearchRepository: CareerSearchRepository;
   collegeRepository: CollegeRepository;
 };
 
@@ -58,6 +63,54 @@ export function registerKnowledgeRoutes(
 
     const body = await getColleges(dependencies.collegeRepository, parsedQuery.data);
     response.status(200).json(body);
+  });
+
+  registry.registerPath({
+    method: "get",
+    path: "/api/v1/catalog/careers/search",
+    tags: ["Knowledge"],
+    summary: "Search published careers",
+    request: {
+      query: CareerSearchQuerySchema,
+    },
+    responses: {
+      200: {
+        description: "A bounded page of published career summaries",
+        content: {
+          "application/json": { schema: CareerSearchResponseSchema },
+        },
+      },
+      400: {
+        description: "Invalid search filters or cursor",
+        content: { "application/json": { schema: ApiErrorSchema } },
+      },
+    },
+  });
+
+  app.get("/api/v1/catalog/careers/search", async (request, response) => {
+    const parsedQuery = CareerSearchQuerySchema.safeParse(request.query);
+
+    if (!parsedQuery.success) {
+      response.status(400).json({
+        code: "INVALID_CATALOG_QUERY",
+        message: "Career search parameters are invalid",
+      });
+      return;
+    }
+
+    try {
+      const body = await searchCareers(dependencies.careerSearchRepository, parsedQuery.data);
+      response.status(200).json(body);
+    } catch (error) {
+      if (error instanceof InvalidCatalogCursorError) {
+        response.status(400).json({
+          code: error.code,
+          message: error.message,
+        });
+        return;
+      }
+      throw error;
+    }
   });
 
   registry.registerPath({
