@@ -1,14 +1,19 @@
 import type { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
 import {
   ApiErrorSchema,
+  CareerSlugParamsSchema,
+  CareerToolResultSchema,
   CollegeListQuerySchema,
   CollegeListResponseSchema,
 } from "@yuvanext/contracts";
 import type { Express } from "express";
+import { getCareer } from "../application/get-career.js";
 import { getColleges } from "../application/get-colleges.js";
+import { CatalogEntityNotFoundError, type CareerRepository } from "../domain/career.js";
 import type { CollegeRepository } from "../domain/college.js";
 
 export type RegisterKnowledgeRoutesDependencies = {
+  careerRepository: CareerRepository;
   collegeRepository: CollegeRepository;
 };
 
@@ -51,10 +56,59 @@ export function registerKnowledgeRoutes(
       return;
     }
 
-    const body = await getColleges(
-      dependencies.collegeRepository,
-      parsedQuery.data,
-    );
+    const body = await getColleges(dependencies.collegeRepository, parsedQuery.data);
     response.status(200).json(body);
+  });
+
+  registry.registerPath({
+    method: "get",
+    path: "/api/v1/catalog/careers/{slug}",
+    tags: ["Knowledge"],
+    summary: "Get a published career",
+    request: {
+      params: CareerSlugParamsSchema,
+    },
+    responses: {
+      200: {
+        description: "Published career with approved details",
+        content: {
+          "application/json": { schema: CareerToolResultSchema },
+        },
+      },
+      400: {
+        description: "Invalid career slug",
+        content: { "application/json": { schema: ApiErrorSchema } },
+      },
+      404: {
+        description: "Career is not in the published catalog",
+        content: { "application/json": { schema: ApiErrorSchema } },
+      },
+    },
+  });
+
+  app.get("/api/v1/catalog/careers/:slug", async (request, response) => {
+    const parsedParams = CareerSlugParamsSchema.safeParse(request.params);
+
+    if (!parsedParams.success) {
+      response.status(400).json({
+        code: "INVALID_CATALOG_QUERY",
+        message: "Career slug is invalid",
+      });
+      return;
+    }
+
+    try {
+      const body = await getCareer(dependencies.careerRepository, parsedParams.data.slug);
+      response.status(200).json(body);
+    } catch (error) {
+      if (error instanceof CatalogEntityNotFoundError) {
+        response.status(404).json({
+          code: error.code,
+          message: error.message,
+        });
+        return;
+      }
+      throw error;
+    }
   });
 }

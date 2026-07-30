@@ -30,5 +30,6 @@ describe("GET /api/v1/health", () => {
     const body = OpenApiPathsSchema.parse(JSON.parse(response.text) as unknown);
     expect(body.paths["/api/v1/health"]).toBeDefined();
     expect(body.paths["/api/v1/catalog/colleges"]).toBeDefined();
+    expect(body.paths["/api/v1/catalog/careers/{slug}"]).toBeDefined();
   });
 });

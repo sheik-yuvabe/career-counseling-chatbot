@@ -1,8 +1,11 @@
 import { createOpenApiRegistry, generateOpenApiDocument } from "@yuvanext/contracts";
 import { createDatabasePool } from "@yuvanext/database";
 import {
+  InMemoryCareerRepository,
   InMemoryCollegeRepository,
+  type CareerRepository,
   type CollegeRepository,
+  PostgresCareerRepository,
   PostgresCollegeRepository,
   registerKnowledgeRoutes,
 } from "@yuvanext/knowledge";
@@ -18,12 +21,21 @@ import { modules } from "./modules.js";
 
 export type CreateAppOptions = {
   logging?: boolean;
+  careerRepository?: CareerRepository;
   collegeRepository?: CollegeRepository;
 };
 
-const createDefaultCollegeRepository = (): CollegeRepository => {
+type KnowledgeRepositories = {
+  careerRepository: CareerRepository;
+  collegeRepository: CollegeRepository;
+};
+
+const createDefaultKnowledgeRepositories = (): KnowledgeRepositories => {
   if (env.DATABASE_URL === undefined) {
-    return new InMemoryCollegeRepository([]);
+    return {
+      careerRepository: new InMemoryCareerRepository([]),
+      collegeRepository: new InMemoryCollegeRepository([]),
+    };
   }
 
   const pool = createDatabasePool({
@@ -31,7 +43,10 @@ const createDefaultCollegeRepository = (): CollegeRepository => {
     ssl: env.DATABASE_SSL,
   });
 
-  return new PostgresCollegeRepository(pool);
+  return {
+    careerRepository: new PostgresCareerRepository(pool),
+    collegeRepository: new PostgresCollegeRepository(pool),
+  };
 };
 
 export const createApp = (options: CreateAppOptions = {}): Express => {
@@ -50,9 +65,13 @@ export const createApp = (options: CreateAppOptions = {}): Express => {
   }
 
   registerHealthRoute(app, registry, modules);
+  const defaultKnowledgeRepositories =
+    options.careerRepository === undefined || options.collegeRepository === undefined
+      ? createDefaultKnowledgeRepositories()
+      : undefined;
   registerKnowledgeRoutes(app, registry, {
-    collegeRepository:
-      options.collegeRepository ?? createDefaultCollegeRepository(),
+    careerRepository: options.careerRepository ?? defaultKnowledgeRepositories!.careerRepository,
+    collegeRepository: options.collegeRepository ?? defaultKnowledgeRepositories!.collegeRepository,
   });
 
   const openApiDocument = generateOpenApiDocument(registry);

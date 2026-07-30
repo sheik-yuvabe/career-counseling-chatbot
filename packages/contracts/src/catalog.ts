@@ -1,20 +1,9 @@
 import { z } from "zod";
-import {
-  IsoTimestampSchema,
-  StateSchema,
-  UuidSchema,
-} from "./common.js";
+import { IsoTimestampSchema, StateSchema, UuidSchema } from "./common.js";
 
-export const VerificationStatusSchema = z.enum([
-  "unverified",
-  "verified",
-  "stale",
-  "retired",
-]);
+export const VerificationStatusSchema = z.enum(["unverified", "verified", "stale", "retired"]);
 
-export type VerificationStatus = z.infer<
-  typeof VerificationStatusSchema
->;
+export type VerificationStatus = z.infer<typeof VerificationStatusSchema>;
 
 export const CollegeSchema = z.object({
   id: UuidSchema,
@@ -52,9 +41,7 @@ export const CollegeListResponseSchema = z.object({
   caveats: z.array(z.string()),
 });
 
-export type CollegeListResponse = z.infer<
-  typeof CollegeListResponseSchema
->;
+export type CollegeListResponse = z.infer<typeof CollegeListResponseSchema>;
 
 export const KnowledgeSourceManifestSchema = z.object({
   id: UuidSchema,
@@ -74,18 +61,14 @@ export const KnowledgeSourceManifestSchema = z.object({
   licenseRef: z.string().trim().min(1).max(500),
 });
 
-export type KnowledgeSourceManifest = z.infer<
-  typeof KnowledgeSourceManifestSchema
->;
+export type KnowledgeSourceManifest = z.infer<typeof KnowledgeSourceManifestSchema>;
 
 export const CollegeDatasetManifestSchema = z.object({
   schemaVersion: z.literal(1),
   datasetKey: z.string().trim().min(1).max(160),
   version: z.string().trim().min(1).max(80),
   datasetVersionId: UuidSchema,
-  recordsFile: z
-    .string()
-    .regex(/^[a-zA-Z0-9][a-zA-Z0-9._-]*\.json$/),
+  recordsFile: z.string().regex(/^[a-zA-Z0-9][a-zA-Z0-9._-]*\.json$/),
   recordCount: z.number().int().nonnegative(),
   checksumSha256: z.string().regex(/^[a-f0-9]{64}$/),
   reviewStatus: z.literal("approved"),
@@ -93,25 +76,11 @@ export const CollegeDatasetManifestSchema = z.object({
   source: KnowledgeSourceManifestSchema,
 });
 
-export type CollegeDatasetManifest = z.infer<
-  typeof CollegeDatasetManifestSchema
->;
+export type CollegeDatasetManifest = z.infer<typeof CollegeDatasetManifestSchema>;
 
-export const RiasecLetterSchema = z.enum([
-  "R",
-  "I",
-  "A",
-  "S",
-  "E",
-  "C",
-]);
+export const RiasecLetterSchema = z.enum(["R", "I", "A", "S", "E", "C"]);
 
-export const CareerPublicationStatusSchema = z.enum([
-  "draft",
-  "review",
-  "published",
-  "retired",
-]);
+export const CareerPublicationStatusSchema = z.enum(["draft", "review", "published", "retired"]);
 
 export const CareerSchema = z
   .object({
@@ -135,10 +104,7 @@ export const CareerSchema = z
     retiredAt: IsoTimestampSchema.nullable(),
   })
   .superRefine((career, context) => {
-    if (
-      career.publicationStatus === "published" &&
-      career.publishedAt === null
-    ) {
+    if (career.publicationStatus === "published" && career.publishedAt === null) {
       context.addIssue({
         code: "custom",
         path: ["publishedAt"],
@@ -146,10 +112,7 @@ export const CareerSchema = z
       });
     }
 
-    if (
-      career.publicationStatus === "retired" &&
-      career.retiredAt === null
-    ) {
+    if (career.publicationStatus === "retired" && career.retiredAt === null) {
       context.addIssue({
         code: "custom",
         path: ["retiredAt"],
@@ -175,15 +138,9 @@ export const CareerInterestProfileSchema = z.object({
   datasetVersionId: UuidSchema,
 });
 
-export type CareerInterestProfile = z.infer<
-  typeof CareerInterestProfileSchema
->;
+export type CareerInterestProfile = z.infer<typeof CareerInterestProfileSchema>;
 
-export const CareerProfileReviewStatusSchema = z.enum([
-  "draft",
-  "reviewed",
-  "retired",
-]);
+export const CareerProfileReviewStatusSchema = z.enum(["draft", "reviewed", "retired"]);
 
 export const CareerProfileSchema = z
   .object({
@@ -199,10 +156,7 @@ export const CareerProfileSchema = z
     reviewedBy: UuidSchema.nullable(),
   })
   .superRefine((profile, context) => {
-    if (
-      profile.reviewStatus === "reviewed" &&
-      profile.lastReviewedAt === null
-    ) {
+    if (profile.reviewStatus === "reviewed" && profile.lastReviewedAt === null) {
       context.addIssue({
         code: "custom",
         path: ["lastReviewedAt"],
@@ -210,10 +164,7 @@ export const CareerProfileSchema = z
       });
     }
 
-    if (
-      profile.salaryEntryBand !== null &&
-      profile.salaryNote === null
-    ) {
+    if (profile.salaryEntryBand !== null && profile.salaryNote === null) {
       context.addIssue({
         code: "custom",
         path: ["salaryNote"],
@@ -239,6 +190,15 @@ export const CareerToolResultSchema = z.object({
   caveats: z.array(z.string()),
 });
 
-export type CareerToolResult = z.infer<
-  typeof CareerToolResultSchema
->;
+export type CareerToolResult = z.infer<typeof CareerToolResultSchema>;
+
+export const CareerSlugParamsSchema = z.object({
+  slug: z
+    .string()
+    .trim()
+    .min(1)
+    .max(160)
+    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/),
+});
+
+export type CareerSlugParams = z.infer<typeof CareerSlugParamsSchema>;

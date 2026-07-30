@@ -8,6 +8,7 @@ import request from "supertest";
 import { describe, expect, it } from "vitest";
 import { collegeFixtures } from "../../test-fixtures/src/index.js";
 import {
+  InMemoryCareerRepository,
   InMemoryCollegeRepository,
   registerKnowledgeRoutes,
 } from "../src/index.js";
@@ -17,6 +18,7 @@ const createTestApp = () => {
   const colleges = CollegeSchema.array().parse(collegeFixtures);
 
   registerKnowledgeRoutes(app, createOpenApiRegistry(), {
+    careerRepository: new InMemoryCareerRepository([]),
     collegeRepository: new InMemoryCollegeRepository(colleges),
   });
 
@@ -38,9 +40,7 @@ describe("college routes", () => {
   });
 
   it("rejects a request without the required state", async () => {
-    const response = await request(createTestApp())
-      .get("/api/v1/catalog/colleges")
-      .expect(400);
+    const response = await request(createTestApp()).get("/api/v1/catalog/colleges").expect(400);
 
     expect(response.body).toEqual({
       code: "INVALID_CATALOG_QUERY",
