@@ -17,6 +17,7 @@
     "format:check": "prettier --check .",
     "test": "vitest run",
     "test:watch": "vitest",
+    "knowledge:import-colleges": "tsx scripts/ingest/import-colleges.ts",
     "db:init": "supabase init",
     "db:login": "supabase login",
     "db:link": "supabase link",
