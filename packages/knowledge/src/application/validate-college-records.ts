@@ -23,23 +23,40 @@ export function validateCollegeRecords(
   input: unknown,
   expectedDatasetVersionId: string,
 ): CollegeValidationResult {
-  const parsed = CollegeSchema.array().safeParse(input);
-
-  if (!parsed.success) {
+  if (!Array.isArray(input)) {
     return {
       success: false,
-      issues: parsed.error.issues.map((issue) => ({
+      issues: [{
         code: "INVALID_RECORD",
-        path: issue.path.join("."),
-        message: issue.message,
-      })),
+        path: "records",
+        message: "College records must be an array",
+      }],
     };
   }
 
   const issues: CollegeValidationIssue[] = [];
+  const records: Array<{ college: College; index: number }> = [];
+
+  input.forEach((record, index) => {
+    const parsedRecord = CollegeSchema.safeParse(record);
+
+    if (!parsedRecord.success) {
+      issues.push(
+        ...parsedRecord.error.issues.map((issue) => ({
+          code: "INVALID_RECORD" as const,
+          path: [index, ...issue.path].join("."),
+          message: issue.message,
+        })),
+      );
+      return;
+    }
+
+    records.push({ college: parsedRecord.data, index });
+  });
+
   const seenIds = new Set<string>();
 
-  parsed.data.forEach((college, index) => {
+  records.forEach(({ college, index }) => {
     if (seenIds.has(college.id)) {
       issues.push({
         code: "DUPLICATE_ID",
@@ -70,6 +87,10 @@ export function validateCollegeRecords(
   });
 
   return issues.length === 0
-    ? { success: true, data: parsed.data, issues: [] }
+    ? {
+        success: true,
+        data: records.map(({ college }) => college),
+        issues: [],
+      }
     : { success: false, issues };
 }

@@ -7,8 +7,11 @@ const defaultDatasetDirectory =
   "data/seed/knowledge/colleges/2026-07-30";
 
 const run = async (): Promise<void> => {
+  const datasetArgument = process.argv
+    .slice(2)
+    .find((argument) => argument !== "--");
   const datasetDirectory = resolve(
-    process.argv[2] ?? defaultDatasetDirectory,
+    datasetArgument ?? defaultDatasetDirectory,
   );
   const manifestInput = JSON.parse(
     await readFile(resolve(datasetDirectory, "manifest.json"), "utf8"),

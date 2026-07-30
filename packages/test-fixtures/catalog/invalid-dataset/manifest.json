@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "datasetKey": "colleges-invalid-demo",
+  "version": "2026-07-30-invalid",
+  "datasetVersionId": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+  "recordsFile": "colleges.json",
+  "recordCount": 5,
+  "checksumSha256": "313a2530d041bf8d271a05856c794f98cad76910d43fcab3ea0c9c6037b740da",
+  "reviewStatus": "approved",
+  "createdAt": "2026-07-30T00:00:00.000Z",
+  "source": {
+    "id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
+    "sourceKey": "yuvanext-invalid-colleges-demo",
+    "name": "YuvaNext deliberately invalid college fixtures",
+    "sourceType": "synthetic_invalid_fixture",
+    "publisher": "YuvaNext POC team",
+    "trustLevel": "test_only",
+    "status": "active",
+    "baseUrl": null,
+    "licenseRef": "Synthetic invalid test data; must never be published"
+  }
+}
