@@ -1,4 +1,9 @@
 import { createOpenApiRegistry, generateOpenApiDocument } from "@yuvanext/contracts";
+import {
+  InMemoryCollegeRepository,
+  type CollegeRepository,
+  registerKnowledgeRoutes,
+} from "@yuvanext/knowledge";
 import cors from "cors";
 import express, { type Express } from "express";
 import helmet from "helmet";
@@ -9,7 +14,10 @@ import { requestLogger } from "../middleware/request-logger.js";
 import { registerHealthRoute } from "../routes/health.js";
 import { modules } from "./modules.js";
 
-export type CreateAppOptions = { logging?: boolean };
+export type CreateAppOptions = {
+  logging?: boolean;
+  collegeRepository?: CollegeRepository;
+};
 
 export const createApp = (options: CreateAppOptions = {}): Express => {
   const app = express();
@@ -27,6 +35,10 @@ export const createApp = (options: CreateAppOptions = {}): Express => {
   }
 
   registerHealthRoute(app, registry, modules);
+  registerKnowledgeRoutes(app, registry, {
+    collegeRepository:
+      options.collegeRepository ?? new InMemoryCollegeRepository([]),
+  });
 
   const openApiDocument = generateOpenApiDocument(registry);
   app.get("/openapi.json", (_request, response) => response.json(openApiDocument));
