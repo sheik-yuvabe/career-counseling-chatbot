@@ -55,3 +55,44 @@ export const CollegeListResponseSchema = z.object({
 export type CollegeListResponse = z.infer<
   typeof CollegeListResponseSchema
 >;
+
+export const KnowledgeSourceManifestSchema = z.object({
+  id: UuidSchema,
+  sourceKey: z.string().trim().min(1).max(160),
+  name: z.string().trim().min(1).max(200),
+  sourceType: z.string().trim().min(1).max(80),
+  publisher: z.string().trim().min(1).max(200),
+  trustLevel: z.string().trim().min(1).max(80),
+  status: z.enum(["active", "inactive"]),
+  baseUrl: z
+    .string()
+    .url()
+    .refine((url) => url.startsWith("https://"), {
+      message: "Knowledge source URL must use HTTPS",
+    })
+    .nullable(),
+  licenseRef: z.string().trim().min(1).max(500),
+});
+
+export type KnowledgeSourceManifest = z.infer<
+  typeof KnowledgeSourceManifestSchema
+>;
+
+export const CollegeDatasetManifestSchema = z.object({
+  schemaVersion: z.literal(1),
+  datasetKey: z.string().trim().min(1).max(160),
+  version: z.string().trim().min(1).max(80),
+  datasetVersionId: UuidSchema,
+  recordsFile: z
+    .string()
+    .regex(/^[a-zA-Z0-9][a-zA-Z0-9._-]*\.json$/),
+  recordCount: z.number().int().nonnegative(),
+  checksumSha256: z.string().regex(/^[a-f0-9]{64}$/),
+  reviewStatus: z.literal("approved"),
+  createdAt: IsoTimestampSchema,
+  source: KnowledgeSourceManifestSchema,
+});
+
+export type CollegeDatasetManifest = z.infer<
+  typeof CollegeDatasetManifestSchema
+>;
