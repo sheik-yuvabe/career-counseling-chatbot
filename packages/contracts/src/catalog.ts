@@ -96,3 +96,130 @@ export const CollegeDatasetManifestSchema = z.object({
 export type CollegeDatasetManifest = z.infer<
   typeof CollegeDatasetManifestSchema
 >;
+
+export const RiasecLetterSchema = z.enum([
+  "R",
+  "I",
+  "A",
+  "S",
+  "E",
+  "C",
+]);
+
+export const CareerPublicationStatusSchema = z.enum([
+  "draft",
+  "review",
+  "published",
+  "retired",
+]);
+
+export const CareerSchema = z
+  .object({
+    id: UuidSchema,
+    onetCode: z.string().trim().min(1).max(40).nullable(),
+    ncoCode: z.string().trim().min(1).max(40).nullable(),
+    slug: z
+      .string()
+      .trim()
+      .min(1)
+      .max(160)
+      .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/),
+    title: z.string().trim().min(1).max(200),
+    shortDescription: z.string().trim().min(1).max(600).nullable(),
+    domainCode: z.string().trim().min(1).max(80),
+    primaryEducationRouteId: UuidSchema.nullable(),
+    isCurated: z.boolean(),
+    publicationStatus: CareerPublicationStatusSchema,
+    datasetVersionId: UuidSchema,
+    publishedAt: IsoTimestampSchema.nullable(),
+    retiredAt: IsoTimestampSchema.nullable(),
+  })
+  .superRefine((career, context) => {
+    if (
+      career.publicationStatus === "published" &&
+      career.publishedAt === null
+    ) {
+      context.addIssue({
+        code: "custom",
+        path: ["publishedAt"],
+        message: "Published careers require a publication date",
+      });
+    }
+
+    if (
+      career.publicationStatus === "retired" &&
+      career.retiredAt === null
+    ) {
+      context.addIssue({
+        code: "custom",
+        path: ["retiredAt"],
+        message: "Retired careers require a retirement date",
+      });
+    }
+  });
+
+export type Career = z.infer<typeof CareerSchema>;
+
+const RiasecScoreSchema = z.number().min(0).max(1);
+
+export const CareerInterestProfileSchema = z.object({
+  careerId: UuidSchema,
+  realistic: RiasecScoreSchema,
+  investigative: RiasecScoreSchema,
+  artistic: RiasecScoreSchema,
+  social: RiasecScoreSchema,
+  enterprising: RiasecScoreSchema,
+  conventional: RiasecScoreSchema,
+  highPointCode: RiasecLetterSchema,
+  profileVersion: z.string().trim().min(1).max(80),
+  datasetVersionId: UuidSchema,
+});
+
+export type CareerInterestProfile = z.infer<
+  typeof CareerInterestProfileSchema
+>;
+
+export const CareerProfileReviewStatusSchema = z.enum([
+  "draft",
+  "reviewed",
+  "retired",
+]);
+
+export const CareerProfileSchema = z
+  .object({
+    careerId: UuidSchema,
+    imageRef: z.string().trim().min(1).max(500).nullable(),
+    salaryEntryBand: z.string().trim().min(1).max(200).nullable(),
+    salaryNote: z.string().trim().min(1).max(600).nullable(),
+    skills: z.array(z.string().trim().min(1).max(100)).max(20),
+    nextRole3yr: z.string().trim().min(1).max(200).nullable(),
+    progressionNote: z.string().trim().min(1).max(600).nullable(),
+    reviewStatus: CareerProfileReviewStatusSchema,
+    lastReviewedAt: IsoTimestampSchema.nullable(),
+    reviewedBy: UuidSchema.nullable(),
+  })
+  .superRefine((profile, context) => {
+    if (
+      profile.reviewStatus === "reviewed" &&
+      profile.lastReviewedAt === null
+    ) {
+      context.addIssue({
+        code: "custom",
+        path: ["lastReviewedAt"],
+        message: "Reviewed career profiles require a review date",
+      });
+    }
+
+    if (
+      profile.salaryEntryBand !== null &&
+      profile.salaryNote === null
+    ) {
+      context.addIssue({
+        code: "custom",
+        path: ["salaryNote"],
+        message: "Salary bands require an approved honesty note",
+      });
+    }
+  });
+
+export type CareerProfile = z.infer<typeof CareerProfileSchema>;
