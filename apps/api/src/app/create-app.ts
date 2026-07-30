@@ -1,7 +1,9 @@
 import { createOpenApiRegistry, generateOpenApiDocument } from "@yuvanext/contracts";
+import { createDatabasePool } from "@yuvanext/database";
 import {
   InMemoryCollegeRepository,
   type CollegeRepository,
+  PostgresCollegeRepository,
   registerKnowledgeRoutes,
 } from "@yuvanext/knowledge";
 import cors from "cors";
@@ -17,6 +19,19 @@ import { modules } from "./modules.js";
 export type CreateAppOptions = {
   logging?: boolean;
   collegeRepository?: CollegeRepository;
+};
+
+const createDefaultCollegeRepository = (): CollegeRepository => {
+  if (env.DATABASE_URL === undefined) {
+    return new InMemoryCollegeRepository([]);
+  }
+
+  const pool = createDatabasePool({
+    connectionString: env.DATABASE_URL,
+    ssl: env.DATABASE_SSL,
+  });
+
+  return new PostgresCollegeRepository(pool);
 };
 
 export const createApp = (options: CreateAppOptions = {}): Express => {
@@ -37,7 +52,7 @@ export const createApp = (options: CreateAppOptions = {}): Express => {
   registerHealthRoute(app, registry, modules);
   registerKnowledgeRoutes(app, registry, {
     collegeRepository:
-      options.collegeRepository ?? new InMemoryCollegeRepository([]),
+      options.collegeRepository ?? createDefaultCollegeRepository(),
   });
 
   const openApiDocument = generateOpenApiDocument(registry);
