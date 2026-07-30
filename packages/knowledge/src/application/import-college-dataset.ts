@@ -40,6 +40,32 @@ export type CollegeImportReport = {
   issues: CollegeImportIssue[];
 };
 
+export type CollegeValidationReport = Omit<
+  CollegeImportReport,
+  "status"
+> & {
+  status: "validated" | "rejected";
+};
+
+export async function validateCollegeDataset(
+  manifestInput: unknown,
+  recordsText: string,
+): Promise<CollegeValidationReport> {
+  const report = await importCollegeDataset(
+    manifestInput,
+    recordsText,
+    {
+      publish: () => Promise.resolve("published"),
+    },
+  );
+
+  return {
+    ...report,
+    status:
+      report.status === "rejected" ? "rejected" : "validated",
+  };
+}
+
 export async function importCollegeDataset(
   manifestInput: unknown,
   recordsText: string,

@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 import {
   type CollegeDatasetPublisher,
   importCollegeDataset,
+  validateCollegeDataset,
 } from "../src/index.js";
 
 const seedDirectory = resolve(
@@ -23,6 +24,19 @@ const readValidSeed = async () => {
 };
 
 describe("importCollegeDataset", () => {
+  it("validates a dataset without invoking a publisher", async () => {
+    const { manifest, recordsText } = await readValidSeed();
+
+    const report = await validateCollegeDataset(
+      manifest,
+      recordsText,
+    );
+
+    expect(report.status).toBe("validated");
+    expect(report.recordCount).toBe(4);
+    expect(report.issues).toEqual([]);
+  });
+
   it("publishes a valid, reviewed dataset", async () => {
     const { manifest, recordsText } = await readValidSeed();
     const publish =
