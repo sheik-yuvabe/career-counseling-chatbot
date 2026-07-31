@@ -1,4 +1,5 @@
 import { createOpenApiRegistry, generateOpenApiDocument } from "@yuvanext/contracts";
+import { registerRecommendationRoutes } from "@yuvanext/recommendations";
 import cors from "cors";
 import express, { type Express } from "express";
 import helmet from "helmet";
@@ -27,6 +28,7 @@ export const createApp = (options: CreateAppOptions = {}): Express => {
   }
 
   registerHealthRoute(app, registry, modules);
+  registerRecommendationRoutes(app, registry);
 
   const openApiDocument = generateOpenApiDocument(registry);
   app.get("/openapi.json", (_request, response) => response.json(openApiDocument));

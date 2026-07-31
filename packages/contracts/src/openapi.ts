@@ -7,6 +7,8 @@ import { z } from "zod";
 
 extendZodWithOpenApi(z);
 
+export type { OpenAPIRegistry };
+
 export const createOpenApiRegistry = (): OpenAPIRegistry => new OpenAPIRegistry();
 
 export type OpenApiDocument = ReturnType<OpenApiGeneratorV3["generateDocument"]>;
