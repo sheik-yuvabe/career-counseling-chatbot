@@ -371,3 +371,40 @@ export const StreamListResponseSchema = z.object({
 export type StreamListResponse = z.infer<
   typeof StreamListResponseSchema
 >;
+
+export const StreamDatasetRecordsSchema = z.object({
+  educationRoutes: z.array(EducationRouteSchema),
+  pathways: z.array(PathwaySchema),
+  streamOptions: z.array(StreamOptionSchema),
+  streamMaps: z.array(StreamMapSchema),
+  streamMapItems: z.array(StreamMapItemSchema),
+});
+
+export type StreamDatasetRecords = z.infer<
+  typeof StreamDatasetRecordsSchema
+>;
+
+export const StreamDatasetManifestSchema = z.object({
+  schemaVersion: z.literal(1),
+  datasetKey: z.string().trim().min(1).max(160),
+  version: z.string().trim().min(1).max(80),
+  datasetVersionId: UuidSchema,
+  recordsFile: z
+    .string()
+    .regex(/^[a-zA-Z0-9][a-zA-Z0-9._-]*\.json$/),
+  recordCounts: z.object({
+    educationRoutes: z.number().int().nonnegative(),
+    pathways: z.number().int().nonnegative(),
+    streamOptions: z.number().int().nonnegative(),
+    streamMaps: z.number().int().nonnegative(),
+    streamMapItems: z.number().int().nonnegative(),
+  }),
+  checksumSha256: z.string().regex(/^[a-f0-9]{64}$/),
+  reviewStatus: z.literal("approved"),
+  createdAt: IsoTimestampSchema,
+  source: KnowledgeSourceManifestSchema,
+});
+
+export type StreamDatasetManifest = z.infer<
+  typeof StreamDatasetManifestSchema
+>;

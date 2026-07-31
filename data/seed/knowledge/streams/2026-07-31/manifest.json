@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "datasetKey": "streams-poc",
+  "version": "2026-07-31",
+  "datasetVersionId": "a4444444-4444-4444-8444-444444444444",
+  "recordsFile": "streams.json",
+  "recordCounts": {
+    "educationRoutes": 3,
+    "pathways": 3,
+    "streamOptions": 2,
+    "streamMaps": 1,
+    "streamMapItems": 2
+  },
+  "checksumSha256": "5a32772d76c6aeafbadf62041ea8ba5f315a5fce0302b47d85df1b9e808a6661",
+  "reviewStatus": "approved",
+  "createdAt": "2026-07-31T00:00:00.000Z",
+  "source": {
+    "id": "b7777777-7777-4777-8777-777777777777",
+    "sourceKey": "yuvanext-synthetic-streams-poc",
+    "name": "YuvaNext synthetic pathway and stream fixtures",
+    "sourceType": "manual_review",
+    "publisher": "YuvaNext POC team",
+    "trustLevel": "project_reviewed",
+    "status": "active",
+    "baseUrl": null,
+    "licenseRef": "Synthetic test data; not for real-world education decisions"
+  }
+}
