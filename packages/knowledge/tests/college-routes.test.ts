@@ -11,6 +11,7 @@ import {
   InMemoryCareerRepository,
   InMemoryCareerSearchRepository,
   InMemoryCollegeRepository,
+  InMemoryStreamRepository,
   registerKnowledgeRoutes,
 } from "../src/index.js";
 
@@ -22,6 +23,7 @@ const createTestApp = () => {
     careerRepository: new InMemoryCareerRepository([]),
     careerSearchRepository: new InMemoryCareerSearchRepository([]),
     collegeRepository: new InMemoryCollegeRepository(colleges),
+    streamRepository: new InMemoryStreamRepository([], [], []),
   });
 
   return app;

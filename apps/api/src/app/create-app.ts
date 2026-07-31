@@ -4,12 +4,15 @@ import {
   InMemoryCareerRepository,
   InMemoryCareerSearchRepository,
   InMemoryCollegeRepository,
+  InMemoryStreamRepository,
   type CareerRepository,
   type CareerSearchRepository,
   type CollegeRepository,
+  type StreamRepository,
   PostgresCareerRepository,
   PostgresCareerSearchRepository,
   PostgresCollegeRepository,
+  PostgresStreamRepository,
   registerKnowledgeRoutes,
 } from "@yuvanext/knowledge";
 import cors from "cors";
@@ -27,12 +30,14 @@ export type CreateAppOptions = {
   careerRepository?: CareerRepository;
   careerSearchRepository?: CareerSearchRepository;
   collegeRepository?: CollegeRepository;
+  streamRepository?: StreamRepository;
 };
 
 type KnowledgeRepositories = {
   careerRepository: CareerRepository;
   careerSearchRepository: CareerSearchRepository;
   collegeRepository: CollegeRepository;
+  streamRepository: StreamRepository;
 };
 
 const createDefaultKnowledgeRepositories = (): KnowledgeRepositories => {
@@ -41,6 +46,7 @@ const createDefaultKnowledgeRepositories = (): KnowledgeRepositories => {
       careerRepository: new InMemoryCareerRepository([]),
       careerSearchRepository: new InMemoryCareerSearchRepository([]),
       collegeRepository: new InMemoryCollegeRepository([]),
+      streamRepository: new InMemoryStreamRepository([], [], []),
     };
   }
 
@@ -53,6 +59,7 @@ const createDefaultKnowledgeRepositories = (): KnowledgeRepositories => {
     careerRepository: new PostgresCareerRepository(pool),
     careerSearchRepository: new PostgresCareerSearchRepository(pool),
     collegeRepository: new PostgresCollegeRepository(pool),
+    streamRepository: new PostgresStreamRepository(pool),
   };
 };
 
@@ -75,7 +82,8 @@ export const createApp = (options: CreateAppOptions = {}): Express => {
   const defaultKnowledgeRepositories =
     options.careerRepository === undefined ||
     options.careerSearchRepository === undefined ||
-    options.collegeRepository === undefined
+    options.collegeRepository === undefined ||
+    options.streamRepository === undefined
       ? createDefaultKnowledgeRepositories()
       : undefined;
   registerKnowledgeRoutes(app, registry, {
@@ -83,6 +91,9 @@ export const createApp = (options: CreateAppOptions = {}): Express => {
     careerSearchRepository:
       options.careerSearchRepository ?? defaultKnowledgeRepositories!.careerSearchRepository,
     collegeRepository: options.collegeRepository ?? defaultKnowledgeRepositories!.collegeRepository,
+    streamRepository:
+      options.streamRepository ??
+      defaultKnowledgeRepositories!.streamRepository,
   });
 
   const openApiDocument = generateOpenApiDocument(registry);

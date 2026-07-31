@@ -7,19 +7,24 @@ import {
   CareerToolResultSchema,
   CollegeListQuerySchema,
   CollegeListResponseSchema,
+  StreamListQuerySchema,
+  StreamListResponseSchema,
 } from "@yuvanext/contracts";
 import type { Express } from "express";
 import { getCareer } from "../application/get-career.js";
 import { getColleges } from "../application/get-colleges.js";
+import { getStreams } from "../application/get-streams.js";
 import { searchCareers } from "../application/search-careers.js";
 import { CatalogEntityNotFoundError, type CareerRepository } from "../domain/career.js";
 import { InvalidCatalogCursorError, type CareerSearchRepository } from "../domain/career-search.js";
 import type { CollegeRepository } from "../domain/college.js";
+import type { StreamRepository } from "../domain/streams.js";
 
 export type RegisterKnowledgeRoutesDependencies = {
   careerRepository: CareerRepository;
   careerSearchRepository: CareerSearchRepository;
   collegeRepository: CollegeRepository;
+  streamRepository: StreamRepository;
 };
 
 export function registerKnowledgeRoutes(
@@ -62,6 +67,46 @@ export function registerKnowledgeRoutes(
     }
 
     const body = await getColleges(dependencies.collegeRepository, parsedQuery.data);
+    response.status(200).json(body);
+  });
+
+  registry.registerPath({
+    method: "get",
+    path: "/api/v1/catalog/streams",
+    tags: ["Knowledge"],
+    summary: "Get approved stream mappings",
+    request: {
+      query: StreamListQuerySchema,
+    },
+    responses: {
+      200: {
+        description: "Ordered approved stream options",
+        content: {
+          "application/json": { schema: StreamListResponseSchema },
+        },
+      },
+      400: {
+        description: "Invalid RIASEC or segment query",
+        content: { "application/json": { schema: ApiErrorSchema } },
+      },
+    },
+  });
+
+  app.get("/api/v1/catalog/streams", async (request, response) => {
+    const parsedQuery = StreamListQuerySchema.safeParse(request.query);
+
+    if (!parsedQuery.success) {
+      response.status(400).json({
+        code: "INVALID_CATALOG_QUERY",
+        message: "Stream query parameters are invalid",
+      });
+      return;
+    }
+
+    const body = await getStreams(
+      dependencies.streamRepository,
+      parsedQuery.data,
+    );
     response.status(200).json(body);
   });
 

@@ -1,5 +1,10 @@
 import { z } from "zod";
-import { IsoTimestampSchema, StateSchema, UuidSchema } from "./common.js";
+import {
+  IsoTimestampSchema,
+  SegmentSchema,
+  StateSchema,
+  UuidSchema,
+} from "./common.js";
 
 export const VerificationStatusSchema = z.enum(["unverified", "verified", "stale", "retired"]);
 
@@ -265,4 +270,104 @@ export const CareerDatasetManifestSchema = z.object({
 
 export type CareerDatasetManifest = z.infer<
   typeof CareerDatasetManifestSchema
+>;
+
+export const RiasecTopTwoSchema = z
+  .string()
+  .regex(/^[RIASEC]{2}$/)
+  .refine((value) => value[0] !== value[1], {
+    message: "RIASEC top-two code must contain two different letters",
+  });
+
+export const EducationRouteSchema = z.object({
+  id: UuidSchema,
+  routeCode: z.string().trim().min(1).max(80),
+  title: z.string().trim().min(1).max(200),
+  routeLevel: z.enum([
+    "school_stream",
+    "certificate",
+    "iti",
+    "diploma",
+    "degree",
+    "postgraduate",
+    "open",
+  ]),
+  description: z.string().trim().min(1).max(600).nullable(),
+  publicationStatus: z.enum(["draft", "published", "retired"]),
+});
+
+export type EducationRoute = z.infer<typeof EducationRouteSchema>;
+
+export const PathwaySchema = z.object({
+  id: UuidSchema,
+  pathwayCode: z.string().trim().min(1).max(80),
+  title: z.string().trim().min(1).max(200),
+  description: z.string().trim().min(1).max(600).nullable(),
+  educationRouteId: UuidSchema,
+  durationBand: z.string().trim().min(1).max(120).nullable(),
+  backupRouteNote: z.string().trim().min(1).max(600).nullable(),
+  publicationStatus: z.enum(["draft", "published", "retired"]),
+  datasetVersionId: UuidSchema,
+});
+
+export type Pathway = z.infer<typeof PathwaySchema>;
+
+export const StreamOptionSchema = z.object({
+  id: UuidSchema,
+  streamCode: z.string().trim().min(1).max(80),
+  title: z.string().trim().min(1).max(200),
+  description: z.string().trim().min(1).max(600),
+  status: z.enum(["active", "inactive", "retired"]),
+});
+
+export type StreamOption = z.infer<typeof StreamOptionSchema>;
+
+export const StreamMapSchema = z.object({
+  id: UuidSchema,
+  topTwoCode: RiasecTopTwoSchema,
+  segment: SegmentSchema,
+  version: z.string().trim().min(1).max(80),
+  datasetVersionId: UuidSchema,
+  status: z.enum(["draft", "published", "retired"]),
+});
+
+export type StreamMap = z.infer<typeof StreamMapSchema>;
+
+export const StreamMapItemSchema = z.object({
+  mapId: UuidSchema,
+  streamOptionId: UuidSchema,
+  rank: z.number().int().positive(),
+  reasonKey: z.string().trim().min(1).max(160),
+});
+
+export type StreamMapItem = z.infer<typeof StreamMapItemSchema>;
+
+export const StreamListQuerySchema = z.object({
+  topTwo: RiasecTopTwoSchema,
+  segment: SegmentSchema,
+});
+
+export type StreamListQuery = z.infer<typeof StreamListQuerySchema>;
+
+export const StreamResultItemSchema = z.object({
+  streamCode: z.string(),
+  title: z.string(),
+  description: z.string(),
+  rank: z.number().int().positive(),
+  reasonKey: z.string(),
+});
+
+export type StreamResultItem = z.infer<
+  typeof StreamResultItemSchema
+>;
+
+export const StreamListResponseSchema = z.object({
+  data: z.array(StreamResultItemSchema),
+  sourceDataVersions: z.record(z.string(), z.string()),
+  retrievedAt: IsoTimestampSchema,
+  caveats: z.array(z.string()),
+});
+
+export type StreamListResponse = z.infer<
+  typeof StreamListResponseSchema
 >;
