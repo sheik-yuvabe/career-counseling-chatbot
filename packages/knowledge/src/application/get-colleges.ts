@@ -17,6 +17,12 @@ export async function getColleges(
   const colleges = (
     await listColleges(repository, {
       state: query.state,
+      ...(query.pathwayId === undefined
+        ? {}
+        : { pathwayId: query.pathwayId }),
+      ...(query.discipline === undefined
+        ? {}
+        : { discipline: query.discipline }),
       limit: query.limit,
     })
   ).slice(0, query.limit);

@@ -33,7 +33,7 @@ describe("PostgresCollegeRepository", () => {
       expect.stringContaining(
         "college.verification_status = 'verified'",
       ),
-      ["Tamil Nadu", 10],
+      ["Tamil Nadu", null, null, 10],
     );
     expect(query.mock.calls[0]?.[0]).toContain(
       "dataset.import_status = 'published'",
@@ -51,6 +51,11 @@ describe("PostgresCollegeRepository", () => {
 
     await repository.list({ limit: 500 });
 
-    expect(query.mock.calls[0]?.[1]).toEqual([null, 50]);
+    expect(query.mock.calls[0]?.[1]).toEqual([
+      null,
+      null,
+      null,
+      50,
+    ]);
   });
 });

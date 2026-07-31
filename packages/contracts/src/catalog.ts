@@ -408,3 +408,62 @@ export const StreamDatasetManifestSchema = z.object({
 export type StreamDatasetManifest = z.infer<
   typeof StreamDatasetManifestSchema
 >;
+
+export const DisciplineSchema = z.object({
+  id: UuidSchema,
+  disciplineCode: z.string().trim().min(1).max(80),
+  title: z.string().trim().min(1).max(200),
+  domainCode: z.string().trim().min(1).max(80),
+  status: z.enum(["active", "inactive", "retired"]),
+});
+
+export type Discipline = z.infer<typeof DisciplineSchema>;
+
+export const QualificationLevelSchema = z.enum([
+  "certificate",
+  "iti",
+  "diploma",
+  "ug",
+  "pg",
+  "open",
+]);
+
+export const CollegeProgramSchema = z
+  .object({
+    id: UuidSchema,
+    collegeId: UuidSchema,
+    disciplineId: UuidSchema,
+    programName: z.string().trim().min(1).max(240),
+    qualificationLevel: QualificationLevelSchema,
+    durationBand: z.string().trim().min(1).max(120).nullable(),
+    admissionRoute: z.string().trim().min(1).max(300).nullable(),
+    feesBand: z.string().trim().min(1).max(160).nullable(),
+    verificationStatus: VerificationStatusSchema,
+    lastVerifiedAt: IsoTimestampSchema.nullable(),
+    datasetVersionId: UuidSchema,
+  })
+  .superRefine((program, context) => {
+    if (
+      program.verificationStatus === "verified" &&
+      program.lastVerifiedAt === null
+    ) {
+      context.addIssue({
+        code: "custom",
+        path: ["lastVerifiedAt"],
+        message: "Verified programs require a verification date",
+      });
+    }
+  });
+
+export type CollegeProgram = z.infer<typeof CollegeProgramSchema>;
+
+export const PathwayDisciplineSchema = z.object({
+  pathwayId: UuidSchema,
+  disciplineId: UuidSchema,
+  relevanceWeight: z.number().min(0).max(1),
+  mappingVersion: z.string().trim().min(1).max(80),
+});
+
+export type PathwayDiscipline = z.infer<
+  typeof PathwayDisciplineSchema
+>;

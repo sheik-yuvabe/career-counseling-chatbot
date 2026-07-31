@@ -2,6 +2,8 @@ import type { College } from "@yuvanext/contracts";
 
 export type CollegeFilters = {
   state?: string;
+  pathwayId?: string;
+  discipline?: string;
   limit?: number;
 };
 

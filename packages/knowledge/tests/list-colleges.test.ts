@@ -1,6 +1,16 @@
-import { CollegeSchema } from "@yuvanext/contracts";
+import {
+  CollegeProgramSchema,
+  CollegeSchema,
+  DisciplineSchema,
+  PathwayDisciplineSchema,
+} from "@yuvanext/contracts";
 import { describe, expect, it } from "vitest";
-import { collegeFixtures } from "../../test-fixtures/src/index.js";
+import {
+  collegeFixtures,
+  collegeProgramFixtures,
+  disciplineFixtures,
+  pathwayDisciplineFixtures,
+} from "../../test-fixtures/src/index.js";
 import {
   InMemoryCollegeRepository,
   listColleges,
@@ -34,5 +44,29 @@ describe("listColleges", () => {
     expect(tamilNaduResult).toHaveLength(1);
     expect(tamilNaduResult[0]?.name).toBe("Chennai Technical College");
     expect(karnatakaResult).toEqual([]);
+  });
+
+  it("filters colleges through verified programs and pathway disciplines", async () => {
+    const programRepository = new InMemoryCollegeRepository(
+      colleges,
+      CollegeProgramSchema.array().parse(collegeProgramFixtures),
+      DisciplineSchema.array().parse(disciplineFixtures),
+      PathwayDisciplineSchema.array().parse(
+        pathwayDisciplineFixtures,
+      ),
+    );
+
+    const matching = await listColleges(programRepository, {
+      pathwayId: "b4444444-4444-4444-8444-444444444444",
+      discipline: "computing",
+    });
+    const missing = await listColleges(programRepository, {
+      discipline: "electrical",
+    });
+
+    expect(matching.map((college) => college.name)).toEqual([
+      "Chennai Technical College",
+    ]);
+    expect(missing).toEqual([]);
   });
 });

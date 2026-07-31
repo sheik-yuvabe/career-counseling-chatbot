@@ -52,10 +52,38 @@ export class PostgresCollegeRepository implements CollegeRepository {
             $1::text is null
             or lower(trim(college.state)) = lower(trim($1::text))
           )
+          and (
+            ($2::uuid is null and $3::text is null)
+            or exists (
+              select 1
+              from knowledge.college_programs as program
+              inner join knowledge.disciplines as discipline
+                on discipline.id = program.discipline_id
+              left join knowledge.pathway_disciplines as mapping
+                on mapping.discipline_id = discipline.id
+              where program.college_id = college.id
+                and program.verification_status = 'verified'
+                and discipline.status = 'active'
+                and (
+                  $2::uuid is null
+                  or mapping.pathway_id = $2::uuid
+                )
+                and (
+                  $3::text is null
+                  or lower(discipline.discipline_code) = lower($3::text)
+                  or lower(discipline.title) = lower($3::text)
+                )
+            )
+          )
         order by lower(college.name), lower(college.city), college.id
-        limit $2
+        limit $4
       `,
-      [filters.state ?? null, limit],
+      [
+        filters.state ?? null,
+        filters.pathwayId ?? null,
+        filters.discipline ?? null,
+        limit,
+      ],
     );
 
     return result.rows.map((row) =>
