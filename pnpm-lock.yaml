@@ -116,12 +116,24 @@ importers:
 
   packages/assessment:
     dependencies:
+      '@asteasolutions/zod-to-openapi':
+        specifier: ^9.1.0
+        version: 9.1.0(zod@4.4.3)
       '@yuvanext/contracts':
         specifier: workspace:*
         version: link:../contracts
       '@yuvanext/database':
         specifier: workspace:*
         version: link:../database
+      express:
+        specifier: ^5.2.1
+        version: 5.2.1
+      pg:
+        specifier: ^8.22.0
+        version: 8.22.0
+      zod:
+        specifier: ^4.4.3
+        version: 4.4.3
 
   packages/config: {}
 

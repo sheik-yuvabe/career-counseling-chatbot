@@ -1,12 +1,24 @@
+import { dirname, resolve } from "node:path";
 import process from "node:process";
+import { fileURLToPath } from "node:url";
 
-try {
-  process.loadEnvFile();
-} catch (error) {
-  if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
-    throw error;
+const loadFirstAvailableEnvFile = (): void => {
+  const serverDir = dirname(fileURLToPath(import.meta.url));
+  const envPaths = [resolve(process.cwd(), ".env"), resolve(serverDir, "../../..", ".env")];
+
+  for (const envPath of envPaths) {
+    try {
+      process.loadEnvFile(envPath);
+      return;
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
+        throw error;
+      }
+    }
   }
-}
+};
+
+loadFirstAvailableEnvFile();
 
 const [{ createApp }, { env }] = await Promise.all([
   import("./app/create-app.js"),

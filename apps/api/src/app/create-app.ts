@@ -1,3 +1,5 @@
+import { registerAssessmentRoutes } from "@yuvanext/assessment";
+import { createDatabasePool } from "@yuvanext/database";
 import { createOpenApiRegistry, generateOpenApiDocument } from "@yuvanext/contracts";
 import cors from "cors";
 import express, { type Express } from "express";
@@ -27,6 +29,13 @@ export const createApp = (options: CreateAppOptions = {}): Express => {
   }
 
   registerHealthRoute(app, registry, modules);
+  registerAssessmentRoutes(
+    app,
+    registry,
+    env.DATABASE_URL
+      ? { pool: createDatabasePool({ connectionString: env.DATABASE_URL, ssl: env.DATABASE_SSL }) }
+      : {},
+  );
 
   const openApiDocument = generateOpenApiDocument(registry);
   app.get("/openapi.json", (_request, response) => response.json(openApiDocument));
