@@ -100,12 +100,29 @@ export class PostgresCollegeDatasetPublisher
           input.manifest.datasetKey,
           input.manifest.version,
           input.manifest.checksumSha256,
-          input.records.length,
+          input.manifest.recordCount,
           JSON.stringify({ schemaVersion: 1, issues: [] }),
         ],
       );
 
-      for (const college of input.records) {
+      for (const discipline of input.records.disciplines) {
+        await client.query(
+          `
+            insert into knowledge.disciplines (
+              id, discipline_code, title, domain_code, status
+            ) values ($1, $2, $3, $4, $5)
+            on conflict (id) do update set
+              discipline_code = excluded.discipline_code,
+              title = excluded.title,
+              domain_code = excluded.domain_code,
+              status = excluded.status
+          `,
+          [discipline.id, discipline.disciplineCode, discipline.title,
+            discipline.domainCode, discipline.status],
+        );
+      }
+
+      for (const college of input.records.colleges) {
         await client.query(
           `
             insert into knowledge.colleges (
@@ -118,6 +135,16 @@ export class PostgresCollegeDatasetPublisher
               $1, null, $2, $3, $4, $5, null, null, null, $6,
               $7, $8, $9, now(), now()
             )
+            on conflict (id) do update set
+              name = excluded.name,
+              city = excluded.city,
+              state = excluded.state,
+              institution_type = excluded.institution_type,
+              website_url = excluded.website_url,
+              verification_status = excluded.verification_status,
+              last_verified_at = excluded.last_verified_at,
+              dataset_version_id = excluded.dataset_version_id,
+              updated_at = now()
           `,
           [
             college.id,
@@ -130,6 +157,39 @@ export class PostgresCollegeDatasetPublisher
             college.lastVerifiedAt,
             college.datasetVersionId,
           ],
+        );
+      }
+
+      for (const program of input.records.programs) {
+        await client.query(
+          `
+            insert into knowledge.college_programs (
+              id, college_id, discipline_id, program_name,
+              qualification_level, duration_band, admission_route,
+              fees_band, verification_status, last_verified_at,
+              dataset_version_id
+            ) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+          `,
+          [program.id, program.collegeId, program.disciplineId,
+            program.programName, program.qualificationLevel,
+            program.durationBand, program.admissionRoute, program.feesBand,
+            program.verificationStatus, program.lastVerifiedAt,
+            program.datasetVersionId],
+        );
+      }
+
+      for (const mapping of input.records.pathwayDisciplines) {
+        await client.query(
+          `
+            insert into knowledge.pathway_disciplines (
+              pathway_id, discipline_id, relevance_weight, mapping_version
+            ) values ($1, $2, $3, $4)
+            on conflict (pathway_id, discipline_id) do update set
+              relevance_weight = excluded.relevance_weight,
+              mapping_version = excluded.mapping_version
+          `,
+          [mapping.pathwayId, mapping.disciplineId,
+            mapping.relevanceWeight, mapping.mappingVersion],
         );
       }
 

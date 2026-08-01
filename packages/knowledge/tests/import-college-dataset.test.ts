@@ -8,7 +8,7 @@ import {
 } from "../src/index.js";
 
 const seedDirectory = resolve(
-  "data/seed/knowledge/colleges/2026-07-30",
+  "data/seed/knowledge/colleges/2026-07-31",
 );
 
 const readValidSeed = async () => {
@@ -33,7 +33,7 @@ describe("importCollegeDataset", () => {
     );
 
     expect(report.status).toBe("validated");
-    expect(report.recordCount).toBe(4);
+    expect(report.recordCount).toBe(8);
     expect(report.issues).toEqual([]);
   });
 
@@ -50,7 +50,7 @@ describe("importCollegeDataset", () => {
     );
 
     expect(report.status).toBe("published");
-    expect(report.recordCount).toBe(4);
+    expect(report.recordCount).toBe(8);
     expect(report.issues).toEqual([]);
     expect(publish).toHaveBeenCalledOnce();
   });

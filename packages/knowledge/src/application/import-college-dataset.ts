@@ -1,17 +1,17 @@
 import { createHash } from "node:crypto";
 import {
   CollegeDatasetManifestSchema,
-  type College,
   type CollegeDatasetManifest,
+  type CollegeDatasetRecords,
 } from "@yuvanext/contracts";
 import {
-  validateCollegeRecords,
+  validateCollegeDatasetRecords,
   type CollegeValidationIssue,
 } from "./validate-college-records.js";
 
 export type PublishCollegeDatasetInput = {
   manifest: CollegeDatasetManifest;
-  records: College[];
+  records: CollegeDatasetRecords;
 };
 
 export type CollegeDatasetPublisher = {
@@ -108,13 +108,21 @@ export async function importCollegeDataset(
     ]);
   }
 
-  const validation = validateCollegeRecords(
+  const validation = validateCollegeDatasetRecords(
     recordsInput,
     manifest.datasetVersionId,
   );
-  const recordCount = Array.isArray(recordsInput)
-    ? recordsInput.length
-    : 0;
+  const recordCounts = validation.success
+    ? {
+        colleges: validation.data.colleges.length,
+        disciplines: validation.data.disciplines.length,
+        programs: validation.data.programs.length,
+        pathwayDisciplines: validation.data.pathwayDisciplines.length,
+      }
+    : null;
+  const recordCount = recordCounts === null
+    ? 0
+    : Object.values(recordCounts).reduce((total, count) => total + count, 0);
   const issues: CollegeImportIssue[] = validation.success
     ? []
     : [...validation.issues];
@@ -132,6 +140,19 @@ export async function importCollegeDataset(
       code: "RECORD_COUNT_MISMATCH",
       path: "recordCount",
       message: "College record count does not match the manifest",
+    });
+  }
+
+  if (
+    recordCounts !== null &&
+    Object.entries(manifest.recordCounts).some(
+      ([key, count]) => recordCounts[key as keyof typeof recordCounts] !== count,
+    )
+  ) {
+    issues.push({
+      code: "RECORD_COUNT_MISMATCH",
+      path: "recordCounts",
+      message: "College dataset section counts do not match the manifest",
     });
   }
 

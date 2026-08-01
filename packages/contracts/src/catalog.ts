@@ -75,6 +75,12 @@ export const CollegeDatasetManifestSchema = z.object({
   datasetVersionId: UuidSchema,
   recordsFile: z.string().regex(/^[a-zA-Z0-9][a-zA-Z0-9._-]*\.json$/),
   recordCount: z.number().int().nonnegative(),
+  recordCounts: z.object({
+    colleges: z.number().int().nonnegative(),
+    disciplines: z.number().int().nonnegative(),
+    programs: z.number().int().nonnegative(),
+    pathwayDisciplines: z.number().int().nonnegative(),
+  }),
   checksumSha256: z.string().regex(/^[a-f0-9]{64}$/),
   reviewStatus: z.literal("approved"),
   createdAt: IsoTimestampSchema,
@@ -466,4 +472,15 @@ export const PathwayDisciplineSchema = z.object({
 
 export type PathwayDiscipline = z.infer<
   typeof PathwayDisciplineSchema
+>;
+
+export const CollegeDatasetRecordsSchema = z.object({
+  colleges: z.array(CollegeSchema),
+  disciplines: z.array(DisciplineSchema),
+  programs: z.array(CollegeProgramSchema),
+  pathwayDisciplines: z.array(PathwayDisciplineSchema),
+});
+
+export type CollegeDatasetRecords = z.infer<
+  typeof CollegeDatasetRecordsSchema
 >;

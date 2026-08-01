@@ -1,7 +1,10 @@
 import process from "node:process";
+import { resolve } from "node:path";
 
 try {
-  process.loadEnvFile();
+  process.loadEnvFile(
+    resolve(process.env.INIT_CWD ?? process.cwd(), ".env"),
+  );
 } catch (error) {
   if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
     throw error;

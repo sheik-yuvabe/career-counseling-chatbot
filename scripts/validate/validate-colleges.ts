@@ -4,7 +4,7 @@ import { resolve } from "node:path";
 import { validateCollegeDataset } from "@yuvanext/knowledge";
 
 const defaultDatasetDirectory =
-  "data/seed/knowledge/colleges/2026-07-30";
+  "data/seed/knowledge/colleges/2026-07-31";
 
 const run = async (): Promise<void> => {
   const datasetArgument = process.argv
