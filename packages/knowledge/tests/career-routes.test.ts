@@ -16,6 +16,7 @@ import {
   careerProfileFixtures,
 } from "../../test-fixtures/src/index.js";
 import {
+  InMemoryAidSchemeRepository,
   InMemoryCareerRepository,
   InMemoryCareerSearchRepository,
   InMemoryCollegeRepository,
@@ -31,6 +32,7 @@ const createTestApp = () => {
   const app = express();
 
   registerKnowledgeRoutes(app, createOpenApiRegistry(), {
+    aidSchemeRepository: new InMemoryAidSchemeRepository([]),
     careerRepository: new InMemoryCareerRepository([
       {
         career: careers[0]!,

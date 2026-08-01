@@ -9,6 +9,7 @@ import { describe, expect, it } from "vitest";
 import { collegeFixtures } from "../../test-fixtures/src/index.js";
 import {
   InMemoryCareerRepository,
+  InMemoryAidSchemeRepository,
   InMemoryCareerSearchRepository,
   InMemoryCollegeRepository,
   InMemoryStreamRepository,
@@ -24,6 +25,7 @@ const createTestApp = () => {
     careerSearchRepository: new InMemoryCareerSearchRepository([]),
     collegeRepository: new InMemoryCollegeRepository(colleges),
     streamRepository: new InMemoryStreamRepository([], [], []),
+    aidSchemeRepository: new InMemoryAidSchemeRepository([]),
   });
 
   return app;

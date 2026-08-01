@@ -48,6 +48,47 @@ export const CollegeListResponseSchema = z.object({
 
 export type CollegeListResponse = z.infer<typeof CollegeListResponseSchema>;
 
+export const AidSchemeSchema = z.object({
+  id: UuidSchema,
+  aidCode: z.string().trim().min(1).max(120),
+  name: z.string().trim().min(1).max(240),
+  providerType: z.string().trim().min(1).max(80).nullable(),
+  provider: z.string().trim().min(1).max(200),
+  level: z.string().trim().min(1).max(100),
+  states: z.array(StateSchema),
+  eligibilitySummary: z.string().trim().min(1).nullable(),
+  benefitSummary: z.string().trim().min(1).nullable(),
+  amountText: z.string().trim().min(1).nullable(),
+  applicationUrl: z.string().url().refine((url) => url.startsWith("https://"), {
+    message: "Aid application URL must use HTTPS",
+  }),
+  portalName: z.string().trim().min(1).nullable(),
+  applyWindowStart: z.string().date().nullable(),
+  applyWindowEnd: z.string().date().nullable(),
+  verificationStatus: VerificationStatusSchema,
+  lastVerifiedAt: IsoTimestampSchema,
+  datasetVersionId: UuidSchema,
+});
+
+export type AidScheme = z.infer<typeof AidSchemeSchema>;
+
+export const AidSchemeListQuerySchema = z.object({
+  state: StateSchema.optional(),
+  level: z.string().trim().min(1).max(100).optional(),
+  limit: z.coerce.number().int().min(1).max(50).default(20),
+});
+
+export type AidSchemeListQuery = z.infer<typeof AidSchemeListQuerySchema>;
+
+export const AidSchemeListResponseSchema = z.object({
+  data: z.array(AidSchemeSchema),
+  sourceDataVersions: z.record(z.string(), z.string()),
+  retrievedAt: IsoTimestampSchema,
+  caveats: z.array(z.string()),
+});
+
+export type AidSchemeListResponse = z.infer<typeof AidSchemeListResponseSchema>;
+
 export const KnowledgeSourceManifestSchema = z.object({
   id: UuidSchema,
   sourceKey: z.string().trim().min(1).max(160),

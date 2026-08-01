@@ -1,6 +1,8 @@
 import type { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
 import {
   ApiErrorSchema,
+  AidSchemeListQuerySchema,
+  AidSchemeListResponseSchema,
   CareerSearchQuerySchema,
   CareerSearchResponseSchema,
   CareerSlugParamsSchema,
@@ -12,12 +14,14 @@ import {
 } from "@yuvanext/contracts";
 import type { Express } from "express";
 import { getCareer } from "../application/get-career.js";
+import { getAidSchemes } from "../application/get-aid-schemes.js";
 import { getColleges } from "../application/get-colleges.js";
 import { getStreams } from "../application/get-streams.js";
 import { searchCareers } from "../application/search-careers.js";
 import { CatalogEntityNotFoundError, type CareerRepository } from "../domain/career.js";
 import { InvalidCatalogCursorError, type CareerSearchRepository } from "../domain/career-search.js";
 import type { CollegeRepository } from "../domain/college.js";
+import type { AidSchemeRepository } from "../domain/aid-scheme.js";
 import type { StreamRepository } from "../domain/streams.js";
 
 export type RegisterKnowledgeRoutesDependencies = {
@@ -25,6 +29,7 @@ export type RegisterKnowledgeRoutesDependencies = {
   careerSearchRepository: CareerSearchRepository;
   collegeRepository: CollegeRepository;
   streamRepository: StreamRepository;
+  aidSchemeRepository: AidSchemeRepository;
 };
 
 export function registerKnowledgeRoutes(
@@ -32,6 +37,38 @@ export function registerKnowledgeRoutes(
   registry: OpenAPIRegistry,
   dependencies: RegisterKnowledgeRoutesDependencies,
 ): void {
+  registry.registerPath({
+    method: "get",
+    path: "/api/v1/catalog/aid-schemes",
+    tags: ["Knowledge"],
+    summary: "List verified financial-aid schemes",
+    request: { query: AidSchemeListQuerySchema },
+    responses: {
+      200: {
+        description: "Verified aid schemes matching the supplied filters",
+        content: { "application/json": { schema: AidSchemeListResponseSchema } },
+      },
+      400: {
+        description: "Invalid aid-scheme filters",
+        content: { "application/json": { schema: ApiErrorSchema } },
+      },
+    },
+  });
+
+  app.get("/api/v1/catalog/aid-schemes", async (request, response) => {
+    const query = AidSchemeListQuerySchema.safeParse(request.query);
+    if (!query.success) {
+      response.status(400).json({
+        code: "INVALID_CATALOG_QUERY",
+        message: "Aid scheme query parameters are invalid",
+      });
+      return;
+    }
+    response.status(200).json(
+      await getAidSchemes(dependencies.aidSchemeRepository, query.data),
+    );
+  });
+
   registry.registerPath({
     method: "get",
     path: "/api/v1/catalog/colleges",

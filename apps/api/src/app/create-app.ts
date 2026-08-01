@@ -2,6 +2,7 @@ import { createOpenApiRegistry, generateOpenApiDocument } from "@yuvanext/contra
 import { createDatabasePool } from "@yuvanext/database";
 import {
   InMemoryCareerRepository,
+  InMemoryAidSchemeRepository,
   InMemoryCareerSearchRepository,
   InMemoryCollegeRepository,
   InMemoryStreamRepository,
@@ -10,6 +11,8 @@ import {
   type CollegeRepository,
   type StreamRepository,
   PostgresCareerRepository,
+  PostgresAidSchemeRepository,
+  type AidSchemeRepository,
   PostgresCareerSearchRepository,
   PostgresCollegeRepository,
   PostgresStreamRepository,
@@ -31,6 +34,7 @@ export type CreateAppOptions = {
   careerSearchRepository?: CareerSearchRepository;
   collegeRepository?: CollegeRepository;
   streamRepository?: StreamRepository;
+  aidSchemeRepository?: AidSchemeRepository;
 };
 
 type KnowledgeRepositories = {
@@ -38,6 +42,7 @@ type KnowledgeRepositories = {
   careerSearchRepository: CareerSearchRepository;
   collegeRepository: CollegeRepository;
   streamRepository: StreamRepository;
+  aidSchemeRepository: AidSchemeRepository;
 };
 
 const createDefaultKnowledgeRepositories = (): KnowledgeRepositories => {
@@ -47,6 +52,7 @@ const createDefaultKnowledgeRepositories = (): KnowledgeRepositories => {
       careerSearchRepository: new InMemoryCareerSearchRepository([]),
       collegeRepository: new InMemoryCollegeRepository([]),
       streamRepository: new InMemoryStreamRepository([], [], []),
+      aidSchemeRepository: new InMemoryAidSchemeRepository([]),
     };
   }
 
@@ -60,6 +66,7 @@ const createDefaultKnowledgeRepositories = (): KnowledgeRepositories => {
     careerSearchRepository: new PostgresCareerSearchRepository(pool),
     collegeRepository: new PostgresCollegeRepository(pool),
     streamRepository: new PostgresStreamRepository(pool),
+    aidSchemeRepository: new PostgresAidSchemeRepository(pool),
   };
 };
 
@@ -84,6 +91,7 @@ export const createApp = (options: CreateAppOptions = {}): Express => {
     options.careerSearchRepository === undefined ||
     options.collegeRepository === undefined ||
     options.streamRepository === undefined
+    || options.aidSchemeRepository === undefined
       ? createDefaultKnowledgeRepositories()
       : undefined;
   registerKnowledgeRoutes(app, registry, {
@@ -94,6 +102,9 @@ export const createApp = (options: CreateAppOptions = {}): Express => {
     streamRepository:
       options.streamRepository ??
       defaultKnowledgeRepositories!.streamRepository,
+    aidSchemeRepository:
+      options.aidSchemeRepository ??
+      defaultKnowledgeRepositories!.aidSchemeRepository,
   });
 
   const openApiDocument = generateOpenApiDocument(registry);

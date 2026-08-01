@@ -6,3 +6,4 @@ export * from "./catalog/colleges.js";
 export * from "./catalog/college-programs.js";
 export * from "./catalog/invalid-colleges.js";
 export * from "./catalog/streams.js";
+export * from "./catalog/aid-schemes.js";
