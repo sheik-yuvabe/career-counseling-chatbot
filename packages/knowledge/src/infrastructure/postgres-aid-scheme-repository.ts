@@ -29,9 +29,25 @@ export class PostgresAidSchemeRepository implements AidSchemeRepository {
           select 1 from unnest(aid.states) state where lower(state) = lower($1::text)
         ))
         and ($2::text is null or lower(aid.level) = lower($2::text))
+        and ($3::numeric is null or not exists (
+          select 1 from knowledge.aid_criteria criterion
+          where criterion.aid_scheme_id = aid.id
+            and criterion.is_required
+            and criterion.criterion_type = 'annual_income_max'
+            and $3::numeric > (criterion.value_json->>'amount')::numeric
+        ))
+        and ($4::text is null or not exists (
+          select 1 from knowledge.aid_criteria criterion
+          where criterion.aid_scheme_id = aid.id
+            and criterion.is_required
+            and criterion.criterion_type = 'student_category'
+            and not (criterion.value_json->'values' ? $4::text)
+        ))
       order by lower(aid.name), aid.id
-      limit $3`,
-      [filters.state ?? null, filters.level ?? null, filters.limit ?? 20],
+      limit $5`,
+      [filters.state ?? null, filters.level ?? null,
+        filters.annualIncome ?? null, filters.category ?? null,
+        filters.limit ?? 20],
     );
     return result.rows.map((row) => AidSchemeSchema.parse({
       ...row,

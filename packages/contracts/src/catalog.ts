@@ -72,9 +72,37 @@ export const AidSchemeSchema = z.object({
 
 export type AidScheme = z.infer<typeof AidSchemeSchema>;
 
+export const AidStudentCategorySchema = z.enum([
+  "general",
+  "obc",
+  "sc",
+  "st",
+  "ews",
+  "minority",
+  "other",
+]);
+
+export const AidCriterionSchema = z.object({
+  id: UuidSchema,
+  aidSchemeId: UuidSchema,
+  criterionType: z.enum(["annual_income_max", "student_category"]),
+  operator: z.enum(["lte", "in"]),
+  value: z.union([
+    z.object({ amount: z.number().nonnegative() }),
+    z.object({ values: z.array(AidStudentCategorySchema).min(1) }),
+  ]),
+  isRequired: z.boolean(),
+  sourceText: z.string().trim().min(1).nullable(),
+  criterionVersion: z.string().trim().min(1).max(80),
+});
+
+export type AidCriterion = z.infer<typeof AidCriterionSchema>;
+
 export const AidSchemeListQuerySchema = z.object({
   state: StateSchema.optional(),
   level: z.string().trim().min(1).max(100).optional(),
+  annualIncome: z.coerce.number().nonnegative().optional(),
+  category: AidStudentCategorySchema.optional(),
   limit: z.coerce.number().int().min(1).max(50).default(20),
 });
 
@@ -88,6 +116,31 @@ export const AidSchemeListResponseSchema = z.object({
 });
 
 export type AidSchemeListResponse = z.infer<typeof AidSchemeListResponseSchema>;
+
+export const AidDatasetManifestSchema = z.object({
+  schemaVersion: z.literal(1),
+  datasetKey: z.string().trim().min(1),
+  version: z.string().trim().min(1),
+  datasetVersionId: UuidSchema,
+  recordsFile: z.string().regex(/^[a-zA-Z0-9][a-zA-Z0-9._-]*\.json$/),
+  recordCount: z.number().int().nonnegative(),
+  checksumSha256: z.string().regex(/^[a-f0-9]{64}$/),
+  reviewStatus: z.literal("approved"),
+  createdAt: IsoTimestampSchema,
+  source: z.object({
+    id: UuidSchema,
+    sourceKey: z.string().trim().min(1),
+    name: z.string().trim().min(1),
+    sourceType: z.string().trim().min(1),
+    publisher: z.string().trim().min(1),
+    trustLevel: z.string().trim().min(1),
+    status: z.enum(["active", "inactive"]),
+    baseUrl: z.string().url().nullable(),
+    licenseRef: z.string().trim().min(1),
+  }),
+});
+
+export type AidDatasetManifest = z.infer<typeof AidDatasetManifestSchema>;
 
 export const KnowledgeSourceManifestSchema = z.object({
   id: UuidSchema,

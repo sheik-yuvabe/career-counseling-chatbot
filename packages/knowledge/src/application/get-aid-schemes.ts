@@ -12,6 +12,10 @@ export async function getAidSchemes(
   const schemes = await repository.list({
     ...(query.state === undefined ? {} : { state: query.state }),
     ...(query.level === undefined ? {} : { level: query.level }),
+    ...(query.annualIncome === undefined
+      ? {}
+      : { annualIncome: query.annualIncome }),
+    ...(query.category === undefined ? {} : { category: query.category }),
     limit: query.limit,
   });
   const versions = [...new Set(schemes.map(({ datasetVersionId }) => datasetVersionId))];
