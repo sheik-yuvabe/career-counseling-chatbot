@@ -3,6 +3,10 @@ import {
   ApiErrorSchema,
   AidSchemeListQuerySchema,
   AidSchemeListResponseSchema,
+  CatalogImportRequestSchema,
+  CatalogImportHeadersSchema,
+  CatalogImportResponseSchema,
+  CatalogImportReportParamsSchema,
   CareerSearchQuerySchema,
   CareerSearchResponseSchema,
   CareerSlugParamsSchema,
@@ -12,6 +16,7 @@ import {
   PublishedDatasetListResponseSchema,
   StreamListQuerySchema,
   StreamListResponseSchema,
+  UuidSchema,
 } from "@yuvanext/contracts";
 import type { Express } from "express";
 import { getCareer } from "../application/get-career.js";
@@ -20,6 +25,7 @@ import { getColleges } from "../application/get-colleges.js";
 import { getStreams } from "../application/get-streams.js";
 import { getPublishedDatasets } from "../application/get-published-datasets.js";
 import { searchCareers } from "../application/search-careers.js";
+import { getCatalogImportReport, startCatalogImport, type CatalogImportCoordinator } from "../application/start-catalog-import.js";
 import { CatalogEntityNotFoundError, type CareerRepository } from "../domain/career.js";
 import { InvalidCatalogCursorError, type CareerSearchRepository } from "../domain/career-search.js";
 import type { CollegeRepository } from "../domain/college.js";
@@ -34,6 +40,8 @@ export type RegisterKnowledgeRoutesDependencies = {
   streamRepository: StreamRepository;
   aidSchemeRepository: AidSchemeRepository;
   datasetRepository: DatasetRepository;
+  catalogImportCoordinator?: CatalogImportCoordinator;
+  authorizeInternalRequest?: (authorization: string | undefined) => boolean;
 };
 
 export function registerKnowledgeRoutes(
@@ -41,6 +49,98 @@ export function registerKnowledgeRoutes(
   registry: OpenAPIRegistry,
   dependencies: RegisterKnowledgeRoutesDependencies,
 ): void {
+  registry.registerPath({
+    method: "get",
+    path: "/api/v1/internal/catalog/imports/{id}/report",
+    tags: ["Knowledge - Internal"],
+    summary: "Get an audited catalog import report",
+    security: [{ bearerAuth: [] }],
+    request: { params: CatalogImportReportParamsSchema },
+    responses: {
+      200: {
+        description: "Audited import result",
+        content: { "application/json": { schema: CatalogImportResponseSchema } },
+      },
+      400: { description: "Invalid import ID", content: { "application/json": { schema: ApiErrorSchema } } },
+      401: { description: "Internal service authorization required", content: { "application/json": { schema: ApiErrorSchema } } },
+      404: { description: "Import report not found", content: { "application/json": { schema: ApiErrorSchema } } },
+      503: { description: "Internal importing is not configured", content: { "application/json": { schema: ApiErrorSchema } } },
+    },
+  });
+
+  app.get("/api/v1/internal/catalog/imports/:id/report", async (request, response) => {
+    if (dependencies.authorizeInternalRequest?.(request.header("authorization")) !== true) {
+      response.status(401).json({ code: "UNAUTHORIZED", message: "Internal service authorization is required" });
+      return;
+    }
+    const params = CatalogImportReportParamsSchema.safeParse(request.params);
+    if (!params.success) {
+      response.status(400).json({ code: "INVALID_IMPORT_ID", message: "Import ID must be a UUID" });
+      return;
+    }
+    if (dependencies.catalogImportCoordinator === undefined) {
+      response.status(503).json({ code: "IMPORT_NOT_CONFIGURED", message: "Catalog importing is not configured" });
+      return;
+    }
+    const report = await getCatalogImportReport(
+      dependencies.catalogImportCoordinator,
+      params.data.id,
+    );
+    if (report === null) {
+      response.status(404).json({ code: "IMPORT_REPORT_NOT_FOUND", message: "Catalog import report was not found" });
+      return;
+    }
+    response.status(200).json(report);
+  });
+
+  registry.registerPath({
+    method: "post",
+    path: "/api/v1/internal/catalog/imports",
+    tags: ["Knowledge - Internal"],
+    summary: "Import an allowlisted reviewed catalog dataset",
+    security: [{ bearerAuth: [] }],
+    request: {
+      headers: CatalogImportHeadersSchema,
+      body: {
+        required: true,
+        content: { "application/json": { schema: CatalogImportRequestSchema } },
+      },
+    },
+    responses: {
+      200: {
+        description: "Dataset import completed or was already published",
+        content: { "application/json": { schema: CatalogImportResponseSchema } },
+      },
+      400: { description: "Invalid import request", content: { "application/json": { schema: ApiErrorSchema } } },
+      401: { description: "Internal service authorization required", content: { "application/json": { schema: ApiErrorSchema } } },
+      503: { description: "Internal importing is not configured", content: { "application/json": { schema: ApiErrorSchema } } },
+    },
+  });
+
+  app.post("/api/v1/internal/catalog/imports", async (request, response) => {
+    const authorization = request.header("authorization");
+    if (dependencies.authorizeInternalRequest?.(authorization) !== true) {
+      response.status(401).json({ code: "UNAUTHORIZED", message: "Internal service authorization is required" });
+      return;
+    }
+    const importId = request.header("idempotency-key");
+    const parsedImportId = UuidSchema.safeParse(importId);
+    const parsedBody = CatalogImportRequestSchema.safeParse(request.body);
+    if (!parsedImportId.success || !parsedBody.success) {
+      response.status(400).json({ code: "INVALID_IMPORT_REQUEST", message: "A UUID idempotency key and allowlisted dataset key are required" });
+      return;
+    }
+    if (dependencies.catalogImportCoordinator === undefined) {
+      response.status(503).json({ code: "IMPORT_NOT_CONFIGURED", message: "Catalog importing is not configured" });
+      return;
+    }
+    response.status(200).json(await startCatalogImport(
+      dependencies.catalogImportCoordinator,
+      parsedBody.data,
+      parsedImportId.data,
+    ));
+  });
+
   registry.registerPath({
     method: "get",
     path: "/api/v1/catalog/datasets",

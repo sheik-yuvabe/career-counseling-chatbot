@@ -12,6 +12,7 @@ export * from "./application/get-aid-schemes.js";
 export * from "./application/get-streams.js";
 export * from "./application/get-career.js";
 export * from "./application/search-careers.js";
+export * from "./application/start-catalog-import.js";
 export * from "./application/import-college-dataset.js";
 export * from "./application/import-career-dataset.js";
 export * from "./application/import-stream-dataset.js";
@@ -36,6 +37,7 @@ export * from "./infrastructure/postgres-career-search-repository.js";
 export * from "./infrastructure/postgres-career-dataset-publisher.js";
 export * from "./infrastructure/postgres-stream-dataset-publisher.js";
 export * from "./infrastructure/postgres-aid-dataset-publisher.js";
+export * from "./infrastructure/local-catalog-import-coordinator.js";
 export * from "./http/register-knowledge-routes.js";
 
 export const knowledgeModule: ModuleDescriptor = {

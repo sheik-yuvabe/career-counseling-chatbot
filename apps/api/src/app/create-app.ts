@@ -1,5 +1,6 @@
 import { createOpenApiRegistry, generateOpenApiDocument } from "@yuvanext/contracts";
 import { createDatabasePool } from "@yuvanext/database";
+import { timingSafeEqual } from "node:crypto";
 import {
   InMemoryCareerRepository,
   InMemoryAidSchemeRepository,
@@ -18,6 +19,8 @@ import {
   PostgresCollegeRepository,
   PostgresStreamRepository,
   PostgresDatasetRepository,
+  LocalCatalogImportCoordinator,
+  type CatalogImportCoordinator,
   type DatasetRepository,
   registerKnowledgeRoutes,
 } from "@yuvanext/knowledge";
@@ -39,6 +42,8 @@ export type CreateAppOptions = {
   streamRepository?: StreamRepository;
   aidSchemeRepository?: AidSchemeRepository;
   datasetRepository?: DatasetRepository;
+  catalogImportCoordinator?: CatalogImportCoordinator;
+  internalApiKey?: string;
 };
 
 type KnowledgeRepositories = {
@@ -48,6 +53,7 @@ type KnowledgeRepositories = {
   streamRepository: StreamRepository;
   aidSchemeRepository: AidSchemeRepository;
   datasetRepository: DatasetRepository;
+  catalogImportCoordinator?: CatalogImportCoordinator;
 };
 
 const createDefaultKnowledgeRepositories = (): KnowledgeRepositories => {
@@ -74,6 +80,7 @@ const createDefaultKnowledgeRepositories = (): KnowledgeRepositories => {
     streamRepository: new PostgresStreamRepository(pool),
     aidSchemeRepository: new PostgresAidSchemeRepository(pool),
     datasetRepository: new PostgresDatasetRepository(pool),
+    catalogImportCoordinator: new LocalCatalogImportCoordinator(pool),
   };
 };
 
@@ -116,6 +123,17 @@ export const createApp = (options: CreateAppOptions = {}): Express => {
     datasetRepository:
       options.datasetRepository ??
       defaultKnowledgeRepositories!.datasetRepository,
+    ...((options.catalogImportCoordinator ??
+      defaultKnowledgeRepositories?.catalogImportCoordinator) === undefined
+      ? {}
+      : {
+          catalogImportCoordinator:
+            options.catalogImportCoordinator ??
+            defaultKnowledgeRepositories!.catalogImportCoordinator!,
+        }),
+    authorizeInternalRequest: createInternalAuthorizer(
+      options.internalApiKey ?? env.INTERNAL_API_KEY,
+    ),
   });
 
   const openApiDocument = generateOpenApiDocument(registry);
@@ -130,3 +148,13 @@ export const createApp = (options: CreateAppOptions = {}): Express => {
   app.use(errorHandler);
   return app;
 };
+
+const createInternalAuthorizer = (expectedKey: string | undefined) =>
+  (authorization: string | undefined): boolean => {
+    if (expectedKey === undefined || authorization === undefined) return false;
+    const prefix = "Bearer ";
+    if (!authorization.startsWith(prefix)) return false;
+    const supplied = Buffer.from(authorization.slice(prefix.length));
+    const expected = Buffer.from(expectedKey);
+    return supplied.length === expected.length && timingSafeEqual(supplied, expected);
+  };

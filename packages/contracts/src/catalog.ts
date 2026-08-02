@@ -179,6 +179,44 @@ export type PublishedDatasetListResponse = z.infer<
   typeof PublishedDatasetListResponseSchema
 >;
 
+export const CatalogImportDatasetKeySchema = z.enum([
+  "careers-poc",
+  "streams-poc",
+  "colleges-poc",
+  "aid-schemes-poc",
+]);
+
+export const CatalogImportRequestSchema = z.object({
+  datasetKey: CatalogImportDatasetKeySchema,
+});
+
+export const CatalogImportHeadersSchema = z.object({
+  "idempotency-key": UuidSchema,
+});
+
+export type CatalogImportRequest = z.infer<typeof CatalogImportRequestSchema>;
+
+export const CatalogImportResponseSchema = z.object({
+  importId: UuidSchema,
+  datasetKey: CatalogImportDatasetKeySchema,
+  status: z.enum(["published", "already_published"]),
+  datasetVersionId: UuidSchema,
+  version: z.string().trim().min(1),
+  recordCount: z.number().int().nonnegative().optional(),
+  checksumSha256: z.string().regex(/^[a-f0-9]{64}$/),
+  issues: z.array(z.object({
+    code: z.string(),
+    path: z.string(),
+    message: z.string(),
+  })),
+});
+
+export type CatalogImportResponse = z.infer<typeof CatalogImportResponseSchema>;
+
+export const CatalogImportReportParamsSchema = z.object({
+  id: UuidSchema,
+});
+
 export const KnowledgeSourceManifestSchema = z.object({
   id: UuidSchema,
   sourceKey: z.string().trim().min(1).max(160),

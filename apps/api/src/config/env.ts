@@ -9,6 +9,7 @@ const EnvSchema = z.object({
   SUPABASE_ANON_KEY: z.string().min(1).optional(),
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(1).optional(),
   DATABASE_URL: z.string().min(1).optional(),
+  INTERNAL_API_KEY: z.string().min(32).optional(),
   DATABASE_SSL: z
     .enum(["true", "false"])
     .default("true")
