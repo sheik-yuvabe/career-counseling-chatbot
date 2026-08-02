@@ -35,10 +35,10 @@ export class PostgresAidDatasetPublisher implements AidDatasetPublisher {
            validation_report_json,imported_at,published_at,created_by)
          values ($1,$2,$3,$4,$5,$6,'staged',$7::jsonb,now(),null,null)`,
         [input.manifest.datasetVersionId, sourceId, input.manifest.datasetKey,
-          input.manifest.version, input.manifest.checksumSha256, input.records.length,
+          input.manifest.version, input.manifest.checksumSha256, input.manifest.recordCount,
           JSON.stringify({ schemaVersion: 1, issues: [] })],
       );
-      for (const aid of input.records) {
+      for (const aid of input.records.schemes) {
         await client.query(
           `insert into knowledge.aid_schemes
             (id,aid_code,name,provider_type,provider,level,states,eligibility_summary,
@@ -56,6 +56,26 @@ export class PostgresAidDatasetPublisher implements AidDatasetPublisher {
             aid.eligibilitySummary, aid.benefitSummary, aid.amountText, aid.applicationUrl,
             aid.portalName, aid.applyWindowStart, aid.applyWindowEnd, aid.verificationStatus,
             aid.lastVerifiedAt, aid.datasetVersionId],
+        );
+      }
+      for (const criterion of input.records.criteria) {
+        await client.query(
+          `insert into knowledge.aid_criteria
+            (id,aid_scheme_id,criterion_type,operator,value_json,is_required,
+             source_text,criterion_version)
+           values ($1,$2,$3,$4,$5::jsonb,$6,$7,$8)
+           on conflict (id) do update set
+             aid_scheme_id=excluded.aid_scheme_id,
+             criterion_type=excluded.criterion_type,
+             operator=excluded.operator,
+             value_json=excluded.value_json,
+             is_required=excluded.is_required,
+             source_text=excluded.source_text,
+             criterion_version=excluded.criterion_version`,
+          [criterion.id, criterion.aidSchemeId, criterion.criterionType,
+            criterion.operator, JSON.stringify(criterion.value),
+            criterion.isRequired, criterion.sourceText,
+            criterion.criterionVersion],
         );
       }
       await client.query("update knowledge.dataset_versions set import_status='published',published_at=now() where id=$1", [input.manifest.datasetVersionId]);

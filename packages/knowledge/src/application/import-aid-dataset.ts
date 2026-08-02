@@ -1,13 +1,13 @@
 import { createHash } from "node:crypto";
 import {
   AidDatasetManifestSchema,
-  AidSchemeSchema,
+  AidDatasetRecordsSchema,
   type AidDatasetManifest,
-  type AidScheme,
+  type AidDatasetRecords,
 } from "@yuvanext/contracts";
 
 export type AidDatasetPublisher = {
-  publish(input: { manifest: AidDatasetManifest; records: AidScheme[] }):
+  publish(input: { manifest: AidDatasetManifest; records: AidDatasetRecords }):
     Promise<"published" | "already_published">;
 };
 
@@ -39,24 +39,47 @@ export async function importAidDataset(
       code: "INVALID_JSON", path: "records", message: "Aid records file is not valid JSON",
     }]);
   }
-  const recordsResult = AidSchemeSchema.array().safeParse(input);
-  const records = recordsResult.success ? recordsResult.data : [];
+  const recordsResult = AidDatasetRecordsSchema.safeParse(
+    Array.isArray(input) ? { schemes: input, criteria: [] } : input,
+  );
+  const records = recordsResult.success
+    ? recordsResult.data
+    : { schemes: [], criteria: [] };
   const issues: AidImportReport["issues"] = recordsResult.success ? [] :
     recordsResult.error.issues.map((issue) => ({
       code: "INVALID_RECORD", path: issue.path.join("."), message: issue.message,
     }));
   const ids = new Set<string>();
-  records.forEach((record, index) => {
+  records.schemes.forEach((record, index) => {
     if (ids.has(record.id)) issues.push({ code: "DUPLICATE_ID", path: `${index}.id`, message: `Duplicate aid ID: ${record.id}` });
     ids.add(record.id);
     if (record.datasetVersionId !== manifest.datasetVersionId) issues.push({ code: "DATASET_VERSION_MISMATCH", path: `${index}.datasetVersionId`, message: "Aid dataset version does not match the manifest" });
   });
+  const criterionIds = new Set<string>();
+  records.criteria.forEach((criterion, index) => {
+    if (criterionIds.has(criterion.id)) issues.push({
+      code: "DUPLICATE_ID", path: `criteria.${index}.id`,
+      message: `Duplicate aid criterion ID: ${criterion.id}`,
+    });
+    criterionIds.add(criterion.id);
+    if (!ids.has(criterion.aidSchemeId)) issues.push({
+      code: "ORPHAN_REFERENCE", path: `criteria.${index}.aidSchemeId`,
+      message: "Aid criterion references an unknown scheme",
+    });
+  });
+  const recordCount = records.schemes.length + records.criteria.length;
   if (checksumSha256 !== manifest.checksumSha256) issues.push({ code: "CHECKSUM_MISMATCH", path: "checksumSha256", message: "Aid records checksum does not match the manifest" });
-  if (records.length !== manifest.recordCount) issues.push({ code: "RECORD_COUNT_MISMATCH", path: "recordCount", message: "Aid record count does not match the manifest" });
-  if (!recordsResult.success || issues.length > 0) return invalid(manifest, checksumSha256, records.length, issues);
+  if (recordCount !== manifest.recordCount) issues.push({ code: "RECORD_COUNT_MISMATCH", path: "recordCount", message: "Aid record count does not match the manifest" });
+  if (manifest.recordCounts !== undefined &&
+    (records.schemes.length !== manifest.recordCounts.schemes ||
+      records.criteria.length !== manifest.recordCounts.criteria)) issues.push({
+    code: "RECORD_COUNT_MISMATCH", path: "recordCounts",
+    message: "Aid section counts do not match the manifest",
+  });
+  if (!recordsResult.success || issues.length > 0) return invalid(manifest, checksumSha256, recordCount, issues);
   const status = await publisher.publish({ manifest, records });
   return { status, datasetKey: manifest.datasetKey, version: manifest.version,
-    datasetVersionId: manifest.datasetVersionId, recordCount: records.length,
+    datasetVersionId: manifest.datasetVersionId, recordCount,
     checksumSha256, issues: [] };
 }
 

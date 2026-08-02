@@ -98,6 +98,13 @@ export const AidCriterionSchema = z.object({
 
 export type AidCriterion = z.infer<typeof AidCriterionSchema>;
 
+export const AidDatasetRecordsSchema = z.object({
+  schemes: z.array(AidSchemeSchema),
+  criteria: z.array(AidCriterionSchema),
+});
+
+export type AidDatasetRecords = z.infer<typeof AidDatasetRecordsSchema>;
+
 export const AidSchemeListQuerySchema = z.object({
   state: StateSchema.optional(),
   level: z.string().trim().min(1).max(100).optional(),
@@ -124,6 +131,10 @@ export const AidDatasetManifestSchema = z.object({
   datasetVersionId: UuidSchema,
   recordsFile: z.string().regex(/^[a-zA-Z0-9][a-zA-Z0-9._-]*\.json$/),
   recordCount: z.number().int().nonnegative(),
+  recordCounts: z.object({
+    schemes: z.number().int().nonnegative(),
+    criteria: z.number().int().nonnegative(),
+  }).optional(),
   checksumSha256: z.string().regex(/^[a-f0-9]{64}$/),
   reviewStatus: z.literal("approved"),
   createdAt: IsoTimestampSchema,

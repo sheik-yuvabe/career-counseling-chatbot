@@ -38,3 +38,26 @@ export const aidSchemeFixtures = [
     datasetVersionId: "d2222222-2222-4222-8222-222222222222",
   },
 ] as const;
+
+export const aidCriterionFixtures = [
+  {
+    id: "d5555555-5555-4555-8555-555555555555",
+    aidSchemeId: "d1111111-1111-4111-8111-111111111111",
+    criterionType: "annual_income_max",
+    operator: "lte",
+    value: { amount: 250000 },
+    isRequired: true,
+    sourceText: "Illustrative annual family income limit.",
+    criterionVersion: "2026-08-01",
+  },
+  {
+    id: "d6666666-6666-4666-8666-666666666666",
+    aidSchemeId: "d1111111-1111-4111-8111-111111111111",
+    criterionType: "student_category",
+    operator: "in",
+    value: { values: ["sc", "st", "obc"] },
+    isRequired: true,
+    sourceText: "Illustrative eligible student categories.",
+    criterionVersion: "2026-08-01",
+  },
+] as const;

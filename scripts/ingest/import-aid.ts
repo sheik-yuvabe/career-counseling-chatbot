@@ -8,7 +8,7 @@ import { importAidDataset, PostgresAidDatasetPublisher } from "@yuvanext/knowled
 process.loadEnvFile(resolve(process.env.INIT_CWD ?? process.cwd(), ".env"));
 if (!process.argv.includes("--publish")) throw new Error("Import refused: pass --publish to allow database writes");
 if (process.env.DATABASE_URL === undefined) throw new Error("DATABASE_URL is required for catalog import");
-const directory = resolve("data/seed/knowledge/aid-schemes/2026-08-01");
+const directory = resolve("data/seed/knowledge/aid-schemes/2026-08-02");
 const manifestInput = JSON.parse(await readFile(resolve(directory, "manifest.json"), "utf8")) as unknown;
 const manifest = AidDatasetManifestSchema.parse(manifestInput);
 const records = await readFile(resolve(directory, manifest.recordsFile), "utf8");
