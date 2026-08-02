@@ -6,6 +6,7 @@ import {
   InMemoryCareerSearchRepository,
   InMemoryCollegeRepository,
   InMemoryStreamRepository,
+  InMemoryDatasetRepository,
   type CareerRepository,
   type CareerSearchRepository,
   type CollegeRepository,
@@ -16,6 +17,8 @@ import {
   PostgresCareerSearchRepository,
   PostgresCollegeRepository,
   PostgresStreamRepository,
+  PostgresDatasetRepository,
+  type DatasetRepository,
   registerKnowledgeRoutes,
 } from "@yuvanext/knowledge";
 import cors from "cors";
@@ -35,6 +38,7 @@ export type CreateAppOptions = {
   collegeRepository?: CollegeRepository;
   streamRepository?: StreamRepository;
   aidSchemeRepository?: AidSchemeRepository;
+  datasetRepository?: DatasetRepository;
 };
 
 type KnowledgeRepositories = {
@@ -43,6 +47,7 @@ type KnowledgeRepositories = {
   collegeRepository: CollegeRepository;
   streamRepository: StreamRepository;
   aidSchemeRepository: AidSchemeRepository;
+  datasetRepository: DatasetRepository;
 };
 
 const createDefaultKnowledgeRepositories = (): KnowledgeRepositories => {
@@ -53,6 +58,7 @@ const createDefaultKnowledgeRepositories = (): KnowledgeRepositories => {
       collegeRepository: new InMemoryCollegeRepository([]),
       streamRepository: new InMemoryStreamRepository([], [], []),
       aidSchemeRepository: new InMemoryAidSchemeRepository([]),
+      datasetRepository: new InMemoryDatasetRepository([]),
     };
   }
 
@@ -67,6 +73,7 @@ const createDefaultKnowledgeRepositories = (): KnowledgeRepositories => {
     collegeRepository: new PostgresCollegeRepository(pool),
     streamRepository: new PostgresStreamRepository(pool),
     aidSchemeRepository: new PostgresAidSchemeRepository(pool),
+    datasetRepository: new PostgresDatasetRepository(pool),
   };
 };
 
@@ -92,6 +99,7 @@ export const createApp = (options: CreateAppOptions = {}): Express => {
     options.collegeRepository === undefined ||
     options.streamRepository === undefined
     || options.aidSchemeRepository === undefined
+    || options.datasetRepository === undefined
       ? createDefaultKnowledgeRepositories()
       : undefined;
   registerKnowledgeRoutes(app, registry, {
@@ -105,6 +113,9 @@ export const createApp = (options: CreateAppOptions = {}): Express => {
     aidSchemeRepository:
       options.aidSchemeRepository ??
       defaultKnowledgeRepositories!.aidSchemeRepository,
+    datasetRepository:
+      options.datasetRepository ??
+      defaultKnowledgeRepositories!.datasetRepository,
   });
 
   const openApiDocument = generateOpenApiDocument(registry);

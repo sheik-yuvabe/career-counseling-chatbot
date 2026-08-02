@@ -9,6 +9,7 @@ import {
   CareerToolResultSchema,
   CollegeListQuerySchema,
   CollegeListResponseSchema,
+  PublishedDatasetListResponseSchema,
   StreamListQuerySchema,
   StreamListResponseSchema,
 } from "@yuvanext/contracts";
@@ -17,12 +18,14 @@ import { getCareer } from "../application/get-career.js";
 import { getAidSchemes } from "../application/get-aid-schemes.js";
 import { getColleges } from "../application/get-colleges.js";
 import { getStreams } from "../application/get-streams.js";
+import { getPublishedDatasets } from "../application/get-published-datasets.js";
 import { searchCareers } from "../application/search-careers.js";
 import { CatalogEntityNotFoundError, type CareerRepository } from "../domain/career.js";
 import { InvalidCatalogCursorError, type CareerSearchRepository } from "../domain/career-search.js";
 import type { CollegeRepository } from "../domain/college.js";
 import type { AidSchemeRepository } from "../domain/aid-scheme.js";
 import type { StreamRepository } from "../domain/streams.js";
+import type { DatasetRepository } from "../domain/dataset.js";
 
 export type RegisterKnowledgeRoutesDependencies = {
   careerRepository: CareerRepository;
@@ -30,6 +33,7 @@ export type RegisterKnowledgeRoutesDependencies = {
   collegeRepository: CollegeRepository;
   streamRepository: StreamRepository;
   aidSchemeRepository: AidSchemeRepository;
+  datasetRepository: DatasetRepository;
 };
 
 export function registerKnowledgeRoutes(
@@ -37,6 +41,27 @@ export function registerKnowledgeRoutes(
   registry: OpenAPIRegistry,
   dependencies: RegisterKnowledgeRoutesDependencies,
 ): void {
+  registry.registerPath({
+    method: "get",
+    path: "/api/v1/catalog/datasets",
+    tags: ["Knowledge"],
+    summary: "List published catalog datasets",
+    responses: {
+      200: {
+        description: "Published dataset versions and source provenance",
+        content: {
+          "application/json": { schema: PublishedDatasetListResponseSchema },
+        },
+      },
+    },
+  });
+
+  app.get("/api/v1/catalog/datasets", async (_request, response) => {
+    response.status(200).json(
+      await getPublishedDatasets(dependencies.datasetRepository),
+    );
+  });
+
   registry.registerPath({
     method: "get",
     path: "/api/v1/catalog/aid-schemes",

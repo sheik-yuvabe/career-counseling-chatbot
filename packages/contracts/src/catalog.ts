@@ -153,6 +153,32 @@ export const AidDatasetManifestSchema = z.object({
 
 export type AidDatasetManifest = z.infer<typeof AidDatasetManifestSchema>;
 
+export const PublishedDatasetSchema = z.object({
+  id: UuidSchema,
+  datasetKey: z.string().trim().min(1),
+  version: z.string().trim().min(1),
+  checksumSha256: z.string().regex(/^[a-f0-9]{64}$/),
+  recordCount: z.number().int().nonnegative(),
+  publishedAt: IsoTimestampSchema,
+  source: z.object({
+    sourceKey: z.string().trim().min(1),
+    name: z.string().trim().min(1),
+    publisher: z.string().trim().min(1),
+    trustLevel: z.string().trim().min(1),
+  }),
+});
+
+export type PublishedDataset = z.infer<typeof PublishedDatasetSchema>;
+
+export const PublishedDatasetListResponseSchema = z.object({
+  data: z.array(PublishedDatasetSchema),
+  retrievedAt: IsoTimestampSchema,
+});
+
+export type PublishedDatasetListResponse = z.infer<
+  typeof PublishedDatasetListResponseSchema
+>;
+
 export const KnowledgeSourceManifestSchema = z.object({
   id: UuidSchema,
   sourceKey: z.string().trim().min(1).max(160),

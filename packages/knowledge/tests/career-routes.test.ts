@@ -20,6 +20,7 @@ import {
   InMemoryCareerRepository,
   InMemoryCareerSearchRepository,
   InMemoryCollegeRepository,
+  InMemoryDatasetRepository,
   InMemoryStreamRepository,
   registerKnowledgeRoutes,
 } from "../src/index.js";
@@ -33,6 +34,7 @@ const createTestApp = () => {
 
   registerKnowledgeRoutes(app, createOpenApiRegistry(), {
     aidSchemeRepository: new InMemoryAidSchemeRepository([]),
+    datasetRepository: new InMemoryDatasetRepository([]),
     careerRepository: new InMemoryCareerRepository([
       {
         career: careers[0]!,

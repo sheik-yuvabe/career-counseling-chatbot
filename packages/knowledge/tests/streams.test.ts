@@ -18,6 +18,7 @@ import {
   InMemoryCareerRepository,
   InMemoryCareerSearchRepository,
   InMemoryCollegeRepository,
+  InMemoryDatasetRepository,
   InMemoryStreamRepository,
   type StreamQueryExecutor,
   PostgresStreamRepository,
@@ -37,6 +38,7 @@ const createTestApp = () => {
 
   registerKnowledgeRoutes(app, createOpenApiRegistry(), {
     aidSchemeRepository: new InMemoryAidSchemeRepository([]),
+    datasetRepository: new InMemoryDatasetRepository([]),
     careerRepository: new InMemoryCareerRepository([]),
     careerSearchRepository: new InMemoryCareerSearchRepository([]),
     collegeRepository: new InMemoryCollegeRepository([]),
