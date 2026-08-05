@@ -130,23 +130,23 @@ const templates: PlanTemplateCatalogRecord[] = [
 ];
 
 describe("recommendation service", () => {
-  it("orchestrates the MVP deterministic recommendation flow", () => {
+  it("orchestrates the MVP deterministic recommendation flow", async () => {
     const service = createRecommendationService();
-    const careerSet = service.recommendCareers({
+    const careerSet = await service.recommendCareers({
       recommendationId: "career-rec-1",
       profile,
       careers,
       config,
       createdAt,
     });
-    const streamSet = service.recommendStreams({
+    const streamSet = await service.recommendStreams({
       recommendationId: "stream-rec-1",
       profile,
       streams,
       config,
       createdAt,
     });
-    const pathwaySet = service.recommendPathways({
+    const pathwaySet = await service.recommendPathways({
       recommendationId: "pathway-rec-1",
       profile,
       pathways,
@@ -155,7 +155,7 @@ describe("recommendation service", () => {
       config,
       createdAt,
     });
-    const collegeSet = service.recommendColleges({
+    const collegeSet = await service.recommendColleges({
       recommendationId: "college-rec-1",
       profile,
       colleges,
@@ -164,7 +164,7 @@ describe("recommendation service", () => {
       config,
       createdAt,
     });
-    const aidSet = service.recommendAid({
+    const aidSet = await service.recommendAid({
       recommendationId: "aid-rec-1",
       profile,
       aidSchemes,
@@ -172,7 +172,7 @@ describe("recommendation service", () => {
       config,
       createdAt,
     });
-    const planSet = service.generatePlan({
+    const planSet = await service.generatePlan({
       recommendationId: "plan-rec-1",
       profile,
       templates,
@@ -195,17 +195,17 @@ describe("recommendation service", () => {
     expect(planSet.items[0]?.title).toBe("Pathfinder Route Plan");
   });
 
-  it("stores completed sets immutably and replays the saved output hash", () => {
+  it("stores completed sets immutably and replays the saved output hash", async () => {
     const service = createRecommendationService();
-    const careerSet = service.recommendCareers({
+    const careerSet = await service.recommendCareers({
       recommendationId: "career-rec-replay",
       profile,
       careers,
       config,
       createdAt,
     });
-    const stored = service.getRecommendation("career-rec-replay");
-    const replay = service.replayRecommendation("career-rec-replay", createdAt);
+    const stored = await service.getRecommendation("career-rec-replay");
+    const replay = await service.replayRecommendation("career-rec-replay", createdAt);
 
     expect(stored?.outputHash).toBe(careerSet.outputHash);
     expect(replay).toMatchObject({
@@ -216,7 +216,7 @@ describe("recommendation service", () => {
     });
   });
 
-  it("rejects recalculation with an existing recommendation id", () => {
+  it("rejects recalculation with an existing recommendation id", async () => {
     const service = createRecommendationService();
     const request = {
       recommendationId: "career-rec-immutable",
@@ -226,7 +226,7 @@ describe("recommendation service", () => {
       createdAt,
     };
 
-    service.recommendCareers(request);
-    expect(() => service.recommendCareers(request)).toThrow(/already exists/);
+    await service.recommendCareers(request);
+    await expect(service.recommendCareers(request)).rejects.toThrow(/already exists/);
   });
 });

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import request from "supertest";
 import { HealthResponseSchema } from "@yuvanext/contracts";
+import { createInMemoryRecommendationStore } from "@yuvanext/recommendations";
 import { z } from "zod";
 import { createApp } from "../src/app/create-app.js";
 
@@ -8,7 +9,9 @@ const OpenApiPathsSchema = z.object({ paths: z.record(z.string(), z.unknown()) }
 
 describe("GET /api/v1/health", () => {
   it("returns all registered backend modules", async () => {
-    const response = await request(createApp({ logging: false })).get("/api/v1/health");
+    const response = await request(
+      createApp({ logging: false, recommendationStore: createInMemoryRecommendationStore() }),
+    ).get("/api/v1/health");
 
     expect(response.status).toBe(200);
     const body = HealthResponseSchema.parse(JSON.parse(response.text) as unknown);
@@ -25,7 +28,9 @@ describe("GET /api/v1/health", () => {
   });
 
   it("publishes OpenAPI JSON for the shared testing UI", async () => {
-    const response = await request(createApp({ logging: false })).get("/openapi.json");
+    const response = await request(
+      createApp({ logging: false, recommendationStore: createInMemoryRecommendationStore() }),
+    ).get("/openapi.json");
     expect(response.status).toBe(200);
     const body = OpenApiPathsSchema.parse(JSON.parse(response.text) as unknown);
     expect(body.paths["/api/v1/health"]).toBeDefined();

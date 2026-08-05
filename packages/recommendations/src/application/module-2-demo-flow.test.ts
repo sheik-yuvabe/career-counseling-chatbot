@@ -33,23 +33,23 @@ describe("Module 2 demo fixture flow", () => {
     ).toEqual(["explorer", "launcher", "pathfinder"]);
   });
 
-  it("runs one complete deterministic MVP journey", () => {
+  it("runs one complete deterministic MVP journey", async () => {
     const service = createRecommendationService();
-    const careerSet = service.recommendCareers({
+    const careerSet = await service.recommendCareers({
       recommendationId: "demo-careers",
       profile: module2DemoProfile,
       careers: module2DemoCareers,
       config: module2DemoConfig,
       createdAt: MODULE_2_DEMO_CREATED_AT,
     });
-    const streamSet = service.recommendStreams({
+    const streamSet = await service.recommendStreams({
       recommendationId: "demo-streams",
       profile: module2DemoProfile,
       streams: module2DemoStreams,
       config: module2DemoConfig,
       createdAt: MODULE_2_DEMO_CREATED_AT,
     });
-    const pathwaySet = service.recommendPathways({
+    const pathwaySet = await service.recommendPathways({
       recommendationId: "demo-pathways",
       profile: module2DemoProfile,
       pathways: module2DemoPathways,
@@ -58,7 +58,7 @@ describe("Module 2 demo fixture flow", () => {
       config: module2DemoConfig,
       createdAt: MODULE_2_DEMO_CREATED_AT,
     });
-    const collegeSet = service.recommendColleges({
+    const collegeSet = await service.recommendColleges({
       recommendationId: "demo-colleges",
       profile: module2DemoProfile,
       colleges: module2DemoColleges,
@@ -68,7 +68,7 @@ describe("Module 2 demo fixture flow", () => {
       config: module2DemoConfig,
       createdAt: MODULE_2_DEMO_CREATED_AT,
     });
-    const aidSet = service.recommendAid({
+    const aidSet = await service.recommendAid({
       recommendationId: "demo-aid",
       profile: module2DemoProfile,
       aidSchemes: module2DemoAidSchemes,
@@ -80,7 +80,7 @@ describe("Module 2 demo fixture flow", () => {
     if (!topPathway) {
       throw new Error("Demo fixture must produce at least one pathway");
     }
-    const planSet = service.generatePlan({
+    const planSet = await service.generatePlan({
       recommendationId: "demo-plan",
       profile: module2DemoProfile,
       templates: module2DemoPlanTemplates,
@@ -101,9 +101,9 @@ describe("Module 2 demo fixture flow", () => {
     expect(planSet.items[0]?.title).toBe("Pathfinder Route Plan");
   });
 
-  it("generates approved plan templates for explorer and launcher profiles", () => {
+  it("generates approved plan templates for explorer and launcher profiles", async () => {
     const service = createRecommendationService();
-    const explorerPlan = service.generatePlan({
+    const explorerPlan = await service.generatePlan({
       recommendationId: "demo-explorer-plan",
       profile: module2ExplorerProfile,
       templates: module2DemoPlanTemplates,
@@ -115,7 +115,7 @@ describe("Module 2 demo fixture flow", () => {
       config: module2DemoConfig,
       createdAt: MODULE_2_DEMO_CREATED_AT,
     });
-    const launcherPlan = service.generatePlan({
+    const launcherPlan = await service.generatePlan({
       recommendationId: "demo-launcher-plan",
       profile: module2LauncherProfile,
       templates: module2DemoPlanTemplates,

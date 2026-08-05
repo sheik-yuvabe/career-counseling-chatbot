@@ -1,5 +1,11 @@
 import { createOpenApiRegistry, generateOpenApiDocument } from "@yuvanext/contracts";
-import { registerRecommendationRoutes } from "@yuvanext/recommendations";
+import { createDatabasePool } from "@yuvanext/database";
+import {
+  createPostgresRecommendationDataSource,
+  createPostgresRecommendationStore,
+  registerRecommendationRoutes,
+  type RecommendationStore,
+} from "@yuvanext/recommendations";
 import cors from "cors";
 import express, { type Express } from "express";
 import helmet from "helmet";
@@ -10,7 +16,10 @@ import { requestLogger } from "../middleware/request-logger.js";
 import { registerHealthRoute } from "../routes/health.js";
 import { modules } from "./modules.js";
 
-export type CreateAppOptions = { logging?: boolean };
+export type CreateAppOptions = {
+  logging?: boolean;
+  recommendationStore?: RecommendationStore;
+};
 
 export const createApp = (options: CreateAppOptions = {}): Express => {
   const app = express();
@@ -28,7 +37,19 @@ export const createApp = (options: CreateAppOptions = {}): Express => {
   }
 
   registerHealthRoute(app, registry, modules);
-  registerRecommendationRoutes(app, registry);
+  const recommendationPool = env.DATABASE_URL
+    ? createDatabasePool({ connectionString: env.DATABASE_URL, ssl: env.DATABASE_SSL })
+    : undefined;
+  const recommendationStore =
+    options.recommendationStore ??
+    (recommendationPool ? createPostgresRecommendationStore({ pool: recommendationPool }) : undefined);
+  if (!recommendationStore) {
+    throw new Error("DATABASE_URL is required to register recommendation routes");
+  }
+  registerRecommendationRoutes(app, registry, {
+    store: recommendationStore,
+    ...(recommendationPool ? { dataSource: createPostgresRecommendationDataSource(recommendationPool) } : {}),
+  });
 
   const openApiDocument = generateOpenApiDocument(registry);
   app.get("/openapi.json", (_request, response) => response.json(openApiDocument));

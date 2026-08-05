@@ -1,6 +1,10 @@
 import type { ModuleDescriptor } from "@yuvanext/contracts";
 export { createRecommendationService } from "./application/recommendation-service.js";
-export { createInMemoryRecommendationStore } from "./application/recommendation-store.js";
+export { createPostgresRecommendationDataSource } from "./application/recommendation-data-source.js";
+export {
+  createInMemoryRecommendationStore,
+  createPostgresRecommendationStore,
+} from "./application/recommendation-store.js";
 export { buildAidRecommendationSet, scoreAidSchemes } from "./domain/aid-recommendations.js";
 export {
   buildCareerRecommendationSet,

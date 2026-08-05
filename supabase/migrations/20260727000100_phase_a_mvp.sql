@@ -352,7 +352,7 @@ CREATE TABLE "knowledge"."stream_maps" (
 CREATE TABLE "knowledge"."stream_map_items" (
   "map_id" uuid NOT NULL,
   "stream_option_id" uuid NOT NULL,
-  "rank" smallint UNIQUE NOT NULL,
+  "rank" smallint NOT NULL,
   "reason_key" text NOT NULL,
   PRIMARY KEY ("map_id", "stream_option_id")
 );
@@ -945,6 +945,8 @@ CREATE UNIQUE INDEX ON "knowledge"."stream_map_items" ("map_id", "rank");
 CREATE UNIQUE INDEX ON "recommendation"."matching_configurations" ("configuration_key", "version");
 
 CREATE UNIQUE INDEX ON "recommendation"."recommendation_rings" ("recommendation_run_id", "ring_code");
+
+CREATE UNIQUE INDEX ON "recommendation"."recommendation_items" ("recommendation_run_id", "rank");
 
 CREATE UNIQUE INDEX ON "recommendation"."plan_templates" ("template_key", "version");
 

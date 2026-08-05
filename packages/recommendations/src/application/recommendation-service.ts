@@ -79,14 +79,14 @@ export type PlanGenerationRequest = RecommendationServiceContext & {
 };
 
 export type RecommendationService = {
-  recommendCareers(request: CareerRecommendationRequest): RecommendationSet;
-  recommendStreams(request: StreamRecommendationRequest): RecommendationSet;
-  recommendPathways(request: PathwayRecommendationRequest): RecommendationSet;
-  recommendColleges(request: CollegeRecommendationRequest): RecommendationSet;
-  recommendAid(request: AidRecommendationRequest): RecommendationSet;
-  generatePlan(request: PlanGenerationRequest): RecommendationSet;
-  getRecommendation(recommendationId: string): RecommendationSet | undefined;
-  replayRecommendation(recommendationId: string, replayedAt: string): RecommendationReplayResult | undefined;
+  recommendCareers(request: CareerRecommendationRequest): Promise<RecommendationSet>;
+  recommendStreams(request: StreamRecommendationRequest): Promise<RecommendationSet>;
+  recommendPathways(request: PathwayRecommendationRequest): Promise<RecommendationSet>;
+  recommendColleges(request: CollegeRecommendationRequest): Promise<RecommendationSet>;
+  recommendAid(request: AidRecommendationRequest): Promise<RecommendationSet>;
+  generatePlan(request: PlanGenerationRequest): Promise<RecommendationSet>;
+  getRecommendation(recommendationId: string): Promise<RecommendationSet | undefined>;
+  replayRecommendation(recommendationId: string, replayedAt: string): Promise<RecommendationReplayResult | undefined>;
 };
 
 export type CreateRecommendationServiceOptions = {
@@ -97,7 +97,7 @@ export function createRecommendationService(
   options: CreateRecommendationServiceOptions = {},
 ): RecommendationService {
   const store = options.store ?? createInMemoryRecommendationStore();
-  const save = (set: RecommendationSet): RecommendationSet => store.save(set);
+  const save = (set: RecommendationSet): Promise<RecommendationSet> => store.save(set);
 
   return {
     recommendCareers: (request) =>
@@ -172,8 +172,8 @@ export function createRecommendationService(
         }),
       ),
     getRecommendation: (recommendationId) => store.findById(recommendationId),
-    replayRecommendation: (recommendationId, replayedAt) => {
-      const recommendation = store.findById(recommendationId);
+    replayRecommendation: async (recommendationId, replayedAt) => {
+      const recommendation = await store.findById(recommendationId);
       if (!recommendation) {
         return undefined;
       }

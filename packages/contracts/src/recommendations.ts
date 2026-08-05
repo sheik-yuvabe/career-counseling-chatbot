@@ -245,7 +245,7 @@ export const RecommendationItemSchema = z.object({
 export type RecommendationItem = z.infer<typeof RecommendationItemSchema>;
 
 export const RecommendationSetSchema = z.object({
-  recommendationId: z.string().min(1),
+  recommendationId: UuidSchema,
   profileSnapshotId: UuidSchema,
   kind: z.enum(["career", "stream", "pathway", "college", "aid", "plan"]),
   items: z.array(RecommendationItemSchema),
@@ -265,8 +265,57 @@ export const RecommendationSetSchema = z.object({
 });
 export type RecommendationSet = z.infer<typeof RecommendationSetSchema>;
 
+const RecommendationSetResponseBodySchema = RecommendationSetSchema.omit({
+  recommendationId: true,
+});
+
+export const CareerRecommendationSetResponseSchema = RecommendationSetResponseBodySchema.extend({
+  careerRecommendationId: UuidSchema,
+});
+export type CareerRecommendationSetResponse = z.infer<
+  typeof CareerRecommendationSetResponseSchema
+>;
+
+export const StreamRecommendationSetResponseSchema = RecommendationSetResponseBodySchema.extend({
+  streamRecommendationId: UuidSchema,
+});
+export type StreamRecommendationSetResponse = z.infer<
+  typeof StreamRecommendationSetResponseSchema
+>;
+
+export const PathwayRecommendationSetResponseSchema = RecommendationSetResponseBodySchema.extend({
+  pathwayRecommendationId: UuidSchema,
+});
+export type PathwayRecommendationSetResponse = z.infer<
+  typeof PathwayRecommendationSetResponseSchema
+>;
+
+export const CollegeRecommendationSetResponseSchema = RecommendationSetResponseBodySchema.extend({
+  collegeRecommendationId: UuidSchema,
+});
+export type CollegeRecommendationSetResponse = z.infer<
+  typeof CollegeRecommendationSetResponseSchema
+>;
+
+export const AidRecommendationSetResponseSchema = RecommendationSetResponseBodySchema.extend({
+  aidRecommendationId: UuidSchema,
+});
+export type AidRecommendationSetResponse = z.infer<typeof AidRecommendationSetResponseSchema>;
+
+export const PlanRecommendationSetResponseSchema = RecommendationSetResponseBodySchema.extend({
+  planRecommendationId: UuidSchema,
+});
+export type PlanRecommendationSetResponse = z.infer<
+  typeof PlanRecommendationSetResponseSchema
+>;
+
+export const RecommendationIdParamsSchema = z.object({
+  id: UuidSchema,
+});
+export type RecommendationIdParams = z.infer<typeof RecommendationIdParamsSchema>;
+
 export const RecommendationReplayResultSchema = z.object({
-  recommendationId: z.string().min(1),
+  recommendationId: UuidSchema,
   replayedAt: IsoTimestampSchema,
   originalOutputHash: z.string().min(1),
   replayOutputHash: z.string().min(1),
@@ -276,14 +325,19 @@ export const RecommendationReplayResultSchema = z.object({
 export type RecommendationReplayResult = z.infer<typeof RecommendationReplayResultSchema>;
 
 const RecommendationBaseRequestSchema = z.object({
-  recommendationId: z.string().min(1),
-  profile: ProfileSnapshotForRecommendationsSchema,
-  config: MatchingConfigSchema,
-  createdAt: IsoTimestampSchema,
+  recommendationId: UuidSchema.optional(),
+  profileSnapshotId: UuidSchema.optional(),
+  profile: ProfileSnapshotForRecommendationsSchema.optional(),
+  config: MatchingConfigSchema.optional(),
+  createdAt: IsoTimestampSchema.optional(),
+  limit: z.number().int().positive().max(100).optional(),
+}).refine((request) => request.profileSnapshotId || request.profile, {
+  message: "Either profileSnapshotId or profile is required.",
+  path: ["profileSnapshotId"],
 });
 
 export const CareerRecommendationRouteRequestSchema = RecommendationBaseRequestSchema.extend({
-  careers: z.array(CareerCatalogRecordSchema).min(1),
+  careers: z.array(CareerCatalogRecordSchema).min(1).optional(),
   feasibilityRules: z
     .array(
       z.object({
@@ -306,25 +360,26 @@ export const CareerRecommendationRouteRequestSchema = RecommendationBaseRequestS
 });
 
 export const StreamRecommendationRouteRequestSchema = RecommendationBaseRequestSchema.extend({
-  streams: z.array(StreamCatalogRecordSchema).min(1),
+  streams: z.array(StreamCatalogRecordSchema).min(1).optional(),
 });
 
 export const PathwayRecommendationRouteRequestSchema = RecommendationBaseRequestSchema.extend({
-  pathways: z.array(PathwayCatalogRecordSchema).min(1),
-  rankedCareerIds: z.array(UuidSchema),
-  rankedStreamIds: z.array(UuidSchema),
+  pathways: z.array(PathwayCatalogRecordSchema).min(1).optional(),
+  rankedCareerIds: z.array(UuidSchema).optional(),
+  rankedStreamIds: z.array(UuidSchema).optional(),
 });
 
 export const CollegeRecommendationRouteRequestSchema = RecommendationBaseRequestSchema.extend({
-  colleges: z.array(CollegeCatalogRecordSchema).min(1),
-  targetDisciplineIds: z.array(UuidSchema).min(1),
+  colleges: z.array(CollegeCatalogRecordSchema).min(1).optional(),
+  targetDisciplineIds: z.array(UuidSchema).min(1).optional(),
+  targetPathwayId: UuidSchema.optional(),
   selectedState: StateSchema.optional(),
   neighboringStates: z.array(StateSchema).optional(),
 });
 
 export const AidRecommendationRouteRequestSchema = RecommendationBaseRequestSchema.extend({
-  aidSchemes: z.array(AidSchemeCatalogRecordSchema).min(1),
-  storedFacts: z.record(z.string(), z.union([z.string(), z.number(), z.boolean(), z.null()])),
+  aidSchemes: z.array(AidSchemeCatalogRecordSchema).min(1).optional(),
+  storedFacts: z.record(z.string(), z.union([z.string(), z.number(), z.boolean(), z.null()])).optional(),
 });
 
 export const PlanTargetSchema = z.object({
@@ -334,7 +389,7 @@ export const PlanTargetSchema = z.object({
 });
 
 export const PlanRecommendationRouteRequestSchema = RecommendationBaseRequestSchema.extend({
-  templates: z.array(PlanTemplateCatalogRecordSchema).min(1),
+  templates: z.array(PlanTemplateCatalogRecordSchema).min(1).optional(),
   target: PlanTargetSchema.optional(),
 });
 
