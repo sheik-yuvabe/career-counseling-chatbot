@@ -81,7 +81,6 @@ export const AssessmentRunSchema = z.object({
 export type AssessmentRun = z.infer<typeof AssessmentRunSchema>;
 
 export const StartAssessmentRunRequestSchema = z.object({
-  instrumentCode: InstrumentCodeSchema.optional(),
   language: z.string().min(2).max(16).default("en"),
   mode: z.enum(["text", "photo"]).optional(),
 });

@@ -65,7 +65,7 @@ export class AssessmentService {
   }): Promise<AssessmentRun> {
     const { profile, now } = await this.loadActiveSessionProfile(input);
     await this.ensureConsentIfMinor(profile);
-    const instrumentCode = input.request.instrumentCode ?? selectDefaultInstrument(profile.segment);
+    const instrumentCode = selectDefaultInstrument(profile.segment);
     const version = await this.assessmentRepository.findActiveVersion({
       instrumentCode,
       language: input.request.language,
