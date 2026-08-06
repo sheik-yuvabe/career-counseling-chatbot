@@ -4,6 +4,7 @@ import type {
   AssessmentResponseSaveResponse,
   AssessmentResult,
   AssessmentRun,
+  InstrumentCode,
   ProfileSnapshot,
   StartAssessmentRunRequest,
   SubmitAssessmentResponseRequest,
@@ -64,8 +65,9 @@ export class AssessmentService {
   }): Promise<AssessmentRun> {
     const { profile, now } = await this.loadActiveSessionProfile(input);
     await this.ensureConsentIfMinor(profile);
+    const instrumentCode = input.request.instrumentCode ?? selectDefaultInstrument(profile.segment);
     const version = await this.assessmentRepository.findActiveVersion({
-      instrumentCode: input.request.instrumentCode,
+      instrumentCode,
       language: input.request.language,
       ageAtOnboarding: profile.ageAtOnboarding,
       now: now.toISOString(),
@@ -147,7 +149,6 @@ export class AssessmentService {
       responseValue: input.response.responseValue ?? null,
       responseJson: input.response.responseJson ?? null,
       latencyMs: input.response.latencyMs ?? null,
-      clientAnswerId: input.response.clientAnswerId,
       answeredAt: input.response.answeredAt ?? now.toISOString(),
       receivedAt: now.toISOString(),
     });
@@ -276,6 +277,9 @@ export class AssessmentService {
     }
   }
 }
+
+export const selectDefaultInstrument = (segment: UserProfile["segment"]): InstrumentCode =>
+  segment === "explorer" ? "mini_ip_30" : "ip_60";
 
 const validateResponseShape = (
   itemType: string,

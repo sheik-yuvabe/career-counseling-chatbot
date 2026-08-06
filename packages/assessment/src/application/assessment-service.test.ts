@@ -31,6 +31,7 @@ class MemoryAssessmentRepository implements AssessmentRepository {
   run: AssessmentRun | null = null;
   responses = new Map<string, AssessmentResponse>();
   result: AssessmentResult | null = null;
+  lastInstrumentCode: string | null = null;
 
   private readonly items: AssessmentItem[] = [
     {
@@ -57,10 +58,11 @@ class MemoryAssessmentRepository implements AssessmentRepository {
     },
   ];
 
-  findActiveVersion(): Promise<AssessmentVersionRecord | null> {
+  findActiveVersion(input: { instrumentCode: AssessmentVersionRecord["instrumentCode"] }): Promise<AssessmentVersionRecord | null> {
+    this.lastInstrumentCode = input.instrumentCode;
     return Promise.resolve({
       id: "66666666-6666-4666-8666-666666666666",
-      instrumentCode: "mini_ip_30",
+      instrumentCode: input.instrumentCode,
       instrumentVersion: "1.0",
       algorithmVersion: "riasec-score-v1",
       batchSize: 10,
@@ -74,7 +76,7 @@ class MemoryAssessmentRepository implements AssessmentRepository {
       userId: input.userId,
       journeySessionId: input.journeySessionId,
       assessmentVersionId: input.assessmentVersionId,
-      instrumentCode: "mini_ip_30",
+      instrumentCode: this.lastInstrumentCode === "ip_60" ? "ip_60" : "mini_ip_30",
       instrumentVersion: "1.0",
       algorithmVersion: "riasec-score-v1",
       segment: input.segment,
@@ -120,7 +122,6 @@ class MemoryAssessmentRepository implements AssessmentRepository {
       responseValue: input.responseValue,
       responseJson: input.responseJson,
       latencyMs: input.latencyMs,
-      clientAnswerId: input.clientAnswerId,
       answeredAt: input.answeredAt,
       receivedAt: input.receivedAt,
     };
@@ -248,8 +249,9 @@ describe("AssessmentService", () => {
     const run = await service.startRun({
       sessionId,
       userId,
-      request: { instrumentCode: "mini_ip_30", language: "en" },
+      request: { language: "en" },
     });
+    expect(assessmentRepository.lastInstrumentCode).toBe("ip_60");
     expect(run.status).toBe("active");
 
     const firstBatch = await service.getNext({ runId, userId });
@@ -258,12 +260,12 @@ describe("AssessmentService", () => {
     await service.submitResponse({
       runId,
       userId,
-      response: { itemId: itemOneId, responseValue: 5, clientAnswerId: "77777777-7777-4777-8777-777777777777" },
+      response: { itemId: itemOneId, responseValue: 5 },
     });
     const saved = await service.submitResponse({
       runId,
       userId,
-      response: { itemId: itemTwoId, responseValue: 3, clientAnswerId: "88888888-8888-4888-8888-888888888888" },
+      response: { itemId: itemTwoId, responseValue: 3 },
     });
     expect(saved.next.progress.isComplete).toBe(true);
 
@@ -273,5 +275,23 @@ describe("AssessmentService", () => {
     const snapshot = await service.buildProfileSnapshot({ sessionId, userId, runId });
     expect(snapshot.snapshotId).toBeDefined();
     expect(snapshot.riasec?.code).toBe("RIA");
+  });
+
+  it("defaults explorer runs to mini_ip_30", async () => {
+    const assessmentRepository = new MemoryAssessmentRepository();
+    const service = new AssessmentService({
+      assessmentRepository,
+      journeySessionRepository: new MemoryJourneySessionRepository(),
+      userProfileRepository: {
+        upsert: () => { throw new Error("not used"); },
+        findByUserId: () => Promise.resolve({ ...profile, segment: "explorer", selfStage: "school", ageAtOnboarding: 13, ageBand: "minor_12_13" }),
+      },
+      guardianConsentRepository: new GrantedConsentRepository(),
+      clock: () => new Date("2026-07-30T09:00:00.000Z"),
+    });
+
+    await service.startRun({ sessionId, userId, request: { language: "en", mode: "text" } });
+
+    expect(assessmentRepository.lastInstrumentCode).toBe("mini_ip_30");
   });
 });

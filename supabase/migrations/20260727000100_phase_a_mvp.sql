@@ -171,7 +171,6 @@ CREATE TABLE "assessment"."assessment_responses" (
   "response_value" smallint,
   "response_json" jsonb,
   "latency_ms" integer,
-  "client_answer_id" uuid UNIQUE NOT NULL,
   "answered_at" timestamptz NOT NULL,
   "received_at" timestamptz NOT NULL
 );
@@ -1215,8 +1214,6 @@ COMMENT ON COLUMN "assessment"."assessment_responses"."response_value" IS 'Nulla
 COMMENT ON COLUMN "assessment"."assessment_responses"."response_json" IS 'Nullable; only for approved structured types';
 
 COMMENT ON COLUMN "assessment"."assessment_responses"."latency_ms" IS 'Non-negative, capped';
-
-COMMENT ON COLUMN "assessment"."assessment_responses"."client_answer_id" IS 'Unique idempotency identifier';
 
 COMMENT ON COLUMN "assessment"."assessment_responses"."answered_at" IS 'Required';
 

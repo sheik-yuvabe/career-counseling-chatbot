@@ -145,7 +145,6 @@ export type Database = {
         Row: {
           answered_at: string;
           assessment_run_id: string;
-          client_answer_id: string;
           id: string;
           item_id: string;
           latency_ms: number | null;
@@ -157,7 +156,6 @@ export type Database = {
         Insert: {
           answered_at: string;
           assessment_run_id: string;
-          client_answer_id: string;
           id: string;
           item_id: string;
           latency_ms?: number | null;
@@ -169,7 +167,6 @@ export type Database = {
         Update: {
           answered_at?: string;
           assessment_run_id?: string;
-          client_answer_id?: string;
           id?: string;
           item_id?: string;
           latency_ms?: number | null;

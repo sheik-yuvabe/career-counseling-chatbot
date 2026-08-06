@@ -326,7 +326,6 @@ Unique active-run rule prevents two simultaneous runs of the same instrument ver
 | `response_value`     | `smallint`    | Nullable; check `1..5` for Likert            |
 | `response_json`      | `jsonb`       | Nullable; only for approved structured types |
 | `latency_ms`         | `integer`     | Non-negative, capped                         |
-| `client_answer_id`   | `uuid`        | Unique idempotency identifier                |
 | `answered_at`        | `timestamptz` | Required                                     |
 | `received_at`        | `timestamptz` | Required                                     |
 
@@ -337,7 +336,7 @@ Constraints:
 - Item must belong to the run's frozen assessment version.
 - Responses are accepted only for `active` runs and consented minors.
 
-Indexes: `(assessment_run_id, answered_at)`, unique `client_answer_id`.
+Indexes: `(assessment_run_id, answered_at)`.
 
 ### `assessment.assessment_results`
 

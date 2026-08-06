@@ -81,8 +81,9 @@ export const AssessmentRunSchema = z.object({
 export type AssessmentRun = z.infer<typeof AssessmentRunSchema>;
 
 export const StartAssessmentRunRequestSchema = z.object({
-  instrumentCode: InstrumentCodeSchema,
+  instrumentCode: InstrumentCodeSchema.optional(),
   language: z.string().min(2).max(16).default("en"),
+  mode: z.enum(["text", "photo"]).optional(),
 });
 export type StartAssessmentRunRequest = z.infer<typeof StartAssessmentRunRequestSchema>;
 
@@ -107,7 +108,6 @@ export const SubmitAssessmentResponseRequestSchema = z.object({
   responseValue: z.number().int().min(1).max(5).optional(),
   responseJson: z.unknown().optional(),
   latencyMs: z.number().int().min(0).max(3_600_000).optional(),
-  clientAnswerId: UuidSchema,
   answeredAt: IsoTimestampSchema.optional(),
 });
 export type SubmitAssessmentResponseRequest = z.infer<
@@ -122,7 +122,6 @@ export const AssessmentResponseSchema = z.object({
   responseValue: z.number().int().nullable(),
   responseJson: z.unknown().nullable(),
   latencyMs: z.number().int().nullable(),
-  clientAnswerId: UuidSchema,
   answeredAt: IsoTimestampSchema,
   receivedAt: IsoTimestampSchema,
 });

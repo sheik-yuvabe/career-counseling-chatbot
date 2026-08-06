@@ -188,7 +188,6 @@ Table assessment.assessment_responses {
   response_value smallint [note: 'Nullable; check 1..5 for Likert']
   response_json jsonb [note: 'Nullable; only for approved structured types']
   latency_ms integer [note: 'Non-negative, capped']
-  client_answer_id uuid [not null, unique, note: 'Unique idempotency identifier']
   answered_at timestamptz [not null, note: 'Required']
   received_at timestamptz [not null, note: 'Required']
 

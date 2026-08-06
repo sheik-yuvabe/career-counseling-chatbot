@@ -550,7 +550,6 @@ selected_option_id    opt-r-01-love
 response_value        5
 response_json         null
 latency_ms            2400
-client_answer_id      ca-unique-001
 answered_at           2026-07-24T07:06:20Z
 received_at           2026-07-24T07:06:21Z
 ```
@@ -567,7 +566,6 @@ Important constraints:
 
 ```text
 one response per assessment run + item
-client_answer_id is unique for offline/idempotent retries
 selected option must belong to the item
 item must belong to the run's assessment version
 ```

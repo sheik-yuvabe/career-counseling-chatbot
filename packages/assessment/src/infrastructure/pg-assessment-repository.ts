@@ -39,7 +39,7 @@ type ItemRow = {
 type ResponseRow = {
   id: string; assessment_run_id: string; item_id: string; selected_option_id: string | null;
   response_value: number | null; response_json: unknown; latency_ms: number | null;
-  client_answer_id: string; answered_at: Date; received_at: Date;
+  answered_at: Date; received_at: Date;
 };
 
 type ResultRow = {
@@ -89,7 +89,6 @@ const mapResponse = (row: ResponseRow): AssessmentResponse => AssessmentResponse
   responseValue: row.response_value,
   responseJson: row.response_json,
   latencyMs: row.latency_ms,
-  clientAnswerId: row.client_answer_id,
   answeredAt: row.answered_at.toISOString(),
   receivedAt: row.received_at.toISOString(),
 });
@@ -220,9 +219,9 @@ export class PgAssessmentRepository implements AssessmentRepository {
     const result = await this.pool.query<ResponseRow>(`
       insert into assessment.assessment_responses (
         id, assessment_run_id, item_id, selected_option_id, response_value, response_json,
-        latency_ms, client_answer_id, answered_at, received_at
+        latency_ms, answered_at, received_at
       )
-      values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+      values ($1,$2,$3,$4,$5,$6,$7,$8,$9)
       on conflict (assessment_run_id, item_id) do update set
         selected_option_id = excluded.selected_option_id,
         response_value = excluded.response_value,
@@ -231,7 +230,7 @@ export class PgAssessmentRepository implements AssessmentRepository {
         answered_at = excluded.answered_at,
         received_at = excluded.received_at
       returning *
-    `, [input.id, input.assessmentRunId, input.itemId, input.selectedOptionId, input.responseValue, input.responseJson, input.latencyMs, input.clientAnswerId, input.answeredAt, input.receivedAt]);
+    `, [input.id, input.assessmentRunId, input.itemId, input.selectedOptionId, input.responseValue, input.responseJson, input.latencyMs, input.answeredAt, input.receivedAt]);
     const row = result.rows[0];
     if (!row) throw new Error("Assessment response upsert returned no row.");
     return mapResponse(row);

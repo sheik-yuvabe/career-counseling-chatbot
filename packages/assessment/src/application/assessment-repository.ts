@@ -41,7 +41,6 @@ export type NewAssessmentResponse = {
   responseValue: number | null;
   responseJson: unknown;
   latencyMs: number | null;
-  clientAnswerId: string;
   answeredAt: string;
   receivedAt: string;
 };
