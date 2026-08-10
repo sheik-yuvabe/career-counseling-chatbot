@@ -111,7 +111,7 @@ Table recommendation.recommendation_items {
   stream_option_id uuid [ref: > knowledge.stream_options.id, note: 'Nullable FK to stream option']
   college_id uuid [ref: > knowledge.colleges.id, note: 'Nullable FK to college']
   aid_scheme_id uuid [ref: > knowledge.aid_schemes.id, note: 'Nullable FK to aid scheme']
-  rank smallint [not null, unique, note: 'Positive, unique within run']
+  rank smallint [not null, note: 'Positive, unique within run']
   fit_score numeric(8,6) [note: 'Nullable; check 0..1']
   interest_fit numeric(8,6) [note: 'Nullable; check 0..1']
   values_fit numeric(8,6) [note: 'Nullable; check 0..1']
@@ -123,6 +123,10 @@ Table recommendation.recommendation_items {
   entity_snapshot_json jsonb [note: 'Minimal approved display snapshot, versioned']
   entity_dataset_version text [not null, note: 'Required']
   created_at timestamptz [not null, note: 'Required']
+
+  indexes {
+    (recommendation_run_id, rank) [unique]
+  }
 }
 
 Table recommendation.plan_templates {

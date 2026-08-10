@@ -1,6 +1,12 @@
 import { registerAssessmentRoutes } from "@yuvanext/assessment";
 import { createDatabasePool } from "@yuvanext/database";
 import { createOpenApiRegistry, generateOpenApiDocument } from "@yuvanext/contracts";
+import {
+  createPostgresRecommendationDataSource,
+  createPostgresRecommendationStore,
+  registerRecommendationRoutes,
+  type RecommendationStore,
+} from "@yuvanext/recommendations";
 import cors from "cors";
 import express, { type Express } from "express";
 import helmet from "helmet";
@@ -11,7 +17,10 @@ import { requestLogger } from "../middleware/request-logger.js";
 import { registerHealthRoute } from "../routes/health.js";
 import { modules } from "./modules.js";
 
-export type CreateAppOptions = { logging?: boolean };
+export type CreateAppOptions = {
+  logging?: boolean;
+  recommendationStore?: RecommendationStore;
+};
 
 export const createApp = (options: CreateAppOptions = {}): Express => {
   const app = express();
@@ -29,13 +38,24 @@ export const createApp = (options: CreateAppOptions = {}): Express => {
   }
 
   registerHealthRoute(app, registry, modules);
+  const databasePool = env.DATABASE_URL
+    ? createDatabasePool({ connectionString: env.DATABASE_URL, ssl: env.DATABASE_SSL })
+    : undefined;
+
   registerAssessmentRoutes(
     app,
     registry,
-    env.DATABASE_URL
-      ? { pool: createDatabasePool({ connectionString: env.DATABASE_URL, ssl: env.DATABASE_SSL }) }
-      : {},
+    databasePool ? { pool: databasePool } : {},
   );
+  const recommendationStore =
+    options.recommendationStore ??
+    (databasePool ? createPostgresRecommendationStore({ pool: databasePool }) : undefined);
+  if (recommendationStore) {
+    registerRecommendationRoutes(app, registry, {
+      store: recommendationStore,
+      ...(databasePool ? { dataSource: createPostgresRecommendationDataSource(databasePool) } : {}),
+    });
+  }
 
   const openApiDocument = generateOpenApiDocument(registry);
   app.get("/openapi.json", (_request, response) => response.json(openApiDocument));

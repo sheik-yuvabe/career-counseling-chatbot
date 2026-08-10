@@ -6,3 +6,4 @@ export * from "./intake.js";
 export * from "./journey-session.js";
 export * from "./openapi.js";
 export * from "./profile.js";
+export * from "./recommendations.js";
