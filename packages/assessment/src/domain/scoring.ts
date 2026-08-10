@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import type { AssessmentResult, RiasecScale } from "@yuvanext/contracts";
+import type { AssessmentResult, InstrumentCode, RiasecScale, WorkValueScale } from "@yuvanext/contracts";
 
 export type ScoredResponseInput = {
   itemId: string;
@@ -10,6 +10,14 @@ export type ScoredResponseInput = {
 };
 
 const RIASEC_ORDER: RiasecScale[] = ["R", "I", "A", "S", "E", "C"];
+const WORK_VALUE_ORDER: WorkValueScale[] = [
+  "achievement",
+  "independence",
+  "recognition",
+  "relationships",
+  "support",
+  "working_conditions",
+];
 
 const stableJson = (value: unknown): string => JSON.stringify(value, Object.keys(value as object).sort());
 
@@ -25,8 +33,20 @@ export const scoreRiasecResponses = (input: {
   responses: ScoredResponseInput[];
   resultId: string;
   createdAt: string;
+}): AssessmentResult => scoreAssessmentResponses(input);
+
+export const scoreAssessmentResponses = (input: {
+  runId: string;
+  userId: string;
+  instrumentCode: AssessmentResult["instrumentCode"];
+  instrumentVersion: string;
+  algorithmVersion: string;
+  responses: ScoredResponseInput[];
+  resultId: string;
+  createdAt: string;
 }): AssessmentResult => {
-  const rawScores: Record<RiasecScale, number> = { R: 0, I: 0, A: 0, S: 0, E: 0, C: 0 };
+  const scaleOrder = getScaleOrder(input.instrumentCode);
+  const rawScores = Object.fromEntries(scaleOrder.map((scale) => [scale, 0])) as Record<string, number>;
   let qcAnswered = 0;
 
   for (const response of input.responses) {
@@ -34,25 +54,27 @@ export const scoreRiasecResponses = (input: {
       qcAnswered += 1;
       continue;
     }
-    if (!response.scaleCode || !RIASEC_ORDER.includes(response.scaleCode as RiasecScale)) {
+    if (!response.scaleCode || !scaleOrder.includes(response.scaleCode)) {
       continue;
     }
 
     const score = response.scoreDelta ?? response.responseValue ?? 0;
-    rawScores[response.scaleCode as RiasecScale] += score;
+    rawScores[response.scaleCode] = getScore(rawScores, response.scaleCode) + score;
   }
 
   const maxScore = Math.max(...Object.values(rawScores), 1);
   const normalizedScores = Object.fromEntries(
-    RIASEC_ORDER.map((scale) => [scale, Number((rawScores[scale] / maxScore).toFixed(6))]),
-  ) as Record<RiasecScale, number>;
+    scaleOrder.map((scale) => [scale, Number((getScore(rawScores, scale) / maxScore).toFixed(6))]),
+  ) as Record<string, number>;
 
-  const sorted = [...RIASEC_ORDER].sort((left, right) => {
-    const scoreDelta = rawScores[right] - rawScores[left];
-    return scoreDelta === 0 ? RIASEC_ORDER.indexOf(left) - RIASEC_ORDER.indexOf(right) : scoreDelta;
+  const sorted = [...scaleOrder].sort((left, right) => {
+    const scoreDelta = getScore(rawScores, right) - getScore(rawScores, left);
+    return scoreDelta === 0 ? scaleOrder.indexOf(left) - scaleOrder.indexOf(right) : scoreDelta;
   });
-  const closeScores = rawScores[sorted[2] ?? "C"] - rawScores[sorted[3] ?? "C"] <= 1;
-  const resultCode = sorted.slice(0, 3).join("");
+  const thirdScore = getScore(rawScores, sorted[2] ?? scaleOrder[scaleOrder.length - 1] ?? "");
+  const fourthScore = getScore(rawScores, sorted[3] ?? scaleOrder[scaleOrder.length - 1] ?? "");
+  const closeScores = thirdScore - fourthScore <= 1;
+  const resultCode = input.instrumentCode === "wip" ? sorted.slice(0, 2).join("_") : sorted.slice(0, 3).join("");
   const qcSummary = { qcAnswered, scoredResponses: input.responses.length - qcAnswered };
   const resultPayload = {
     rawScores,
@@ -81,3 +103,8 @@ export const scoreRiasecResponses = (input: {
     createdAt: input.createdAt,
   };
 };
+
+const getScaleOrder = (instrumentCode: InstrumentCode): string[] =>
+  instrumentCode === "wip" ? WORK_VALUE_ORDER : RIASEC_ORDER;
+
+const getScore = (scores: Record<string, number>, scale: string): number => scores[scale] ?? 0;

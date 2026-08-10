@@ -70,6 +70,18 @@ export const registerAssessmentWorkflowRoutes = (
     }
   });
 
+  app.post("/api/v1/journey-sessions/:sessionId/work-values-runs", async (request, response, next) => {
+    try {
+      const userId = getActorUserId(request.headers);
+      const { sessionId } = SessionParamsSchema.parse(request.params);
+      const body = StartAssessmentRunRequestSchema.parse(request.body);
+      const run = await service.startWorkValuesRun({ sessionId, userId, request: body });
+      response.status(201).json({ run });
+    } catch (error) {
+      try { sendError(response, error); } catch (unhandled) { next(unhandled); }
+    }
+  });
+
   registry.registerPath({
     method: "get",
     path: "/api/v1/assessment-runs/{runId}/next",

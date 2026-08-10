@@ -293,6 +293,22 @@ export class PgAssessmentRepository implements AssessmentRepository {
     return row ? mapResult(row) : null;
   }
 
+  async findLatestResultByUserForInstrument(input: {
+    userId: string;
+    instrumentCode: InstrumentCode;
+  }): Promise<AssessmentResult | null> {
+    const result = await this.pool.query<ResultRow>(
+      `select *
+       from assessment.assessment_results
+       where user_id = $1 and instrument_code = $2
+       order by created_at desc
+       limit 1`,
+      [input.userId, input.instrumentCode],
+    );
+    const row = result.rows[0];
+    return row ? mapResult(row) : null;
+  }
+
   async getIntakeSummary(input: { userId: string; sessionId: string }): Promise<Record<string, unknown>> {
     const result = await this.pool.query<{ question_key: string; answer_json: unknown }>(`
       select iq.question_key, ia.answer_json
@@ -320,10 +336,12 @@ export class PgAssessmentRepository implements AssessmentRepository {
       )
       values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)
     `, [input.id, input.userId, input.profileVersion, input.profile.segment, input.profile.ageBand, input.profile.city, input.profile.state, input.profile.selfStage, input.profile.wantsAid, input.intakeSummary, input.resultSummary, input.algorithmVersion, input.snapshotSchemaVersion, input.payloadHash, input.createdAt]);
-    await this.pool.query(
-      `insert into assessment.profile_snapshot_results (profile_snapshot_id, assessment_result_id, result_role, display_order) values ($1,$2,'interest',1)`,
-      [input.id, input.sourceResultId],
-    );
+    for (const sourceResult of input.sourceResults) {
+      await this.pool.query(
+        `insert into assessment.profile_snapshot_results (profile_snapshot_id, assessment_result_id, result_role, display_order) values ($1,$2,$3,$4)`,
+        [input.id, sourceResult.resultId, sourceResult.role, sourceResult.displayOrder],
+      );
+    }
     return ProfileSnapshotSchema.parse({
       snapshotId: input.id,
       userId: input.userId,
@@ -335,9 +353,10 @@ export class PgAssessmentRepository implements AssessmentRepository {
       wantsAid: input.profile.wantsAid,
       intakeSummary: input.intakeSummary,
       riasec: (input.resultSummary as { riasec?: unknown }).riasec,
+      values: (input.resultSummary as { values?: unknown }).values,
       profileVersion: input.profileVersion,
       algorithmVersion: input.algorithmVersion,
-      sourceResultIds: [input.sourceResultId],
+      sourceResultIds: input.sourceResults.map((sourceResult) => sourceResult.resultId),
       createdAt: input.createdAt,
     });
   }

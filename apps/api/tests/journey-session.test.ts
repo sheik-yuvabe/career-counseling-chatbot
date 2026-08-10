@@ -19,6 +19,7 @@ describe("Journey session routes", () => {
     expect(body.paths["/api/v1/journey-sessions/{sessionId}/intake/questions"]).toBeDefined();
     expect(body.paths["/api/v1/journey-sessions/{sessionId}/intake/answers/{questionId}"]).toBeDefined();
     expect(body.paths["/api/v1/journey-sessions/{sessionId}/assessment-runs"]).toBeDefined();
+    expect(body.paths["/api/v1/journey-sessions/{sessionId}/work-values-runs"]).toBeUndefined();
     expect(body.paths["/api/v1/assessment-runs/{runId}/next"]).toBeDefined();
     expect(body.paths["/api/v1/assessment-runs/{runId}/responses"]).toBeDefined();
     expect(body.paths["/api/v1/assessment-runs/{runId}/score"]).toBeDefined();

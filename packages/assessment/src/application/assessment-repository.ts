@@ -55,7 +55,7 @@ export type NewProfileSnapshot = {
   algorithmVersion: string;
   snapshotSchemaVersion: number;
   payloadHash: string;
-  sourceResultId: string;
+  sourceResults: Array<{ resultId: string; role: "interest" | "values"; displayOrder: number }>;
   createdAt: string;
 };
 
@@ -82,6 +82,10 @@ export type AssessmentRepository = {
   listScoringResponses(runId: string): Promise<ScoredResponseInput[]>;
   createResult(input: AssessmentResult): Promise<AssessmentResult>;
   findResultByRunForUser(input: { runId: string; userId: string }): Promise<AssessmentResult | null>;
+  findLatestResultByUserForInstrument(input: {
+    userId: string;
+    instrumentCode: InstrumentCode;
+  }): Promise<AssessmentResult | null>;
   getIntakeSummary(input: { userId: string; sessionId: string }): Promise<Record<string, unknown>>;
   getNextProfileVersion(userId: string): Promise<number>;
   createProfileSnapshot(input: NewProfileSnapshot): Promise<ProfileSnapshot>;

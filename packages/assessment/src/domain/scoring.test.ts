@@ -26,4 +26,25 @@ describe("scoreRiasecResponses", () => {
     expect(result.inputHash).toHaveLength(64);
     expect(result.outputHash).toHaveLength(64);
   });
+
+  it("scores WIP work values with deterministic top-two output", () => {
+    const result = scoreRiasecResponses({
+      runId: "11111111-1111-4111-8111-111111111111",
+      userId: "22222222-2222-4222-8222-222222222222",
+      instrumentCode: "wip",
+      instrumentVersion: "1.0",
+      algorithmVersion: "wip-deterministic-v1",
+      resultId: "33333333-3333-4333-8333-333333333333",
+      createdAt: "2026-07-30T09:00:00.000Z",
+      responses: [
+        { itemId: "a1", scaleCode: "achievement", isQc: false, responseValue: 5, scoreDelta: null },
+        { itemId: "i1", scaleCode: "independence", isQc: false, responseValue: 4, scoreDelta: null },
+        { itemId: "r1", scaleCode: "relationships", isQc: false, responseValue: 2, scoreDelta: null },
+      ],
+    });
+
+    expect(result.resultCode).toBe("achievement_independence");
+    expect(result.normalizedScores.achievement).toBe(1);
+    expect(result.normalizedScores.independence).toBe(0.8);
+  });
 });

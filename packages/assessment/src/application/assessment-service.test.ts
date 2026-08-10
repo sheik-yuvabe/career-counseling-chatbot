@@ -64,7 +64,7 @@ class MemoryAssessmentRepository implements AssessmentRepository {
       id: "66666666-6666-4666-8666-666666666666",
       instrumentCode: input.instrumentCode,
       instrumentVersion: "1.0",
-      algorithmVersion: "riasec-score-v1",
+      algorithmVersion: input.instrumentCode === "wip" ? "wip-deterministic-v1" : "riasec-score-v1",
       batchSize: 10,
       itemCount: 2,
     });
@@ -76,9 +76,10 @@ class MemoryAssessmentRepository implements AssessmentRepository {
       userId: input.userId,
       journeySessionId: input.journeySessionId,
       assessmentVersionId: input.assessmentVersionId,
-      instrumentCode: this.lastInstrumentCode === "ip_60" ? "ip_60" : "mini_ip_30",
+      instrumentCode:
+        this.lastInstrumentCode === "wip" ? "wip" : this.lastInstrumentCode === "ip_60" ? "ip_60" : "mini_ip_30",
       instrumentVersion: "1.0",
-      algorithmVersion: "riasec-score-v1",
+      algorithmVersion: this.lastInstrumentCode === "wip" ? "wip-deterministic-v1" : "riasec-score-v1",
       segment: input.segment,
       status: "active",
       currentPosition: 0,
@@ -157,6 +158,10 @@ class MemoryAssessmentRepository implements AssessmentRepository {
     return Promise.resolve(this.result);
   }
 
+  findLatestResultByUserForInstrument(): Promise<AssessmentResult | null> {
+    return Promise.resolve(this.result?.instrumentCode === "wip" ? this.result : null);
+  }
+
   getIntakeSummary(): Promise<Record<string, unknown>> {
     return Promise.resolve({ current_goal: { value: "job" } });
   }
@@ -177,9 +182,10 @@ class MemoryAssessmentRepository implements AssessmentRepository {
       wantsAid: input.profile.wantsAid,
       intakeSummary: input.intakeSummary,
       riasec: (input.resultSummary as { riasec: ProfileSnapshot["riasec"] }).riasec,
+      values: (input.resultSummary as { values: ProfileSnapshot["values"] }).values,
       profileVersion: input.profileVersion,
       algorithmVersion: input.algorithmVersion,
-      sourceResultIds: [input.sourceResultId],
+      sourceResultIds: input.sourceResults.map((sourceResult) => sourceResult.resultId),
       createdAt: input.createdAt,
     });
   }
@@ -293,5 +299,21 @@ describe("AssessmentService", () => {
     await service.startRun({ sessionId, userId, request: { language: "en", mode: "text" } });
 
     expect(assessmentRepository.lastInstrumentCode).toBe("mini_ip_30");
+  });
+
+  it("starts WIP work-values runs without frontend instrument selection", async () => {
+    const assessmentRepository = new MemoryAssessmentRepository();
+    const service = new AssessmentService({
+      assessmentRepository,
+      journeySessionRepository: new MemoryJourneySessionRepository(),
+      userProfileRepository: new MemoryUserProfileRepository(),
+      guardianConsentRepository: new GrantedConsentRepository(),
+      clock: () => new Date("2026-07-30T09:00:00.000Z"),
+    });
+
+    const run = await service.startWorkValuesRun({ sessionId, userId, request: { language: "en" } });
+
+    expect(assessmentRepository.lastInstrumentCode).toBe("wip");
+    expect(run.instrumentCode).toBe("wip");
   });
 });

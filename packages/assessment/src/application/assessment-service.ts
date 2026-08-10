@@ -15,7 +15,7 @@ import {
   createJourneySessionExpiration,
   isJourneySessionExpired,
 } from "../domain/journey-session.js";
-import { scoreRiasecResponses, sha256Json } from "../domain/scoring.js";
+import { scoreAssessmentResponses, sha256Json } from "../domain/scoring.js";
 import {
   assessmentItemNotFound,
   assessmentResultNotFound,
@@ -30,7 +30,7 @@ import {
   journeySessionNotResumable,
   userProfileNotFound,
 } from "./errors.js";
-import type { AssessmentRepository } from "./assessment-repository.js";
+import type { AssessmentRepository, NewProfileSnapshot } from "./assessment-repository.js";
 import type { GuardianConsentRepository } from "./guardian-consent-repository.js";
 import type { JourneySessionRepository } from "./journey-session-repository.js";
 import type { UserProfileRepository } from "./user-profile-repository.js";
@@ -63,11 +63,28 @@ export class AssessmentService {
     userId: string;
     request: StartAssessmentRunRequest;
   }): Promise<AssessmentRun> {
+    const { profile } = await this.loadActiveSessionProfile(input);
+    return this.startRunForInstrument({ ...input, instrumentCode: selectDefaultInstrument(profile.segment) });
+  }
+
+  async startWorkValuesRun(input: {
+    sessionId: string;
+    userId: string;
+    request: StartAssessmentRunRequest;
+  }): Promise<AssessmentRun> {
+    return this.startRunForInstrument({ ...input, instrumentCode: "wip" });
+  }
+
+  private async startRunForInstrument(input: {
+    sessionId: string;
+    userId: string;
+    request: StartAssessmentRunRequest;
+    instrumentCode: InstrumentCode;
+  }): Promise<AssessmentRun> {
     const { profile, now } = await this.loadActiveSessionProfile(input);
     await this.ensureConsentIfMinor(profile);
-    const instrumentCode = selectDefaultInstrument(profile.segment);
     const version = await this.assessmentRepository.findActiveVersion({
-      instrumentCode,
+      instrumentCode: input.instrumentCode,
       language: input.request.language,
       ageAtOnboarding: profile.ageAtOnboarding,
       now: now.toISOString(),
@@ -176,7 +193,7 @@ export class AssessmentService {
     }
 
     const scoringResponses = await this.assessmentRepository.listScoringResponses(run.id);
-    const result = scoreRiasecResponses({
+    const result = scoreAssessmentResponses({
       runId: run.id,
       userId: input.userId,
       instrumentCode: run.instrumentCode,
@@ -205,17 +222,23 @@ export class AssessmentService {
 
     const intakeSummary = await this.assessmentRepository.getIntakeSummary(input);
     const profileVersion = await this.assessmentRepository.getNextProfileVersion(input.userId);
-    const resultSummary = {
-      riasec: {
-        rawScores: result.rawScores,
-        normalizedScores: result.normalizedScores,
-        code: result.resultCode,
-        confidence: result.confidence,
-        closeScores: result.closeScores,
-        instrumentCode: result.instrumentCode,
-        instrumentVersion: result.instrumentVersion,
-      },
-    };
+    const sourceResults: NewProfileSnapshot["sourceResults"] = [];
+    const resultSummary: Record<string, unknown> = {};
+    if (result.instrumentCode === "wip") {
+      resultSummary.values = toValuesSummary(result);
+      sourceResults.push({ resultId: result.id, role: "values", displayOrder: 2 });
+    } else {
+      resultSummary.riasec = toRiasecSummary(result);
+      sourceResults.push({ resultId: result.id, role: "interest", displayOrder: 1 });
+      const valuesResult = await this.assessmentRepository.findLatestResultByUserForInstrument({
+        userId: input.userId,
+        instrumentCode: "wip",
+      });
+      if (valuesResult) {
+        resultSummary.values = toValuesSummary(valuesResult);
+        sourceResults.push({ resultId: valuesResult.id, role: "values", displayOrder: 2 });
+      }
+    }
     const payload = { profile, intakeSummary, resultSummary, profileVersion };
     return this.assessmentRepository.createProfileSnapshot({
       id: randomUUID(),
@@ -227,7 +250,7 @@ export class AssessmentService {
       algorithmVersion: "profile-builder-v1",
       snapshotSchemaVersion: 1,
       payloadHash: sha256Json(payload),
-      sourceResultId: result.id,
+      sourceResults,
       createdAt: now.toISOString(),
     });
   }
@@ -280,6 +303,26 @@ export class AssessmentService {
 
 export const selectDefaultInstrument = (segment: UserProfile["segment"]): InstrumentCode =>
   segment === "explorer" ? "mini_ip_30" : "ip_60";
+
+const toRiasecSummary = (result: AssessmentResult) => ({
+  rawScores: result.rawScores,
+  normalizedScores: result.normalizedScores,
+  code: result.resultCode,
+  confidence: result.confidence,
+  closeScores: result.closeScores,
+  instrumentCode: result.instrumentCode,
+  instrumentVersion: result.instrumentVersion,
+});
+
+const toValuesSummary = (result: AssessmentResult) => ({
+  rawScores: result.rawScores,
+  normalizedScores: result.normalizedScores,
+  topTwo: result.resultCode.split("_"),
+  confidence: result.confidence,
+  closeScores: result.closeScores,
+  instrumentCode: result.instrumentCode,
+  instrumentVersion: result.instrumentVersion,
+});
 
 const validateResponseShape = (
   itemType: string,

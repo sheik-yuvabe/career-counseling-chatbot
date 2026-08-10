@@ -163,6 +163,7 @@ class UnavailableAssessmentRepository implements AssessmentRepository {
   listScoringResponses() { return this.unavailable(); }
   createResult() { return this.unavailable(); }
   findResultByRunForUser() { return this.unavailable(); }
+  findLatestResultByUserForInstrument() { return this.unavailable(); }
   getIntakeSummary() { return this.unavailable(); }
   getNextProfileVersion() { return this.unavailable(); }
   createProfileSnapshot() { return this.unavailable(); }

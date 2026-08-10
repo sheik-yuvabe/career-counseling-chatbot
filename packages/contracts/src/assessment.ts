@@ -34,6 +34,16 @@ export type AssessmentItemType = z.infer<typeof AssessmentItemTypeSchema>;
 export const RiasecScaleSchema = z.enum(["R", "I", "A", "S", "E", "C"]);
 export type RiasecScale = z.infer<typeof RiasecScaleSchema>;
 
+export const WorkValueScaleSchema = z.enum([
+  "achievement",
+  "independence",
+  "recognition",
+  "relationships",
+  "support",
+  "working_conditions",
+]);
+export type WorkValueScale = z.infer<typeof WorkValueScaleSchema>;
+
 export const ConfidenceSchema = z.enum(["normal", "soft"]);
 export type Confidence = z.infer<typeof ConfidenceSchema>;
 
@@ -135,6 +145,7 @@ export type AssessmentResponseSaveResponse = z.infer<
 >;
 
 export const RiasecScoresSchema = z.record(RiasecScaleSchema, z.number());
+export const AssessmentScoresSchema = z.record(z.string().min(1), z.number());
 
 export const AssessmentResultSchema = z.object({
   id: UuidSchema,
@@ -143,8 +154,8 @@ export const AssessmentResultSchema = z.object({
   instrumentCode: InstrumentCodeSchema,
   instrumentVersion: z.string().min(1),
   algorithmVersion: z.string().min(1),
-  rawScores: RiasecScoresSchema,
-  normalizedScores: RiasecScoresSchema,
+  rawScores: AssessmentScoresSchema,
+  normalizedScores: AssessmentScoresSchema,
   resultCode: z.string().min(1),
   confidence: ConfidenceSchema,
   closeScores: z.boolean(),
@@ -176,6 +187,17 @@ export const ProfileSnapshotSchema = z.object({
       confidence: ConfidenceSchema,
       closeScores: z.boolean(),
       instrumentCode: InstrumentCodeSchema,
+      instrumentVersion: z.string().min(1),
+    })
+    .optional(),
+  values: z
+    .object({
+      rawScores: z.record(WorkValueScaleSchema, z.number()),
+      normalizedScores: z.record(WorkValueScaleSchema, z.number()),
+      topTwo: z.array(WorkValueScaleSchema).length(2),
+      confidence: ConfidenceSchema,
+      closeScores: z.boolean(),
+      instrumentCode: z.literal("wip"),
       instrumentVersion: z.string().min(1),
     })
     .optional(),
