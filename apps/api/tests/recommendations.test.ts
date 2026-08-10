@@ -135,7 +135,7 @@ describe("recommendation routes", () => {
     });
   });
 
-  it("rejects duplicate recommendation ids because completed outputs are immutable", async () => {
+  it("returns the existing recommendation when calculation inputs are unchanged", async () => {
     const app = createTestApp();
     const payload = {
       recommendationId: "00000000-0000-4000-8000-000000006303",
@@ -155,13 +155,12 @@ describe("recommendation routes", () => {
       ],
     };
 
-    expect((await request(app).post("/api/v1/recommendations/careers").send(payload)).status).toBe(200);
-    const duplicate = await request(app).post("/api/v1/recommendations/careers").send(payload);
+    const original = await request(app).post("/api/v1/recommendations/careers").send(payload);
+    expect(original.status).toBe(200);
+    const repeated = await request(app).post("/api/v1/recommendations/careers").send(payload);
 
-    expect(duplicate.status).toBe(409);
-    expect(JSON.parse(duplicate.text)).toMatchObject({
-      code: "recommendation_already_exists",
-    });
+    expect(repeated.status).toBe(200);
+    expect(repeated.text).toBe(original.text);
   });
 
   it("rejects invalid recommendation request bodies", async () => {

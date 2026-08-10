@@ -27,7 +27,7 @@ export type RecommendationDataSource = {
   loadProfile(profileSnapshotId: string): Promise<ProfileSnapshotForRecommendations>;
   loadActiveConfig(configurationKey: string): Promise<MatchingConfig>;
   loadFeasibilityRules(config: MatchingConfig): Promise<FeasibilityRule[]>;
-  loadCareers(limit?: number): Promise<CareerCatalogRecord[]>;
+  loadCareers(): Promise<CareerCatalogRecord[]>;
   loadStreams(profile: ProfileSnapshotForRecommendations, limit?: number): Promise<StreamCatalogRecord[]>;
   loadPathways(limit?: number): Promise<PathwayCatalogRecord[]>;
   loadColleges(limit?: number): Promise<CollegeCatalogRecord[]>;
@@ -116,7 +116,7 @@ export function createPostgresRecommendationDataSource(pool: Pool): Recommendati
       }));
     },
 
-    async loadCareers(limit = 30) {
+    async loadCareers() {
       const result = await pool.query<{
         id: string;
         title: string;
@@ -164,9 +164,7 @@ export function createPostgresRecommendationDataSource(pool: Pool): Recommendati
           on route.id = coalesce(pathway.education_route_id, career.primary_education_route_id)
         where career.publication_status = 'published'
         group by career.id, dataset.version, interest.career_id, value_profile.career_id
-        order by career.title asc
-        limit $1`,
-        [limit],
+        order by career.title asc`,
       );
 
       return result.rows.map((row) => ({

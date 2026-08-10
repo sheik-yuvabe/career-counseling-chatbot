@@ -82,7 +82,9 @@ export const registerRecommendationRoutes = (
       return service.recommendCareers({
         recommendationId: resolveRecommendationId(body.recommendationId),
         profile,
-        careers: body.careers ?? (await requireDataSource(options.dataSource).loadCareers(body.limit)),
+        // Rank the complete published catalogue. Limiting before scoring could
+        // discard the student's best matches merely because they sort later.
+        careers: body.careers ?? (await requireDataSource(options.dataSource).loadCareers()),
         config,
         ...(body.feasibilityRules
           ? { feasibilityRules: body.feasibilityRules }

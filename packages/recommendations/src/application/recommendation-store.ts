@@ -8,6 +8,11 @@ export type StoredRecommendationSet = RecommendationSet;
 export type RecommendationStore = {
   save(set: RecommendationSet): Promise<RecommendationSet>;
   findById(recommendationId: string): Promise<RecommendationSet | undefined>;
+  findByInputHash(
+    profileSnapshotId: string,
+    kind: RecommendationSet["kind"],
+    inputHash: string,
+  ): Promise<RecommendationSet | undefined>;
   clear(): Promise<void>;
 };
 
@@ -25,6 +30,16 @@ export function createInMemoryRecommendationStore(): RecommendationStore {
     },
     findById(recommendationId) {
       return Promise.resolve(sets.get(recommendationId));
+    },
+    findByInputHash(profileSnapshotId, kind, inputHash) {
+      return Promise.resolve(
+        [...sets.values()].find(
+          (set) =>
+            set.profileSnapshotId === profileSnapshotId &&
+            set.kind === kind &&
+            set.inputHash === inputHash,
+        ),
+      );
     },
     clear() {
       sets.clear();
@@ -71,9 +86,10 @@ export function createPostgresRecommendationStore(
   return {
     async save(set) {
       await withTransaction(options.pool, async (client) => {
-        const existing = await client.query("select id from recommendation.recommendation_runs where id = $1", [
-          set.recommendationId,
-        ]);
+        const existing = await client.query(
+          "select id from recommendation.recommendation_runs where id = $1",
+          [set.recommendationId],
+        );
         if ((existing.rowCount ?? 0) > 0) {
           throw new Error(`Recommendation ${set.recommendationId} already exists`);
         }
@@ -213,20 +229,41 @@ export function createPostgresRecommendationStore(
         inputHash: row.input_hash,
         outputHash: row.output_hash,
         createdAt:
-          typeof row.created_at === "string" ? new Date(row.created_at).toISOString() : row.created_at.toISOString(),
+          typeof row.created_at === "string"
+            ? new Date(row.created_at).toISOString()
+            : row.created_at.toISOString(),
       };
     },
 
+    async findByInputHash(profileSnapshotId, kind, inputHash) {
+      const result = await options.pool.query<{ id: string }>(
+        `select id
+        from recommendation.recommendation_runs
+        where profile_snapshot_id = $1
+          and kind = $2
+          and input_hash = $3
+          and status = 'completed'
+        order by completed_at desc nulls last, created_at desc
+        limit 1`,
+        [profileSnapshotId, kind, inputHash],
+      );
+      const recommendationId = result.rows[0]?.id;
+      if (!recommendationId) {
+        return undefined;
+      }
+
+      return createPostgresRecommendationStore(options).findById(recommendationId);
+    },
+
     clear() {
-      return Promise.reject(new Error("Clearing the persistent recommendation store is not supported"));
+      return Promise.reject(
+        new Error("Clearing the persistent recommendation store is not supported"),
+      );
     },
   };
 }
 
-async function resolveConfigurationId(
-  client: PoolClient,
-  set: RecommendationSet,
-): Promise<string> {
+async function resolveConfigurationId(client: PoolClient, set: RecommendationSet): Promise<string> {
   const byVersion = await client.query<{ id: string }>(
     `select id
      from recommendation.matching_configurations
@@ -253,7 +290,9 @@ async function resolveConfigurationId(
     return algorithmMatch;
   }
 
-  throw new Error(`No matching configuration found for ${set.algorithmVersion}/${set.weightsVersion}`);
+  throw new Error(
+    `No matching configuration found for ${set.algorithmVersion}/${set.weightsVersion}`,
+  );
 }
 
 async function insertRings(
@@ -282,7 +321,14 @@ async function insertRings(
         rule_version,
         reason_template_key
       ) values ($1, $2, $3, $4, $5, $6)`,
-      [id, set.recommendationId, ringCode, displayOrder, set.algorithmVersion, `${set.kind}_${ringCode}`],
+      [
+        id,
+        set.recommendationId,
+        ringCode,
+        displayOrder,
+        set.algorithmVersion,
+        `${set.kind}_${ringCode}`,
+      ],
     );
   }
 

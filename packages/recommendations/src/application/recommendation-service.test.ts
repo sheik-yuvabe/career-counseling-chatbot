@@ -216,17 +216,52 @@ describe("recommendation service", () => {
     });
   });
 
-  it("rejects recalculation with an existing recommendation id", async () => {
+  it("reuses the existing recommendation when calculation inputs are unchanged", async () => {
     const service = createRecommendationService();
-    const request = {
-      recommendationId: "career-rec-immutable",
+    const first = await service.recommendCareers({
+      recommendationId: "career-rec-original",
       profile,
       careers,
       config,
       createdAt,
-    };
+    });
+    const repeated = await service.recommendCareers({
+      recommendationId: "career-rec-unused",
+      profile,
+      careers,
+      config,
+      createdAt: "2026-07-29T00:00:00.000Z",
+    });
 
-    await service.recommendCareers(request);
-    await expect(service.recommendCareers(request)).rejects.toThrow(/already exists/);
+    expect(repeated.recommendationId).toBe(first.recommendationId);
+    expect(repeated.inputHash).toBe(first.inputHash);
+  });
+
+  it("creates a new recommendation when the profile changes", async () => {
+    const service = createRecommendationService();
+    const first = await service.recommendCareers({
+      recommendationId: "career-rec-profile-v1",
+      profile,
+      careers,
+      config,
+      createdAt,
+    });
+    const changedProfile = {
+      ...profile,
+      profileSnapshotId: "00000000-0000-4000-8000-000000005099",
+      profileVersion: "profile-v2",
+      profileHash: "profile-hash-v2",
+      riasec: { ...profile.riasec, I: 8 },
+    };
+    const changed = await service.recommendCareers({
+      recommendationId: "career-rec-profile-v2",
+      profile: changedProfile,
+      careers,
+      config,
+      createdAt: "2026-07-29T00:00:00.000Z",
+    });
+
+    expect(changed.recommendationId).not.toBe(first.recommendationId);
+    expect(changed.inputHash).not.toBe(first.inputHash);
   });
 });

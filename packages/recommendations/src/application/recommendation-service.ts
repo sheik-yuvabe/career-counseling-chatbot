@@ -10,10 +10,7 @@ import type {
   RecommendationSet,
   StreamCatalogRecord,
 } from "@yuvanext/contracts";
-import {
-  buildAidRecommendationSet,
-  type StoredFacts,
-} from "../domain/aid-recommendations.js";
+import { buildAidRecommendationSet, type StoredFacts } from "../domain/aid-recommendations.js";
 import {
   buildCareerRecommendationSet,
   type CounselorPriority,
@@ -86,7 +83,10 @@ export type RecommendationService = {
   recommendAid(request: AidRecommendationRequest): Promise<RecommendationSet>;
   generatePlan(request: PlanGenerationRequest): Promise<RecommendationSet>;
   getRecommendation(recommendationId: string): Promise<RecommendationSet | undefined>;
-  replayRecommendation(recommendationId: string, replayedAt: string): Promise<RecommendationReplayResult | undefined>;
+  replayRecommendation(
+    recommendationId: string,
+    replayedAt: string,
+  ): Promise<RecommendationReplayResult | undefined>;
 };
 
 export type CreateRecommendationServiceOptions = {
@@ -97,7 +97,10 @@ export function createRecommendationService(
   options: CreateRecommendationServiceOptions = {},
 ): RecommendationService {
   const store = options.store ?? createInMemoryRecommendationStore();
-  const save = (set: RecommendationSet): Promise<RecommendationSet> => store.save(set);
+  const save = async (set: RecommendationSet): Promise<RecommendationSet> => {
+    const existing = await store.findByInputHash(set.profileSnapshotId, set.kind, set.inputHash);
+    return existing ?? store.save(set);
+  };
 
   return {
     recommendCareers: (request) =>
