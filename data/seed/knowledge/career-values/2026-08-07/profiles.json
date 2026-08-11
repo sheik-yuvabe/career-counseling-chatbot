@@ -1,0 +1,325 @@
+{
+  "source": "O*NET 30.0 Work Values",
+  "checksumSha256": "3aac674a8c4a984ad513a45ece814d52825f24e0a7fbe00b7aee7cb4588a05ae",
+  "profiles": [
+    {
+      "onetCode": "17-2051.00",
+      "values": {
+        "Achievement": 0.76143,
+        "Independence": 0.85714,
+        "Recognition": 0.76143,
+        "Relationships": 0.57143,
+        "Support": 0.66714,
+        "Working Conditions": 0.78571
+      }
+    },
+    {
+      "onetCode": "17-2141.00",
+      "values": {
+        "Achievement": 0.76143,
+        "Independence": 0.76143,
+        "Recognition": 0.81,
+        "Relationships": 0.66714,
+        "Support": 0.66714,
+        "Working Conditions": 0.73857
+      }
+    },
+    {
+      "onetCode": "29-1123.00",
+      "values": {
+        "Achievement": 0.81,
+        "Independence": 0.76143,
+        "Recognition": 0.81,
+        "Relationships": 0.95286,
+        "Support": 0.66714,
+        "Working Conditions": 0.76143
+      }
+    },
+    {
+      "onetCode": "29-2011.00",
+      "values": {
+        "Achievement": 0.61857,
+        "Independence": 0.66714,
+        "Recognition": 0.52429,
+        "Relationships": 0.61857,
+        "Support": 0.81,
+        "Working Conditions": 0.54714
+      }
+    },
+    {
+      "onetCode": "25-2021.00",
+      "values": {
+        "Achievement": 0.81,
+        "Independence": 0.76143,
+        "Recognition": 0.61857,
+        "Relationships": 0.90429,
+        "Support": 0.71429,
+        "Working Conditions": 0.71429
+      }
+    },
+    {
+      "onetCode": "25-2031.00",
+      "values": {
+        "Achievement": 0.81,
+        "Independence": 0.71429,
+        "Recognition": 0.57143,
+        "Relationships": 1,
+        "Support": 0.66714,
+        "Working Conditions": 0.76143
+      }
+    },
+    {
+      "onetCode": "13-2011.00",
+      "values": {
+        "Achievement": 0.71429,
+        "Independence": 0.71429,
+        "Recognition": 0.66714,
+        "Relationships": 0.66714,
+        "Support": 0.66714,
+        "Working Conditions": 0.64286
+      }
+    },
+    {
+      "onetCode": "17-2021.00",
+      "values": {
+        "Achievement": 0.76143,
+        "Independence": 0.81,
+        "Recognition": 0.66714,
+        "Relationships": 0.47571,
+        "Support": 0.52429,
+        "Working Conditions": 0.81
+      }
+    },
+    {
+      "onetCode": "19-2041.00",
+      "values": {
+        "Achievement": 0.71429,
+        "Independence": 0.71429,
+        "Recognition": 0.71429,
+        "Relationships": 0.57143,
+        "Support": 0.52429,
+        "Working Conditions": 0.66714
+      }
+    },
+    {
+      "onetCode": "47-2111.00",
+      "values": {
+        "Achievement": 0.61857,
+        "Independence": 0.76143,
+        "Recognition": 0.47571,
+        "Relationships": 0.52429,
+        "Support": 0.71429,
+        "Working Conditions": 0.59571
+      }
+    },
+    {
+      "onetCode": "51-4121.00",
+      "values": {
+        "Achievement": 0.35714,
+        "Independence": 0.40429,
+        "Recognition": 0.35714,
+        "Relationships": 0.45286,
+        "Support": 0.69,
+        "Working Conditions": 0.45286
+      }
+    },
+    {
+      "onetCode": "27-1024.00",
+      "values": {
+        "Achievement": 0.81,
+        "Independence": 0.76143,
+        "Recognition": 0.66714,
+        "Relationships": 0.57143,
+        "Support": 0.57143,
+        "Working Conditions": 0.64286
+      }
+    },
+    {
+      "onetCode": "27-3043.00",
+      "values": {
+        "Achievement": 0.71429,
+        "Independence": 0.52429,
+        "Recognition": 0.52429,
+        "Relationships": 0.57143,
+        "Support": 0.61857,
+        "Working Conditions": 0.59571
+      }
+    },
+    {
+      "onetCode": "23-1011.00",
+      "values": {
+        "Achievement": 0.85714,
+        "Independence": 0.85714,
+        "Recognition": 0.90429,
+        "Relationships": 0.57143,
+        "Support": 0.61857,
+        "Working Conditions": 0.85714
+      }
+    },
+    {
+      "onetCode": "33-2011.00",
+      "values": {
+        "Achievement": 0.78571,
+        "Independence": 0.66714,
+        "Recognition": 0.69,
+        "Relationships": 0.81,
+        "Support": 0.83286,
+        "Working Conditions": 0.64286
+      }
+    },
+    {
+      "onetCode": "19-2031.00",
+      "values": {
+        "Achievement": 0.81,
+        "Independence": 0.76143,
+        "Recognition": 0.71429,
+        "Relationships": 0.42857,
+        "Support": 0.66714,
+        "Working Conditions": 0.73857
+      }
+    },
+    {
+      "onetCode": "19-1022.00",
+      "values": {
+        "Achievement": 0.71429,
+        "Independence": 0.71429,
+        "Recognition": 0.76143,
+        "Relationships": 0.61857,
+        "Support": 0.57143,
+        "Working Conditions": 0.66714
+      }
+    },
+    {
+      "onetCode": "13-1081.00",
+      "values": {
+        "Achievement": 0.76143,
+        "Independence": 0.81,
+        "Recognition": 0.71429,
+        "Relationships": 0.71429,
+        "Support": 0.61857,
+        "Working Conditions": 0.69
+      }
+    },
+    {
+      "onetCode": "11-3071.00",
+      "values": {
+        "Achievement": 0.63429,
+        "Independence": 0.74571,
+        "Recognition": 0.60286,
+        "Relationships": 0.76143,
+        "Support": 0.68286,
+        "Working Conditions": 0.73857
+      }
+    },
+    {
+      "onetCode": "35-1011.00",
+      "values": {
+        "Achievement": 0.71429,
+        "Independence": 0.85714,
+        "Recognition": 0.76143,
+        "Relationships": 0.66714,
+        "Support": 0.52429,
+        "Working Conditions": 0.64286
+      }
+    },
+    {
+      "onetCode": "11-9081.00",
+      "values": {
+        "Achievement": 0.71429,
+        "Independence": 0.85714,
+        "Recognition": 0.61857,
+        "Relationships": 1,
+        "Support": 0.57143,
+        "Working Conditions": 0.59571
+      }
+    },
+    {
+      "onetCode": "21-1021.00",
+      "values": {
+        "Achievement": 0.85714,
+        "Independence": 0.76143,
+        "Recognition": 0.52429,
+        "Relationships": 0.95286,
+        "Support": 0.66714,
+        "Working Conditions": 0.71429
+      }
+    },
+    {
+      "onetCode": "21-1012.00",
+      "values": {
+        "Achievement": 0.76143,
+        "Independence": 0.66714,
+        "Recognition": 0.66714,
+        "Relationships": 1,
+        "Support": 0.52429,
+        "Working Conditions": 0.71429
+      }
+    },
+    {
+      "onetCode": "17-1011.00",
+      "values": {
+        "Achievement": 0.81,
+        "Independence": 0.85714,
+        "Recognition": 0.81,
+        "Relationships": 0.52429,
+        "Support": 0.61857,
+        "Working Conditions": 0.78571
+      }
+    },
+    {
+      "onetCode": "11-9021.00",
+      "values": {
+        "Achievement": 0.76143,
+        "Independence": 0.81,
+        "Recognition": 0.66714,
+        "Relationships": 0.71429,
+        "Support": 0.76143,
+        "Working Conditions": 0.83286
+      }
+    },
+    {
+      "onetCode": "47-2231.00",
+      "values": {
+        "Achievement": 0.57143,
+        "Independence": 0.47571,
+        "Recognition": 0.42857,
+        "Relationships": 0.42857,
+        "Support": 0.57143,
+        "Working Conditions": 0.5
+      }
+    },
+    {
+      "onetCode": "49-9081.00",
+      "values": {
+        "Achievement": 0.57143,
+        "Independence": 0.42857,
+        "Recognition": 0.42857,
+        "Relationships": 0.52429,
+        "Support": 0.61857,
+        "Working Conditions": 0.54714
+      }
+    },
+    {
+      "onetCode": "49-3023.00",
+      "values": {
+        "Achievement": 0.52429,
+        "Independence": 0.61857,
+        "Recognition": 0.42857,
+        "Relationships": 0.54714,
+        "Support": 0.61857,
+        "Working Conditions": 0.51143
+      }
+    },
+    {
+      "onetCode": "53-2011.00",
+      "values": {
+        "Achievement": 0.81,
+        "Independence": 0.90429,
+        "Recognition": 0.81,
+        "Relationships": 0.71429,
+        "Support": 0.90429,
+        "Working Conditions": 0.83286
+      }
+    }
+  ]
+}

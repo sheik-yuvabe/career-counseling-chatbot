@@ -29,6 +29,28 @@ export class PostgresStreamRepository implements StreamRepository {
   ): Promise<StreamRepositoryResult> {
     const result = await this.database.query(
       `
+        with selected_map as (
+          select map.id
+          from knowledge.stream_maps as map
+          inner join knowledge.dataset_versions as dataset
+            on dataset.id = map.dataset_version_id
+          inner join knowledge.knowledge_sources as source
+            on source.id = dataset.source_id
+          where map.top_two_code = $1
+            and map.segment = $2
+            and map.status = 'published'
+            and dataset.import_status = 'published'
+            and source.trust_level in ('authoritative_external', 'project_reviewed')
+          order by
+            case source.trust_level
+              when 'authoritative_external' then 0
+              else 1
+            end,
+            dataset.published_at desc nulls last,
+            dataset.imported_at desc,
+            map.id
+          limit 1
+        )
         select
           option.stream_code as "streamCode",
           option.title,
@@ -37,6 +59,8 @@ export class PostgresStreamRepository implements StreamRepository {
           item.reason_key as "reasonKey",
           map.dataset_version_id::text as "datasetVersionId"
         from knowledge.stream_maps as map
+        inner join selected_map
+          on selected_map.id = map.id
         inner join knowledge.dataset_versions as dataset
           on dataset.id = map.dataset_version_id
         inner join knowledge.stream_map_items as item

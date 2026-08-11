@@ -28,7 +28,7 @@
     "state": "Karnataka",
     "institutionType": "institute",
     "websiteUrl": "https://example.edu/bengaluru-skills",
-    "verificationStatus": "stale",
+    "verificationStatus": "stale",                   
     "lastVerifiedAt": "2024-01-01T00:00:00.000Z",
     "datasetVersionId": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
   },

@@ -18,3 +18,24 @@ supabase/.temp/
 .DS_Store
 Thumbs.db
 .vscode/settings.json
+
+# Downloaded source snapshots and local data-processing inputs.
+# Reviewed/versioned datasets under data/seed remain tracked.
+data/raw/
+
+# Generated documentation exports kept at the docs root.
+# Source-of-truth documentation in docs/reference, docs/data-model, and
+# docs/poc remains tracked.
+docs/*.pdf
+docs/*.ppt
+docs/*.pptx
+docs/checksum-sha256-explainer.html
+docs/module-3-api-endpoint-guide.html
+docs/module-3-complete-api-flow.html
+docs/module-3-endpoint-code-locations.html
+docs/module-3-swagger-demo-catalog.html
+
+# Temporary office and PDF-rendering files.
+~$*
+*.tmp
+*.temp

@@ -38,6 +38,12 @@ describe("PostgresCollegeRepository", () => {
     expect(query.mock.calls[0]?.[0]).toContain(
       "dataset.import_status = 'published'",
     );
+    expect(query.mock.calls[0]?.[0]).toContain(
+      "with selected_dataset as",
+    );
+    expect(query.mock.calls[0]?.[0]).toContain(
+      "inner join selected_dataset",
+    );
     expect(result[0]?.lastVerifiedAt).toBe(
       "2026-07-01T00:00:00.000Z",
     );

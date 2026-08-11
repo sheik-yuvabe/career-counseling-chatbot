@@ -9,8 +9,36 @@ export class PostgresAidSchemeRepository implements AidSchemeRepository {
   constructor(private readonly database: QueryExecutor) {}
 
   async list(filters: AidSchemeFilters): Promise<readonly AidScheme[]> {
+    const limit = Math.min(Math.max(filters.limit ?? 20, 1), 50);
     const result = await this.database.query(
-      `select aid.id::text as "id", aid.aid_code as "aidCode", aid.name,
+      `with selected_dataset as (
+        select dataset.id
+        from knowledge.dataset_versions dataset
+        join knowledge.knowledge_sources source on source.id = dataset.source_id
+        where dataset.import_status = 'published'
+          and exists (
+            select 1
+            from knowledge.aid_schemes candidate
+            where candidate.dataset_version_id = dataset.id
+              and candidate.verification_status = 'verified'
+              and ($1::text is null or cardinality(candidate.states) = 0 or exists (
+                select 1
+                from unnest(candidate.states) state
+                where lower(trim(state)) = lower(trim($1::text))
+              ))
+          )
+        order by
+          case source.trust_level
+            when 'authoritative_external' then 0
+            when 'project_reviewed' then 1
+            else 2
+          end,
+          dataset.published_at desc nulls last,
+          dataset.imported_at desc,
+          dataset.id
+        limit 1
+      )
+      select aid.id::text as "id", aid.aid_code as "aidCode", aid.name,
         aid.provider_type as "providerType", aid.provider, aid.level,
         coalesce(aid.states, array[]::text[]) as states,
         aid.eligibility_summary as "eligibilitySummary",
@@ -23,6 +51,7 @@ export class PostgresAidSchemeRepository implements AidSchemeRepository {
         aid.dataset_version_id::text as "datasetVersionId"
       from knowledge.aid_schemes aid
       join knowledge.dataset_versions dataset on dataset.id = aid.dataset_version_id
+      join selected_dataset on selected_dataset.id = dataset.id
       where aid.verification_status = 'verified'
         and dataset.import_status = 'published'
         and ($1::text is null or cardinality(aid.states) = 0 or exists (
@@ -45,15 +74,22 @@ export class PostgresAidSchemeRepository implements AidSchemeRepository {
         ))
       order by lower(aid.name), aid.id
       limit $5`,
-      [filters.state ?? null, filters.level ?? null,
-        filters.annualIncome ?? null, filters.category ?? null,
-        filters.limit ?? 20],
+      [
+        filters.state ?? null,
+        filters.level ?? null,
+        filters.annualIncome ?? null,
+        filters.category ?? null,
+        limit,
+      ],
     );
-    return result.rows.map((row) => AidSchemeSchema.parse({
-      ...row,
-      lastVerifiedAt: row.lastVerifiedAt instanceof Date
-        ? row.lastVerifiedAt.toISOString()
-        : row.lastVerifiedAt,
-    }));
+    return result.rows.map((row) =>
+      AidSchemeSchema.parse({
+        ...row,
+        lastVerifiedAt:
+          row.lastVerifiedAt instanceof Date
+            ? row.lastVerifiedAt.toISOString()
+            : row.lastVerifiedAt,
+      }),
+    );
   }
 }

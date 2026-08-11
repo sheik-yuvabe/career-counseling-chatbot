@@ -33,6 +33,33 @@ export class PostgresCollegeRepository implements CollegeRepository {
     const limit = Math.min(Math.max(filters.limit ?? 20, 1), 50);
     const result = await this.database.query(
       `
+        with selected_dataset as (
+          select dataset.id
+          from knowledge.dataset_versions as dataset
+          inner join knowledge.knowledge_sources as source
+            on source.id = dataset.source_id
+          where dataset.import_status = 'published'
+            and exists (
+              select 1
+              from knowledge.colleges as candidate
+              where candidate.dataset_version_id = dataset.id
+                and candidate.verification_status = 'verified'
+                and (
+                  $1::text is null
+                  or lower(trim(candidate.state)) = lower(trim($1::text))
+                )
+            )
+          order by
+            case source.trust_level
+              when 'authoritative_external' then 0
+              when 'project_reviewed' then 1
+              else 2
+            end,
+            dataset.published_at desc nulls last,
+            dataset.imported_at desc,
+            dataset.id
+          limit 1
+        )
         select
           college.id::text as "id",
           college.name,
@@ -46,6 +73,8 @@ export class PostgresCollegeRepository implements CollegeRepository {
         from knowledge.colleges as college
         inner join knowledge.dataset_versions as dataset
           on dataset.id = college.dataset_version_id
+        inner join selected_dataset
+          on selected_dataset.id = dataset.id
         where college.verification_status = 'verified'
           and dataset.import_status = 'published'
           and (

@@ -33,5 +33,16 @@ describe("GET /api/v1/health", () => {
     expect(body.paths["/api/v1/catalog/careers/{slug}"]).toBeDefined();
     expect(body.paths["/api/v1/catalog/careers/search"]).toBeDefined();
     expect(body.paths["/api/v1/catalog/streams"]).toBeDefined();
+    expect(Object.keys(body.paths)).toEqual([
+      "/api/v1/health",
+      "/api/v1/catalog/datasets",
+      "/api/v1/catalog/careers/search",
+      "/api/v1/catalog/careers/{slug}",
+      "/api/v1/catalog/streams",
+      "/api/v1/catalog/colleges",
+      "/api/v1/catalog/aid-schemes",
+      "/api/v1/internal/catalog/imports",
+      "/api/v1/internal/catalog/imports/{id}/report",
+    ]);
   });
 });

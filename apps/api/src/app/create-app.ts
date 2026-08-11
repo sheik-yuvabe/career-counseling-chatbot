@@ -137,6 +137,26 @@ export const createApp = (options: CreateAppOptions = {}): Express => {
   });
 
   const openApiDocument = generateOpenApiDocument(registry);
+  const swaggerPathOrder = [
+    "/api/v1/health",
+    "/api/v1/catalog/datasets",
+    "/api/v1/catalog/careers/search",
+    "/api/v1/catalog/careers/{slug}",
+    "/api/v1/catalog/streams",
+    "/api/v1/catalog/colleges",
+    "/api/v1/catalog/aid-schemes",
+    "/api/v1/internal/catalog/imports",
+    "/api/v1/internal/catalog/imports/{id}/report",
+  ];
+  const orderedPaths: typeof openApiDocument.paths = {};
+  for (const path of swaggerPathOrder) {
+    const pathItem = openApiDocument.paths[path];
+    if (pathItem !== undefined) orderedPaths[path] = pathItem;
+  }
+  for (const [path, pathItem] of Object.entries(openApiDocument.paths)) {
+    if (orderedPaths[path] === undefined) orderedPaths[path] = pathItem;
+  }
+  openApiDocument.paths = orderedPaths;
   app.get("/openapi.json", (_request, response) => response.json(openApiDocument));
   app.use(
     "/docs",
@@ -148,7 +168,6 @@ export const createApp = (options: CreateAppOptions = {}): Express => {
   app.use(errorHandler);
   return app;
 };
-
 const createInternalAuthorizer = (expectedKey: string | undefined) =>
   (authorization: string | undefined): boolean => {
     if (expectedKey === undefined || authorization === undefined) return false;
