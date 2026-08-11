@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "datasetKey": "streams-poc",
+  "version": "2026-08-11",
+  "datasetVersionId": "a7777777-7777-4777-8777-777777777777",
+  "recordsFile": "streams.json",
+  "recordCounts": {
+    "educationRoutes": 0,
+    "pathways": 0,
+    "streamOptions": 6,
+    "streamMaps": 4,
+    "streamMapItems": 8
+  },
+  "checksumSha256": "78f64e159ef8f1e970e91bfdf86ad2df70f1ad0776dbc2f750076ff0549166f5",
+  "reviewStatus": "approved",
+  "createdAt": "2026-08-11T00:00:00.000Z",
+  "source": {
+    "id": "b7777777-7777-4777-8777-777777777777",
+    "sourceKey": "yuvanext-synthetic-streams-poc",
+    "name": "YuvaNext reviewed pathway and stream mappings",
+    "sourceType": "manual_review",
+    "publisher": "YuvaNext POC team",
+    "trustLevel": "project_reviewed",
+    "status": "active",
+    "baseUrl": null,
+    "licenseRef": "Reviewed POC guidance; confirm stream availability with the relevant education board"
+  }
+}

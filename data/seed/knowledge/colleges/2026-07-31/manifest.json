@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "datasetKey": "colleges-poc",
+  "version": "2026-07-31",
+  "datasetVersionId": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaab",
+  "recordsFile": "colleges.json",
+  "recordCount": 8,
+  "recordCounts": {
+    "colleges": 4,
+    "disciplines": 2,
+    "programs": 1,
+    "pathwayDisciplines": 1
+  },
+  "checksumSha256": "a7515180df51bb6c0cd31e9b32525b202cf046fb5c8cf719671fb5d1c41da497",
+  "reviewStatus": "approved",
+  "createdAt": "2026-07-31T00:00:00.000Z",
+  "source": {
+    "id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
+    "sourceKey": "yuvanext-synthetic-colleges-poc",
+    "name": "YuvaNext synthetic college fixtures",
+    "sourceType": "manual_review",
+    "publisher": "YuvaNext POC team",
+    "trustLevel": "project_reviewed",
+    "status": "active",
+    "baseUrl": null,
+    "licenseRef": "Synthetic test data; not for real-world college decisions"
+  }
+}

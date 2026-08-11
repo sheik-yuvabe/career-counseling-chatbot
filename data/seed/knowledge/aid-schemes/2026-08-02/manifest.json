@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "datasetKey": "aid-schemes-poc",
+  "version": "2026-08-02",
+  "datasetVersionId": "d2222222-2222-4222-8222-222222222223",
+  "recordsFile": "aid-schemes.json",
+  "recordCount": 3,
+  "recordCounts": { "schemes": 1, "criteria": 2 },
+  "checksumSha256": "9d546c0d6e4930dfa804d8daa8b7785f650e144e1fe1b97ba3cd8e706fe1e887",
+  "reviewStatus": "approved",
+  "createdAt": "2026-08-02T00:00:00.000Z",
+  "source": {
+    "id": "d4444444-4444-4444-8444-444444444444",
+    "sourceKey": "yuvanext-synthetic-aid-poc",
+    "name": "YuvaNext synthetic aid fixtures",
+    "sourceType": "manual_review",
+    "publisher": "YuvaNext POC team",
+    "trustLevel": "project_reviewed",
+    "status": "active",
+    "baseUrl": null,
+    "licenseRef": "Synthetic test data; not for real-world financial decisions"
+  }
+}

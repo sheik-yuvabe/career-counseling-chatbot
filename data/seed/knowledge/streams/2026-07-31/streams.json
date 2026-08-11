@@ -1,0 +1,103 @@
+{
+  "educationRoutes": [
+    {
+      "id": "b1111111-1111-4111-8111-111111111111",
+      "routeCode": "degree",
+      "title": "Degree Route",
+      "routeLevel": "degree",
+      "description": "A higher-education route leading to an undergraduate degree.",
+      "publicationStatus": "published"
+    },
+    {
+      "id": "b2222222-2222-4222-8222-222222222222",
+      "routeCode": "iti",
+      "title": "ITI Route",
+      "routeLevel": "iti",
+      "description": "A practical trade-training route through an Industrial Training Institute.",
+      "publicationStatus": "published"
+    },
+    {
+      "id": "b3333333-3333-4333-8333-333333333333",
+      "routeCode": "diploma",
+      "title": "Diploma Route",
+      "routeLevel": "diploma",
+      "description": "An applied technical route leading to a recognized diploma.",
+      "publicationStatus": "published"
+    }
+  ],
+  "pathways": [
+    {
+      "id": "b4444444-4444-4444-8444-444444444444",
+      "pathwayCode": "bsc-data-science",
+      "title": "BSc Data Science",
+      "description": "An undergraduate pathway combining computing, statistics, and data analysis.",
+      "educationRouteId": "b1111111-1111-4111-8111-111111111111",
+      "durationBand": "3-4 years",
+      "backupRouteNote": "A related diploma or certificate can provide an alternative starting point.",
+      "publicationStatus": "published",
+      "datasetVersionId": "a4444444-4444-4444-8444-444444444444"
+    },
+    {
+      "id": "b5555555-5555-4555-8555-555555555555",
+      "pathwayCode": "iti-electrician",
+      "title": "ITI Electrician",
+      "description": "A practical training pathway covering electrical installation and maintenance.",
+      "educationRouteId": "b2222222-2222-4222-8222-222222222222",
+      "durationBand": "1-2 years",
+      "backupRouteNote": "A short electrical certificate may provide an alternative entry route.",
+      "publicationStatus": "published",
+      "datasetVersionId": "a4444444-4444-4444-8444-444444444444"
+    },
+    {
+      "id": "b6666666-6666-4666-8666-666666666666",
+      "pathwayCode": "diploma-computer-engineering",
+      "title": "Diploma in Computer Engineering",
+      "description": "An applied computing pathway with technical and laboratory learning.",
+      "educationRouteId": "b3333333-3333-4333-8333-333333333333",
+      "durationBand": "2-3 years",
+      "backupRouteNote": "An approved certificate or open-learning route may be considered.",
+      "publicationStatus": "published",
+      "datasetVersionId": "a4444444-4444-4444-8444-444444444444"
+    }
+  ],
+  "streamOptions": [
+    {
+      "id": "a1111111-1111-4111-8111-111111111111",
+      "streamCode": "science-mathematics",
+      "title": "Science with Mathematics",
+      "description": "Builds foundations in mathematics, science, and analytical problem-solving.",
+      "status": "active"
+    },
+    {
+      "id": "a2222222-2222-4222-8222-222222222222",
+      "streamCode": "vocational-technology",
+      "title": "Vocational Technology",
+      "description": "Develops practical technical skills through applied learning.",
+      "status": "active"
+    }
+  ],
+  "streamMaps": [
+    {
+      "id": "a3333333-3333-4333-8333-333333333333",
+      "topTwoCode": "RI",
+      "segment": "explorer",
+      "version": "poc-1",
+      "datasetVersionId": "a4444444-4444-4444-8444-444444444444",
+      "status": "published"
+    }
+  ],
+  "streamMapItems": [
+    {
+      "mapId": "a3333333-3333-4333-8333-333333333333",
+      "streamOptionId": "a1111111-1111-4111-8111-111111111111",
+      "rank": 1,
+      "reasonKey": "ri-analytical-foundation"
+    },
+    {
+      "mapId": "a3333333-3333-4333-8333-333333333333",
+      "streamOptionId": "a2222222-2222-4222-8222-222222222222",
+      "rank": 2,
+      "reasonKey": "ri-applied-technical-route"
+    }
+  ]
+}

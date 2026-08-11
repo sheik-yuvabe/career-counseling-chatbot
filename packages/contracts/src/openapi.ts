@@ -9,7 +9,15 @@ extendZodWithOpenApi(z);
 
 export type { OpenAPIRegistry };
 
-export const createOpenApiRegistry = (): OpenAPIRegistry => new OpenAPIRegistry();
+export const createOpenApiRegistry = (): OpenAPIRegistry => {
+  const registry = new OpenAPIRegistry();
+  registry.registerComponent("securitySchemes", "bearerAuth", {
+    type: "http",
+    scheme: "bearer",
+    bearerFormat: "internal API key",
+  });
+  return registry;
+};
 
 export type OpenApiDocument = ReturnType<OpenApiGeneratorV3["generateDocument"]>;
 

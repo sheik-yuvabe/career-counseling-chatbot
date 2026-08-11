@@ -1,0 +1,66 @@
+{
+  "careers": [
+    {
+      "id": "91111111-1111-4111-8111-111111111111",
+      "onetCode": "15-2051.00",
+      "ncoCode": null,
+      "slug": "data-scientist",
+      "title": "Data Scientist",
+      "shortDescription": "Uses data, statistics, and computing to investigate practical questions.",
+      "domainCode": "technology",
+      "primaryEducationRouteId": null,
+      "isCurated": true,
+      "publicationStatus": "published",
+      "datasetVersionId": "93333333-3333-4333-8333-333333333333",
+      "publishedAt": "2026-07-30T00:00:00.000Z",
+      "retiredAt": null
+    },
+    {
+      "id": "94444444-4444-4444-8444-444444444444",
+      "onetCode": null,
+      "ncoCode": null,
+      "slug": "solar-panel-technician",
+      "title": "Solar Panel Technician",
+      "shortDescription": "Installs and maintains solar-energy equipment under appropriate supervision.",
+      "domainCode": "skilled-trades",
+      "primaryEducationRouteId": null,
+      "isCurated": true,
+      "publicationStatus": "draft",
+      "datasetVersionId": "93333333-3333-4333-8333-333333333333",
+      "publishedAt": null,
+      "retiredAt": null
+    }
+  ],
+  "interestProfiles": [
+    {
+      "careerId": "91111111-1111-4111-8111-111111111111",
+      "realistic": 0.35,
+      "investigative": 0.95,
+      "artistic": 0.3,
+      "social": 0.4,
+      "enterprising": 0.45,
+      "conventional": 0.7,
+      "highPointCode": "I",
+      "profileVersion": "poc-1",
+      "datasetVersionId": "93333333-3333-4333-8333-333333333333"
+    }
+  ],
+  "profiles": [
+    {
+      "careerId": "91111111-1111-4111-8111-111111111111",
+      "imageRef": "catalog/careers/data-scientist.webp",
+      "salaryEntryBand": "Varies by location, employer, and qualification",
+      "salaryNote": "This is general guidance, not a guaranteed salary figure.",
+      "skills": [
+        "Data analysis",
+        "Statistics",
+        "Programming"
+      ],
+      "nextRole3yr": "Data Scientist or Analytics Specialist",
+      "progressionNote": "Progress depends on demonstrated skills, experience, and available roles.",
+      "reviewStatus": "reviewed",
+      "lastReviewedAt": "2026-07-30T00:00:00.000Z",
+      "reviewedBy": null
+    }
+  ]
+}

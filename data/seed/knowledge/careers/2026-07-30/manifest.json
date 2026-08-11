@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "datasetKey": "careers-poc",
+  "version": "2026-07-30",
+  "datasetVersionId": "93333333-3333-4333-8333-333333333333",
+  "recordsFile": "careers.json",
+  "recordCounts": {
+    "careers": 2,
+    "interestProfiles": 1,
+    "profiles": 1
+  },
+  "checksumSha256": "776f361a054498542aca4c79260122fc0be28c63953e3b28347b60c8ab5baca8",
+  "reviewStatus": "approved",
+  "createdAt": "2026-07-30T00:00:00.000Z",
+  "source": {
+    "id": "97777777-7777-4777-8777-777777777777",
+    "sourceKey": "yuvanext-synthetic-careers-poc",
+    "name": "YuvaNext synthetic career fixtures",
+    "sourceType": "manual_review",
+    "publisher": "YuvaNext POC team",
+    "trustLevel": "project_reviewed",
+    "status": "active",
+    "baseUrl": null,
+    "licenseRef": "Synthetic test data; not for real-world career decisions"
+  }
+}

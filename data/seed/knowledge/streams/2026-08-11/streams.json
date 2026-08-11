@@ -1,0 +1,132 @@
+{
+  "educationRoutes": [],
+  "pathways": [],
+  "streamOptions": [
+    {
+      "id": "a1111111-1111-4111-8111-111111111111",
+      "streamCode": "science-mathematics",
+      "title": "Science with Mathematics",
+      "description": "Builds foundations in mathematics, science, and analytical problem-solving.",
+      "status": "active"
+    },
+    {
+      "id": "a2222222-2222-4222-8222-222222222222",
+      "streamCode": "vocational-technology",
+      "title": "Vocational Technology",
+      "description": "Develops practical technical skills through applied learning.",
+      "status": "active"
+    },
+    {
+      "id": "a5111111-1111-4111-8111-111111111111",
+      "streamCode": "science-biology",
+      "title": "Science with Biology",
+      "description": "Builds foundations in biological sciences, laboratory learning, and evidence-based inquiry.",
+      "status": "active"
+    },
+    {
+      "id": "a5222222-2222-4222-8222-222222222222",
+      "streamCode": "commerce-business",
+      "title": "Commerce and Business Studies",
+      "description": "Develops foundations in commerce, economics, accounting, and enterprise.",
+      "status": "active"
+    },
+    {
+      "id": "a5333333-3333-4333-8333-333333333333",
+      "streamCode": "humanities-social-sciences",
+      "title": "Humanities and Social Sciences",
+      "description": "Develops communication, social inquiry, civic understanding, and critical interpretation.",
+      "status": "active"
+    },
+    {
+      "id": "a5444444-4444-4444-8444-444444444444",
+      "streamCode": "arts-design",
+      "title": "Arts and Design",
+      "description": "Develops creative expression, visual communication, design thinking, and portfolio practice.",
+      "status": "active"
+    }
+  ],
+  "streamMaps": [
+    {
+      "id": "a6111111-1111-4111-8111-111111111111",
+      "topTwoCode": "IS",
+      "segment": "explorer",
+      "version": "poc-2",
+      "datasetVersionId": "a7777777-7777-4777-8777-777777777777",
+      "status": "published"
+    },
+    {
+      "id": "a6222222-2222-4222-8222-222222222222",
+      "topTwoCode": "AS",
+      "segment": "explorer",
+      "version": "poc-2",
+      "datasetVersionId": "a7777777-7777-4777-8777-777777777777",
+      "status": "published"
+    },
+    {
+      "id": "a6333333-3333-4333-8333-333333333333",
+      "topTwoCode": "AE",
+      "segment": "explorer",
+      "version": "poc-2",
+      "datasetVersionId": "a7777777-7777-4777-8777-777777777777",
+      "status": "published"
+    },
+    {
+      "id": "a6444444-4444-4444-8444-444444444444",
+      "topTwoCode": "RC",
+      "segment": "explorer",
+      "version": "poc-2",
+      "datasetVersionId": "a7777777-7777-4777-8777-777777777777",
+      "status": "published"
+    }
+  ],
+  "streamMapItems": [
+    {
+      "mapId": "a6111111-1111-4111-8111-111111111111",
+      "streamOptionId": "a1111111-1111-4111-8111-111111111111",
+      "rank": 1,
+      "reasonKey": "is-scientific-inquiry"
+    },
+    {
+      "mapId": "a6111111-1111-4111-8111-111111111111",
+      "streamOptionId": "a5111111-1111-4111-8111-111111111111",
+      "rank": 2,
+      "reasonKey": "is-life-science-inquiry"
+    },
+    {
+      "mapId": "a6222222-2222-4222-8222-222222222222",
+      "streamOptionId": "a5444444-4444-4444-8444-444444444444",
+      "rank": 1,
+      "reasonKey": "as-creative-expression"
+    },
+    {
+      "mapId": "a6222222-2222-4222-8222-222222222222",
+      "streamOptionId": "a5333333-3333-4333-8333-333333333333",
+      "rank": 2,
+      "reasonKey": "as-people-and-culture"
+    },
+    {
+      "mapId": "a6333333-3333-4333-8333-333333333333",
+      "streamOptionId": "a5222222-2222-4222-8222-222222222222",
+      "rank": 1,
+      "reasonKey": "ae-enterprise-and-communication"
+    },
+    {
+      "mapId": "a6333333-3333-4333-8333-333333333333",
+      "streamOptionId": "a5444444-4444-4444-8444-444444444444",
+      "rank": 2,
+      "reasonKey": "ae-creative-leadership"
+    },
+    {
+      "mapId": "a6444444-4444-4444-8444-444444444444",
+      "streamOptionId": "a2222222-2222-4222-8222-222222222222",
+      "rank": 1,
+      "reasonKey": "rc-practical-structured-learning"
+    },
+    {
+      "mapId": "a6444444-4444-4444-8444-444444444444",
+      "streamOptionId": "a5222222-2222-4222-8222-222222222222",
+      "rank": 2,
+      "reasonKey": "rc-organized-business-foundation"
+    }
+  ]
+}

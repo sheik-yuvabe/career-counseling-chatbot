@@ -4,7 +4,11 @@ import { fileURLToPath } from "node:url";
 
 const loadFirstAvailableEnvFile = (): void => {
   const serverDir = dirname(fileURLToPath(import.meta.url));
-  const envPaths = [resolve(process.cwd(), ".env"), resolve(serverDir, "../../..", ".env")];
+  const envPaths = [
+    resolve(process.env.INIT_CWD ?? process.cwd(), ".env"),
+    resolve(process.cwd(), ".env"),
+    resolve(serverDir, "../../..", ".env"),
+  ];
 
   for (const envPath of envPaths) {
     try {
