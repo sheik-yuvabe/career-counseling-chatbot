@@ -1,4 +1,17 @@
 import { createOpenApiRegistry, generateOpenApiDocument } from "@yuvanext/contracts";
+import {
+  createPostgresEvaluationRunRepository,
+  type EvaluationRunRepository,
+  registerEvaluationRoutes,
+} from "@yuvanext/evaluation";
+import {
+  createPostgresPrivacyJobRepository,
+  createPostgresSafetyOperationsRepository,
+  type PrivacyJobRepository,
+  type SafetyOperationsRepository,
+  registerSafetyRoutes,
+} from "@yuvanext/safety";
+import { createDatabasePool } from "@yuvanext/database";
 import cors from "cors";
 import express, { type Express } from "express";
 import helmet from "helmet";
@@ -9,11 +22,22 @@ import { requestLogger } from "../middleware/request-logger.js";
 import { registerHealthRoute } from "../routes/health.js";
 import { modules } from "./modules.js";
 
-export type CreateAppOptions = { logging?: boolean };
+export type CreateAppOptions = {
+  database?: boolean;
+  evaluationRunRepository?: EvaluationRunRepository;
+  logging?: boolean;
+  privacyJobRepository?: PrivacyJobRepository;
+  safetyOperationsRepository?: SafetyOperationsRepository;
+};
 
 export const createApp = (options: CreateAppOptions = {}): Express => {
   const app = express();
   const registry = createOpenApiRegistry();
+  const shouldUseDatabase = options.database ?? env.NODE_ENV !== "test";
+  const databasePool =
+    env.DATABASE_URL && shouldUseDatabase
+      ? createDatabasePool({ connectionString: env.DATABASE_URL, ssl: env.DATABASE_SSL })
+      : undefined;
 
   app.disable("x-powered-by");
   app.use(helmet({ contentSecurityPolicy: false }));
@@ -27,6 +51,29 @@ export const createApp = (options: CreateAppOptions = {}): Express => {
   }
 
   registerHealthRoute(app, registry, modules);
+  const privacyJobRepository =
+    options.privacyJobRepository ??
+    (databasePool ? createPostgresPrivacyJobRepository(databasePool) : undefined);
+  const evaluationRunRepository =
+    options.evaluationRunRepository ??
+    (databasePool ? createPostgresEvaluationRunRepository(databasePool) : undefined);
+  const safetyOperationsRepository =
+    options.safetyOperationsRepository ??
+    (databasePool ? createPostgresSafetyOperationsRepository(databasePool) : undefined);
+  const safetyRouteDependencies =
+    privacyJobRepository || safetyOperationsRepository
+      ? {
+          ...(privacyJobRepository ? { privacyJobRepository } : {}),
+          ...(safetyOperationsRepository ? { safetyOperationsRepository } : {}),
+        }
+      : undefined;
+
+  registerSafetyRoutes(app, registry, safetyRouteDependencies);
+  registerEvaluationRoutes(
+    app,
+    registry,
+    evaluationRunRepository ? { evaluationRunRepository } : undefined,
+  );
 
   const openApiDocument = generateOpenApiDocument(registry);
   app.get("/openapi.json", (_request, response) => response.json(openApiDocument));

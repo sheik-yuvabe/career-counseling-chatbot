@@ -1,12 +1,27 @@
 import process from "node:process";
+import { existsSync } from "node:fs";
+import { dirname, join, parse } from "node:path";
 
-try {
-  process.loadEnvFile();
-} catch (error) {
-  if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
-    throw error;
+const loadNearestEnvFile = (): void => {
+  let directory = process.cwd();
+  const root = parse(directory).root;
+
+  while (true) {
+    const candidate = join(directory, ".env");
+    if (existsSync(candidate)) {
+      process.loadEnvFile(candidate);
+      return;
+    }
+
+    if (directory === root) {
+      return;
+    }
+
+    directory = dirname(directory);
   }
-}
+};
+
+loadNearestEnvFile();
 
 const [{ createApp }, { env }] = await Promise.all([
   import("./app/create-app.js"),
@@ -14,9 +29,10 @@ const [{ createApp }, { env }] = await Promise.all([
 ]);
 
 const app = createApp();
-const server = app.listen(env.PORT, () => {
-  process.stdout.write(`YuvaNext API listening on http://localhost:${env.PORT}\n`);
-  process.stdout.write(`Swagger UI: http://localhost:${env.PORT}/docs\n`);
+const displayHost = env.HOST === "0.0.0.0" ? "localhost" : env.HOST;
+const server = app.listen(env.PORT, env.HOST, () => {
+  process.stdout.write(`YuvaNext API listening on http://${displayHost}:${env.PORT}\n`);
+  process.stdout.write(`Swagger UI: http://${displayHost}:${env.PORT}/docs\n`);
 });
 
 const shutdown = (signal: string): void => {
