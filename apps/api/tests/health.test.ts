@@ -8,11 +8,14 @@ const OpenApiPathsSchema = z.object({ paths: z.record(z.string(), z.unknown()) }
 
 describe("GET /api/v1/health", () => {
   it("returns all registered backend modules", async () => {
-    const response = await request(createApp({ logging: false })).get("/api/v1/health");
+    const response = await request(
+      createApp({ logging: false, checkDatabase: () => Promise.resolve(true) }),
+    ).get("/api/v1/health");
 
     expect(response.status).toBe(200);
     const body = HealthResponseSchema.parse(JSON.parse(response.text) as unknown);
     expect(body.status).toBe("ok");
+    expect(body.database.status).toBe("connected");
     expect(body.modules).toHaveLength(6);
     expect(body.modules.map((module) => module.code)).toEqual([
       "m1",
@@ -22,6 +25,31 @@ describe("GET /api/v1/health", () => {
       "m5-safety",
       "m5-evaluation",
     ]);
+  });
+
+  it("reports a failed database connection instead of a false healthy status", async () => {
+    const response = await request(
+      createApp({
+        logging: false,
+        checkDatabase: () => Promise.reject(new Error("synthetic database failure")),
+      }),
+    ).get("/api/v1/health");
+
+    expect(response.status).toBe(503);
+    const body = HealthResponseSchema.parse(JSON.parse(response.text) as unknown);
+    expect(body.status).toBe("degraded");
+    expect(body.database.status).toBe("disconnected");
+  });
+
+  it("reports a healthy fixture runtime without claiming a database connection", async () => {
+    const response = await request(createApp({ logging: false, databaseRequired: false })).get(
+      "/api/v1/health",
+    );
+
+    expect(response.status).toBe(200);
+    const body = HealthResponseSchema.parse(JSON.parse(response.text) as unknown);
+    expect(body.status).toBe("ok");
+    expect(body.database.status).toBe("not_required");
   });
 
   it("publishes OpenAPI JSON for the shared testing UI", async () => {

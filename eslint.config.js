@@ -12,6 +12,7 @@ export default tseslint.config(
       "packages/database/src/database.types.ts",
       "eslint.config.js",
       "scripts/**/*.mjs",
+      "packages/*/scripts/**/*.mjs",
     ],
   },
   eslint.configs.recommended,

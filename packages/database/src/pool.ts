@@ -1,11 +1,17 @@
 import { Pool, type PoolClient, type PoolConfig } from "pg";
 
-export type DatabasePoolOptions = { connectionString: string; ssl: boolean; max?: number };
+export type DatabasePoolOptions = {
+  connectionString: string;
+  ssl: boolean;
+  max?: number;
+  connectionTimeoutMillis?: number;
+};
 
 export const createDatabasePool = (options: DatabasePoolOptions): Pool => {
   const config: PoolConfig = {
     connectionString: options.connectionString,
     max: options.max ?? 10,
+    connectionTimeoutMillis: options.connectionTimeoutMillis ?? 10_000,
     ssl: options.ssl ? { rejectUnauthorized: false } : undefined,
   };
   return new Pool(config);

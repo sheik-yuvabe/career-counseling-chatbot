@@ -73,20 +73,21 @@ erDiagram
 
 ### `counselor.conversations`
 
-| Column                | Type          | Rules                                                       |
-| --------------------- | ------------- | ----------------------------------------------------------- |
-| `id`                  | `uuid`        | PK                                                          |
-| `user_id`             | `uuid`        | FK to `auth.users`                                          |
-| `profile_snapshot_id` | `uuid`        | Nullable FK to current snapshot used at start               |
-| `segment`             | `text`        | Snapshot for behavior/copy                                  |
-| `status`              | `text`        | `active`, `paused`, `completed`, `safety_locked`, `deleted` |
-| `channel`             | `text`        | Phase A `web`                                               |
-| `language`            | `text`        | Phase A `en`                                                |
-| `ai_mode`             | `text`        | `enabled`, `degraded`, `disabled`                           |
-| `started_at`          | `timestamptz` | Required                                                    |
-| `last_turn_at`        | `timestamptz` | Nullable                                                    |
-| `completed_at`        | `timestamptz` | Nullable                                                    |
-| `created_at`          | `timestamptz` | Required                                                    |
+| Column                  | Type          | Rules                                                       |
+| ----------------------- | ------------- | ----------------------------------------------------------- |
+| `id`                    | `uuid`        | PK                                                          |
+| `user_id`               | `uuid`        | FK to `auth.users`                                          |
+| `start_idempotency_key` | `uuid`        | Required; retryable start key scoped to user                |
+| `profile_snapshot_id`   | `uuid`        | Nullable FK to current snapshot used at start               |
+| `segment`               | `text`        | Snapshot for behavior/copy                                  |
+| `status`                | `text`        | `active`, `paused`, `completed`, `safety_locked`, `deleted` |
+| `channel`               | `text`        | Phase A `web`                                               |
+| `language`              | `text`        | Phase A `en`                                                |
+| `ai_mode`               | `text`        | `enabled`, `degraded`, `disabled`                           |
+| `started_at`            | `timestamptz` | Required                                                    |
+| `last_turn_at`          | `timestamptz` | Nullable                                                    |
+| `completed_at`          | `timestamptz` | Nullable                                                    |
+| `created_at`            | `timestamptz` | Required                                                    |
 
 Indexes: `(user_id, started_at desc)`, active conversation partial index.
 
@@ -96,7 +97,9 @@ Indexes: `(user_id, started_at desc)`, active conversation partial index.
 | -------------------------- | ------------- | ---------------------------------------------------------- |
 | `id`                       | `uuid`        | PK                                                         |
 | `conversation_id`          | `uuid`        | FK                                                         |
-| `turn_number`              | `integer`     | Positive, unique within conversation                       |
+| `idempotency_key`          | `uuid`        | Required; retryable write key scoped to conversation       |
+| `client_message_id`        | `uuid`        | Nullable legacy/internal client correlation ID             |
+| `turn_number`              | `integer`     | Positive; no duplicates within a conversation              |
 | `role`                     | `text`        | `user`, `assistant`, `system_copy`                         |
 | `content`                  | `text`        | Bounded; may contain personal free text                    |
 | `content_language`         | `text`        | Required                                                   |
@@ -186,19 +189,20 @@ The linter result itself is stored as message flags and an audit event; failed t
 
 One mutable resumable state per user/journey.
 
-| Column                      | Type          | Rules                               |
-| --------------------------- | ------------- | ----------------------------------- |
-| `user_id`                   | `uuid`        | PK/FK to Auth user                  |
-| `conversation_id`           | `uuid`        | Nullable FK                         |
-| `current_step`              | `smallint`    | Check `1..5`                        |
-| `current_state_key`         | `text`        | Approved state machine key          |
-| `profile_snapshot_id`       | `uuid`        | Nullable FK                         |
-| `current_recommendation_id` | `uuid`        | Nullable Module 2 ID; app validated |
-| `current_assessment_run_id` | `uuid`        | Nullable Module 1 ID; app validated |
-| `is_safety_paused`          | `boolean`     | Default false                       |
-| `state_json`                | `jsonb`       | Minimal bounded navigation state    |
-| `lock_version`              | `integer`     | Optimistic concurrency              |
-| `updated_at`                | `timestamptz` | Required                            |
+| Column                      | Type          | Rules                                 |
+| --------------------------- | ------------- | ------------------------------------- |
+| `user_id`                   | `uuid`        | PK/FK to Auth user                    |
+| `conversation_id`           | `uuid`        | Nullable FK                           |
+| `current_step`              | `smallint`    | Check `1..5`                          |
+| `current_state_key`         | `text`        | Approved state machine key            |
+| `profile_snapshot_id`       | `uuid`        | Nullable FK                           |
+| `current_recommendation_id` | `uuid`        | Nullable Module 2 ID; app validated   |
+| `current_assessment_run_id` | `uuid`        | Nullable Module 1 ID; app validated   |
+| `is_safety_paused`          | `boolean`     | Default false                         |
+| `state_json`                | `jsonb`       | Minimal bounded navigation state      |
+| `lock_version`              | `integer`     | Optimistic concurrency                |
+| `last_idempotency_key`      | `uuid`        | Nullable latest retryable state write |
+| `updated_at`                | `timestamptz` | Required                              |
 
 The state cannot mark Step 5 complete before a report/share action emits the required event.
 
@@ -210,6 +214,7 @@ Append-only event history used to reconstruct breadcrumb state.
 | ---------------------- | ------------- | ------------------------ |
 | `id`                   | `uuid`        | PK                       |
 | `user_id`              | `uuid`        | FK                       |
+| `producer_event_id`    | `uuid`        | Unique idempotency ID    |
 | `conversation_id`      | `uuid`        | Nullable FK              |
 | `event_type`           | `text`        | Approved event catalog   |
 | `event_schema_version` | `integer`     | Required                 |
@@ -243,20 +248,22 @@ General analytics receives only aggregated action counts, not the full user expl
 
 Immutable report input. Rendering must not fetch new recommendations.
 
-| Column                  | Type          | Rules                         |
-| ----------------------- | ------------- | ----------------------------- |
-| `id`                    | `uuid`        | PK                            |
-| `user_id`               | `uuid`        | FK                            |
-| `profile_snapshot_id`   | `uuid`        | FK to assessment snapshot     |
-| `recommendation_ids`    | `uuid[]`      | Validated Module 2 run IDs    |
-| `exploration_event_ids` | `uuid[]`      | Selected relevant events      |
-| `report_schema_version` | `integer`     | Required                      |
-| `language`              | `text`        | Required                      |
-| `payload_json`          | `jsonb`       | Complete versioned report DTO |
-| `payload_hash`          | `text`        | Required                      |
-| `summary_mode`          | `text`        | `template`, `ai_polished`     |
-| `prompt_version`        | `text`        | Nullable                      |
-| `created_at`            | `timestamptz` | Required                      |
+| Column                  | Type          | Rules                                         |
+| ----------------------- | ------------- | --------------------------------------------- |
+| `id`                    | `uuid`        | PK                                            |
+| `user_id`               | `uuid`        | FK                                            |
+| `idempotency_key`       | `uuid`        | Required; retryable report key scoped to user |
+| `profile_snapshot_id`   | `uuid`        | FK to assessment snapshot                     |
+| `recommendation_ids`    | `uuid[]`      | Validated Module 2 run IDs                    |
+| `exploration_event_ids` | `uuid[]`      | Selected relevant events                      |
+| `explored_entity_ids`   | `uuid[]`      | Frozen explored entity IDs for output         |
+| `report_schema_version` | `integer`     | Required                                      |
+| `language`              | `text`        | Required                                      |
+| `payload_json`          | `jsonb`       | Complete versioned report DTO                 |
+| `payload_hash`          | `text`        | Required                                      |
+| `summary_mode`          | `text`        | `template`, `ai_polished`                     |
+| `prompt_version`        | `text`        | Nullable                                      |
+| `created_at`            | `timestamptz` | Required                                      |
 
 Any AI polish must pass the same entity/number linter and may not change facts. Template mode is always available.
 
@@ -283,7 +290,7 @@ Share-card validation forbids phone, age, city, school, scores and selections; i
 
 | Use case           | Inputs                                     | Writes                                                 | Output                         |
 | ------------------ | ------------------------------------------ | ------------------------------------------------------ | ------------------------------ |
-| Start conversation | user/profile/segment                       | conversation, journey state                            | Welcome/static turn            |
+| Start conversation | user/profile; segment derived from profile | conversation, journey state                            | Welcome/static turn            |
 | Send message       | message + bounded context                  | user message, tool calls, assistant message, grounding | `AssistantTurn` SSE            |
 | AI unavailable     | message + static upstream data             | messages/events                                        | Template response/widgets      |
 | Explore entity     | recommendation item/action                 | exploration event, journey event                       | Detail/list state              |

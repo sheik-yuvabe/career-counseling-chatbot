@@ -757,12 +757,14 @@ export type Database = {
     Tables: {
       conversation_messages: {
         Row: {
+          client_message_id: string | null;
           content: string;
           content_language: string;
           conversation_id: string;
           created_at: string;
           flags: string[] | null;
           id: string;
+          idempotency_key: string;
           message_status: string;
           model_name: string | null;
           prompt_version: string | null;
@@ -771,12 +773,14 @@ export type Database = {
           turn_number: number;
         };
         Insert: {
+          client_message_id?: string | null;
           content: string;
           content_language: string;
           conversation_id: string;
           created_at: string;
           flags?: string[] | null;
           id: string;
+          idempotency_key: string;
           message_status: string;
           model_name?: string | null;
           prompt_version?: string | null;
@@ -785,12 +789,14 @@ export type Database = {
           turn_number: number;
         };
         Update: {
+          client_message_id?: string | null;
           content?: string;
           content_language?: string;
           conversation_id?: string;
           created_at?: string;
           flags?: string[] | null;
           id?: string;
+          idempotency_key?: string;
           message_status?: string;
           model_name?: string | null;
           prompt_version?: string | null;
@@ -860,6 +866,7 @@ export type Database = {
           last_turn_at: string | null;
           profile_snapshot_id: string | null;
           segment: string;
+          start_idempotency_key: string;
           started_at: string;
           status: string;
           user_id: string;
@@ -874,6 +881,7 @@ export type Database = {
           last_turn_at?: string | null;
           profile_snapshot_id?: string | null;
           segment: string;
+          start_idempotency_key: string;
           started_at: string;
           status: string;
           user_id: string;
@@ -888,6 +896,7 @@ export type Database = {
           last_turn_at?: string | null;
           profile_snapshot_id?: string | null;
           segment?: string;
+          start_idempotency_key?: string;
           started_at?: string;
           status?: string;
           user_id?: string;
@@ -944,6 +953,7 @@ export type Database = {
           expires_at: string;
           generation_status: string;
           id: string;
+          idempotency_key: string;
           privacy_class: string | null;
           report_snapshot_id: string | null;
           storage_bucket: string;
@@ -958,6 +968,7 @@ export type Database = {
           expires_at: string;
           generation_status: string;
           id: string;
+          idempotency_key: string;
           privacy_class?: string | null;
           report_snapshot_id?: string | null;
           storage_bucket: string;
@@ -972,6 +983,7 @@ export type Database = {
           expires_at?: string;
           generation_status?: string;
           id?: string;
+          idempotency_key?: string;
           privacy_class?: string | null;
           report_snapshot_id?: string | null;
           storage_bucket?: string;
@@ -996,6 +1008,7 @@ export type Database = {
           id: string;
           metadata_json: Json | null;
           occurred_at: string;
+          producer_event_id: string;
           related_entity_id: string | null;
           related_entity_type: string | null;
           user_id: string;
@@ -1007,6 +1020,7 @@ export type Database = {
           id: string;
           metadata_json?: Json | null;
           occurred_at: string;
+          producer_event_id: string;
           related_entity_id?: string | null;
           related_entity_type?: string | null;
           user_id: string;
@@ -1018,6 +1032,7 @@ export type Database = {
           id?: string;
           metadata_json?: Json | null;
           occurred_at?: string;
+          producer_event_id?: string;
           related_entity_id?: string | null;
           related_entity_type?: string | null;
           user_id?: string;
@@ -1040,6 +1055,7 @@ export type Database = {
           current_state_key: string;
           current_step: number;
           is_safety_paused: boolean | null;
+          last_idempotency_key: string | null;
           lock_version: number | null;
           profile_snapshot_id: string | null;
           state_json: Json | null;
@@ -1053,6 +1069,7 @@ export type Database = {
           current_state_key: string;
           current_step: number;
           is_safety_paused?: boolean | null;
+          last_idempotency_key?: string | null;
           lock_version?: number | null;
           profile_snapshot_id?: string | null;
           state_json?: Json | null;
@@ -1066,6 +1083,7 @@ export type Database = {
           current_state_key?: string;
           current_step?: number;
           is_safety_paused?: boolean | null;
+          last_idempotency_key?: string | null;
           lock_version?: number | null;
           profile_snapshot_id?: string | null;
           state_json?: Json | null;
@@ -1136,8 +1154,10 @@ export type Database = {
       report_snapshots: {
         Row: {
           created_at: string;
+          explored_entity_ids: string[];
           exploration_event_ids: string[] | null;
           id: string;
+          idempotency_key: string;
           language: string;
           payload_hash: string;
           payload_json: Json;
@@ -1150,8 +1170,10 @@ export type Database = {
         };
         Insert: {
           created_at: string;
+          explored_entity_ids: string[];
           exploration_event_ids?: string[] | null;
           id: string;
+          idempotency_key: string;
           language: string;
           payload_hash: string;
           payload_json: Json;
@@ -1164,8 +1186,10 @@ export type Database = {
         };
         Update: {
           created_at?: string;
+          explored_entity_ids?: string[];
           exploration_event_ids?: string[] | null;
           id?: string;
+          idempotency_key?: string;
           language?: string;
           payload_hash?: string;
           payload_json?: Json;
