@@ -10,6 +10,8 @@ export const registerHealthRoute = (
   app: Express,
   registry: OpenAPIRegistry,
   modules: ModuleDescriptor[],
+  checkDatabase?: () => Promise<boolean>,
+  databaseRequired = true,
 ): void => {
   registry.registerPath({
     method: "get",
@@ -18,19 +20,35 @@ export const registerHealthRoute = (
     summary: "Check API health and module registration",
     responses: {
       200: {
-        description: "API is running",
+        description: "API dependencies required by the selected runtime are healthy",
+        content: { "application/json": { schema: HealthResponseSchema } },
+      },
+      503: {
+        description: "API is running but the database is unavailable or not configured",
         content: { "application/json": { schema: HealthResponseSchema } },
       },
     },
   });
 
-  app.get("/api/v1/health", (_request, response) => {
+  app.get("/api/v1/health", async (_request, response) => {
+    let databaseStatus: HealthResponse["database"]["status"] = databaseRequired
+      ? "not_configured"
+      : "not_required";
+    if (databaseRequired && checkDatabase) {
+      try {
+        databaseStatus = (await checkDatabase()) ? "connected" : "disconnected";
+      } catch {
+        databaseStatus = "disconnected";
+      }
+    }
+    const healthy = databaseStatus === "connected" || databaseStatus === "not_required";
     const body: HealthResponse = {
-      status: "ok",
+      status: healthy ? "ok" : "degraded",
       service: "yuvanext-api",
       timestamp: new Date().toISOString(),
+      database: { status: databaseStatus },
       modules,
     };
-    response.status(200).json(body);
+    response.status(healthy ? 200 : 503).json(body);
   });
 };

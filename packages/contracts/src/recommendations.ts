@@ -265,6 +265,11 @@ export const RecommendationSetSchema = z.object({
 });
 export type RecommendationSet = z.infer<typeof RecommendationSetSchema>;
 
+export const RecommendationSetResponseSchema = z.object({
+  recommendation: RecommendationSetSchema,
+});
+export type RecommendationSetResponse = z.infer<typeof RecommendationSetResponseSchema>;
+
 const RecommendationSetResponseBodySchema = RecommendationSetSchema.omit({
   recommendationId: true,
 });

@@ -8,8 +8,8 @@
     "node": ">=22.0.0"
   },
   "scripts": {
-    "dev": "pnpm --filter @yuvanext/api dev",
-    "build": "tsup apps/api/src/server.ts --format esm --platform node --target node22 --out-dir apps/api/dist --clean --external express --external cors --external helmet --external pino --external swagger-ui-express --external zod --external @asteasolutions/zod-to-openapi",
+    "dev": "corepack pnpm --filter @yuvanext/api dev",
+    "build": "tsup apps/api/src/server.ts --format esm --platform node --target node22 --out-dir apps/api/dist --clean --external express --external cors --external helmet --external pino --external swagger-ui-express --external zod --external @asteasolutions/zod-to-openapi --external pg",
     "start": "node apps/api/dist/server.js",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",

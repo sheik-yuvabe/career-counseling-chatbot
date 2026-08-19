@@ -21,6 +21,7 @@ export * from "./application/list-colleges.js";
 export * from "./application/validate-college-records.js";
 export * from "./application/validate-career-records.js";
 export * from "./application/validate-stream-records.js";
+export * from "./application/knowledge-reader.js";
 export * from "./infrastructure/in-memory-college-repository.js";
 export * from "./infrastructure/in-memory-dataset-repository.js";
 export * from "./infrastructure/in-memory-aid-scheme-repository.js";
@@ -37,6 +38,7 @@ export * from "./infrastructure/postgres-career-search-repository.js";
 export * from "./infrastructure/postgres-career-dataset-publisher.js";
 export * from "./infrastructure/postgres-stream-dataset-publisher.js";
 export * from "./infrastructure/postgres-aid-dataset-publisher.js";
+export * from "./infrastructure/postgres-knowledge-reader.js";
 export * from "./infrastructure/local-catalog-import-coordinator.js";
 export * from "./http/register-knowledge-routes.js";
 
@@ -44,5 +46,5 @@ export const knowledgeModule: ModuleDescriptor = {
   code: "m3",
   name: "Knowledge",
   packageName: "@yuvanext/knowledge",
-  status: "scaffolded",
+  status: "in_progress",
 };

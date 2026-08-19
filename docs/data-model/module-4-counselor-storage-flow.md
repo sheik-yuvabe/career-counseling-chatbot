@@ -21,8 +21,10 @@ language                   ta
 ```text
 POST /api/v1/conversations
   -> authorize user
-  -> read current profile/recommendation IDs
-  -> create counselor.conversations
+  -> read the selected or latest profile snapshot
+  -> derive segment from the profile and use Phase A web/en defaults
+  -> read the current recommendation ID
+  -> create counselor.conversations with the start idempotency key
   -> create or resume counselor.journey_states
   -> store approved welcome message
   -> return conversation and journey DTO
@@ -46,7 +48,7 @@ POST /api/v1/conversations/:id/messages
 
 ### 1. User message
 
-`counselor.conversation_messages` stores one row per user or assistant turn. A client message ID prevents duplicates when React retries.
+`counselor.conversation_messages` stores one row per user or assistant turn. The public API requires one retry idempotency key scoped to the conversation. The service derives the stored message ID from that key, so the client does not send a second message identifier. `client_message_id` remains nullable for backward-compatible internal writers.
 
 ### 2. Safety before general AI
 
@@ -91,6 +93,7 @@ user opens recommendation/card/compare view
 ```
 
 - `journey_events` is append-only transition history.
+- `journey_events.producer_event_id` durably deduplicates producer retries.
 - `journey_states` is the current resumable position.
 - `exploration_events` records an opened, compared or selected approved entity.
 
@@ -111,7 +114,7 @@ user requests report
   -> return short-lived signed URL
 ```
 
-`report_snapshots` preserves exact approved inputs. `generated_assets` stores storage references, hashes, visibility and expiry—not the binary itself.
+`report_snapshots` preserves exact approved inputs and deduplicates report writes by user and idempotency key. `generated_assets` stores storage references, hashes, visibility and expiry—not the binary itself.
 
 ## AI-disabled fallback
 

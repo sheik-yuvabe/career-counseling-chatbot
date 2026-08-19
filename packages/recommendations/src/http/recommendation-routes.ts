@@ -60,6 +60,7 @@ type ConfigResolvableBody = {
 export type RegisterRecommendationRoutesOptions = {
   store: RecommendationStore;
   dataSource?: RecommendationDataSource;
+  registerReadRoute?: boolean;
 };
 
 export const registerRecommendationRoutes = (
@@ -209,45 +210,47 @@ export const registerRecommendationRoutes = (
     },
   });
 
-  registry.registerPath({
-    method: "get",
-    path: "/api/v1/recommendations/{id}",
-    tags: ["Recommendations"],
-    summary: "Fetch a stored immutable recommendation set",
-    request: {
-      params: RecommendationIdParamsSchema,
-    },
-    responses: {
-      200: {
-        description: "Stored recommendation set",
-        content: {
-          "application/json": {
-            schema: RecommendationSetSchema,
-            example: storedRecommendationExample(),
+  if (options.registerReadRoute !== false) {
+    registry.registerPath({
+      method: "get",
+      path: "/api/v1/recommendations/{id}",
+      tags: ["Recommendations"],
+      summary: "Fetch a stored immutable recommendation set",
+      request: {
+        params: RecommendationIdParamsSchema,
+      },
+      responses: {
+        200: {
+          description: "Stored recommendation set",
+          content: {
+            "application/json": {
+              schema: RecommendationSetSchema,
+              example: storedRecommendationExample(),
+            },
           },
         },
+        404: { description: "Recommendation not found" },
       },
-      404: { description: "Recommendation not found" },
-    },
-  });
+    });
 
-  app.get("/api/v1/recommendations/:id", async (request: Request, response: Response) => {
-    const recommendationId = readRecommendationRouteId(request, response);
-    if (!recommendationId) {
-      return;
-    }
+    app.get("/api/v1/recommendations/:id", async (request: Request, response: Response) => {
+      const recommendationId = readRecommendationRouteId(request, response);
+      if (!recommendationId) {
+        return;
+      }
 
-    const recommendation = await service.getRecommendation(recommendationId);
-    if (!recommendation) {
-      response.status(404).json({
-        code: "recommendation_not_found",
-        message: "No recommendation set exists for the requested id.",
-      });
-      return;
-    }
+      const recommendation = await service.getRecommendation(recommendationId);
+      if (!recommendation) {
+        response.status(404).json({
+          code: "recommendation_not_found",
+          message: "No recommendation set exists for the requested id.",
+        });
+        return;
+      }
 
-    response.status(200).json(recommendation);
-  });
+      response.status(200).json(recommendation);
+    });
+  }
 
   registry.registerPath({
     method: "post",

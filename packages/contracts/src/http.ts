@@ -11,9 +11,12 @@ export const ApiErrorSchema = z.object({
 });
 
 export const HealthResponseSchema = z.object({
-  status: z.literal("ok"),
+  status: z.enum(["ok", "degraded"]),
   service: z.literal("yuvanext-api"),
   timestamp: z.string().datetime(),
+  database: z.object({
+    status: z.enum(["connected", "disconnected", "not_configured", "not_required"]),
+  }),
   modules: z.array(ModuleDescriptorSchema),
 });
 export type HealthResponse = z.infer<typeof HealthResponseSchema>;

@@ -1,7 +1,17 @@
 import { timingSafeEqual } from "node:crypto";
-import { registerAssessmentRoutes } from "@yuvanext/assessment";
+import {
+  registerAssessmentProfileRoutes,
+  registerAssessmentRoutes,
+  type AssessmentHttpDependencies,
+} from "@yuvanext/assessment";
 import { createOpenApiRegistry, generateOpenApiDocument } from "@yuvanext/contracts";
+import { registerCounselorRoutes, type CounselorHttpDependencies } from "@yuvanext/counselor";
 import { createDatabasePool } from "@yuvanext/database";
+import {
+  createPostgresEvaluationRunRepository,
+  type EvaluationRunRepository,
+  registerEvaluationRoutes,
+} from "@yuvanext/evaluation";
 import {
   InMemoryAidSchemeRepository,
   InMemoryCareerRepository,
@@ -28,9 +38,19 @@ import {
 import {
   createPostgresRecommendationDataSource,
   createPostgresRecommendationStore,
+  registerRecommendationReadRoutes,
   registerRecommendationRoutes,
+  type RecommendationHttpDependencies,
   type RecommendationStore,
 } from "@yuvanext/recommendations";
+import {
+  createPostgresPrivacyJobRepository,
+  createPostgresSafetyOperationsRepository,
+  type PrivacyJobRepository,
+  type ResolveSafetyUserId,
+  type SafetyOperationsRepository,
+  registerSafetyRoutes,
+} from "@yuvanext/safety";
 import cors from "cors";
 import express, { type Express } from "express";
 import helmet from "helmet";
@@ -44,7 +64,13 @@ import { modules } from "./modules.js";
 
 export type CreateAppOptions = {
   logging?: boolean;
+  checkDatabase?: () => Promise<boolean>;
+  databaseRequired?: boolean;
+  database?: boolean;
+  assessment?: AssessmentHttpDependencies;
+  recommendations?: RecommendationHttpDependencies;
   recommendationStore?: RecommendationStore;
+  counselor?: CounselorHttpDependencies;
   careerRepository?: CareerRepository;
   careerSearchRepository?: CareerSearchRepository;
   collegeRepository?: CollegeRepository;
@@ -53,6 +79,10 @@ export type CreateAppOptions = {
   datasetRepository?: DatasetRepository;
   catalogImportCoordinator?: CatalogImportCoordinator;
   internalApiKey?: string;
+  evaluationRunRepository?: EvaluationRunRepository;
+  privacyJobRepository?: PrivacyJobRepository;
+  resolveSafetyUserId?: ResolveSafetyUserId;
+  safetyOperationsRepository?: SafetyOperationsRepository;
 };
 
 type KnowledgeRepositories = {
@@ -91,6 +121,11 @@ const createDefaultKnowledgeRepositories = (pool: Pool | undefined): KnowledgeRe
 export const createApp = (options: CreateAppOptions = {}): Express => {
   const app = express();
   const registry = createOpenApiRegistry();
+  const shouldUseDatabase = options.database ?? env.NODE_ENV !== "test";
+  const databasePool =
+    env.DATABASE_URL && shouldUseDatabase
+      ? createDatabasePool({ connectionString: env.DATABASE_URL, ssl: env.DATABASE_SSL })
+      : undefined;
 
   app.disable("x-powered-by");
   app.use(helmet({ contentSecurityPolicy: false }));
@@ -103,12 +138,16 @@ export const createApp = (options: CreateAppOptions = {}): Express => {
     app.use(requestLogger);
   }
 
-  registerHealthRoute(app, registry, modules);
-  const databasePool = env.DATABASE_URL
-    ? createDatabasePool({ connectionString: env.DATABASE_URL, ssl: env.DATABASE_SSL })
-    : undefined;
+  registerHealthRoute(
+    app,
+    registry,
+    modules,
+    options.checkDatabase,
+    options.databaseRequired ?? true,
+  );
 
   registerAssessmentRoutes(app, registry, databasePool ? { pool: databasePool } : {});
+  registerAssessmentProfileRoutes(app, registry, options.assessment);
 
   const recommendationStore =
     options.recommendationStore ??
@@ -117,7 +156,11 @@ export const createApp = (options: CreateAppOptions = {}): Express => {
     registerRecommendationRoutes(app, registry, {
       store: recommendationStore,
       ...(databasePool ? { dataSource: createPostgresRecommendationDataSource(databasePool) } : {}),
+      registerReadRoute: options.recommendations ? false : true,
     });
+  }
+  if (options.recommendations) {
+    registerRecommendationReadRoutes(app, registry, options.recommendations);
   }
 
   const defaultKnowledgeRepositories =
@@ -150,6 +193,33 @@ export const createApp = (options: CreateAppOptions = {}): Express => {
     ),
   });
 
+  registerCounselorRoutes(app, registry, options.counselor);
+
+  const privacyJobRepository =
+    options.privacyJobRepository ??
+    (databasePool ? createPostgresPrivacyJobRepository(databasePool) : undefined);
+  const evaluationRunRepository =
+    options.evaluationRunRepository ??
+    (databasePool ? createPostgresEvaluationRunRepository(databasePool) : undefined);
+  const safetyOperationsRepository =
+    options.safetyOperationsRepository ??
+    (databasePool ? createPostgresSafetyOperationsRepository(databasePool) : undefined);
+  const safetyRouteDependencies =
+    privacyJobRepository || safetyOperationsRepository || options.resolveSafetyUserId
+      ? {
+          ...(privacyJobRepository ? { privacyJobRepository } : {}),
+          ...(safetyOperationsRepository ? { safetyOperationsRepository } : {}),
+          ...(options.resolveSafetyUserId ? { resolveUserId: options.resolveSafetyUserId } : {}),
+        }
+      : undefined;
+
+  registerSafetyRoutes(app, registry, safetyRouteDependencies);
+  registerEvaluationRoutes(
+    app,
+    registry,
+    evaluationRunRepository ? { evaluationRunRepository } : undefined,
+  );
+
   const openApiDocument = generateOpenApiDocument(registry);
   const swaggerPathOrder = [
     "/api/v1/health",
@@ -171,6 +241,7 @@ export const createApp = (options: CreateAppOptions = {}): Express => {
     if (orderedPaths[path] === undefined) orderedPaths[path] = pathItem;
   }
   openApiDocument.paths = orderedPaths;
+
   app.get("/openapi.json", (_request, response) => response.json(openApiDocument));
   app.use(
     "/docs",

@@ -67,6 +67,17 @@ export type {
   StreamRecommendationInput,
 } from "./domain/stream-recommendations.js";
 
+export * from "./application/get-recommendation-set.js";
+export * from "./application/recommendation-set-reader.js";
+export {
+  registerRecommendationRoutes as registerRecommendationReadRoutes,
+  type RecommendationHttpDependencies,
+  type RecommendationSetService,
+  type ResolveRecommendationUserId,
+} from "./http/register-recommendation-routes.js";
+export * from "./infrastructure/fixture-recommendation-set-reader.js";
+export * from "./infrastructure/postgres-recommendation-set-reader.js";
+
 export const recommendationsModule: ModuleDescriptor = {
   code: "m2",
   name: "Recommendations",

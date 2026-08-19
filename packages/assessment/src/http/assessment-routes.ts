@@ -5,7 +5,7 @@ import {
   AssessmentResponseSaveResponseSchema,
   AssessmentResultResponseSchema,
   AssessmentRunResponseSchema,
-  ProfileSnapshotResponseSchema,
+  AssessmentProfileSnapshotResponseSchema,
   StartAssessmentRunRequestSchema,
   SubmitAssessmentResponseRequestSchema,
   UuidSchema,
@@ -169,7 +169,7 @@ export const registerAssessmentWorkflowRoutes = (
     responses: {
       201: {
         description: "ProfileSnapshot generated",
-        content: { "application/json": { schema: ProfileSnapshotResponseSchema } },
+        content: { "application/json": { schema: AssessmentProfileSnapshotResponseSchema } },
       },
     },
   });

@@ -14,7 +14,7 @@ export const createOpenApiRegistry = (): OpenAPIRegistry => {
   registry.registerComponent("securitySchemes", "bearerAuth", {
     type: "http",
     scheme: "bearer",
-    bearerFormat: "internal API key",
+    bearerFormat: "JWT or internal API key",
   });
   return registry;
 };

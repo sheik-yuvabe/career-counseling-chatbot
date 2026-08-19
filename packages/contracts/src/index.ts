@@ -1,12 +1,60 @@
-export * from "./assessment.js";
+export * from "./audit.js";
 export * from "./catalog.js";
+export * from "./chat.js";
 export * from "./common.js";
 export * from "./guardian-consent.js";
 export * from "./http.js";
 export * from "./intake.js";
+export * from "./integration.js";
 export * from "./journey-session.js";
 export * from "./openapi.js";
 export * from "./profile.js";
+export * from "./safety.js";
+export * from "./widgets.js";
+export {
+  AssessmentItemSchema,
+  AssessmentItemTypeSchema,
+  AssessmentNextResponseSchema,
+  AssessmentOptionSchema,
+  AssessmentResponseSaveResponseSchema,
+  AssessmentResponseSchema,
+  AssessmentResultResponseSchema,
+  AssessmentResultSchema,
+  AssessmentRunResponseSchema,
+  AssessmentRunSchema,
+  AssessmentRunStatusSchema,
+  AssessmentScoresSchema,
+  ConfidenceSchema,
+  InstrumentCodeSchema,
+  ProfileSnapshotResponseSchema as AssessmentProfileSnapshotResponseSchema,
+  ProfileSnapshotSchema as AssessmentProfileSnapshotSchema,
+  RiasecScaleSchema,
+  RiasecScoresSchema,
+  StartAssessmentRunRequestSchema,
+  SubmitAssessmentResponseRequestSchema,
+  WorkValueScaleSchema,
+} from "./assessment.js";
+export type {
+  AssessmentItem,
+  AssessmentItemType,
+  AssessmentNextResponse,
+  AssessmentOption,
+  AssessmentResponse,
+  AssessmentResponseSaveResponse,
+  AssessmentResult,
+  AssessmentResultResponse,
+  AssessmentRun,
+  AssessmentRunResponse,
+  AssessmentRunStatus,
+  Confidence,
+  InstrumentCode,
+  ProfileSnapshot as AssessmentProfileSnapshot,
+  ProfileSnapshotResponse as AssessmentProfileSnapshotResponse,
+  RiasecScale,
+  StartAssessmentRunRequest,
+  SubmitAssessmentResponseRequest,
+  WorkValueScale,
+} from "./assessment.js";
 export {
   AidFitExplanationSchema,
   AidLikelihoodLabelSchema,
@@ -37,6 +85,7 @@ export {
   RecommendationIdParamsSchema,
   RecommendationItemSchema,
   RecommendationReplayResultSchema,
+  RecommendationSetResponseSchema,
   RecommendationSetSchema,
   RiasecVectorSchema,
   StreamCatalogRecordSchema,
@@ -73,6 +122,7 @@ export type {
   RecommendationIdParams,
   RecommendationItem,
   RecommendationReplayResult,
+  RecommendationSetResponse,
   RecommendationSet,
   RiasecLetter,
   RiasecVector,

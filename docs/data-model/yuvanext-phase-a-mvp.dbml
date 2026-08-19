@@ -648,6 +648,7 @@ Table recommendation.missions {
 Table counselor.conversations {
   id uuid [pk, note: 'PK']
   user_id uuid [not null, ref: > auth.users.id, note: 'FK to auth.users']
+  start_idempotency_key uuid [not null, note: 'Required; retryable start key scoped to user']
   profile_snapshot_id uuid [ref: > assessment.profile_snapshots.id, note: 'Nullable FK to current snapshot used at start']
   segment text [not null, note: 'Snapshot for behavior/copy']
   status text [not null, note: 'active, paused, completed, safety_locked, deleted']
@@ -658,12 +659,18 @@ Table counselor.conversations {
   last_turn_at timestamptz [note: 'Nullable']
   completed_at timestamptz [note: 'Nullable']
   created_at timestamptz [not null, note: 'Required']
+
+  indexes {
+    (user_id, start_idempotency_key) [unique]
+  }
 }
 
 Table counselor.conversation_messages {
   id uuid [pk, note: 'PK']
   conversation_id uuid [not null, ref: > counselor.conversations.id, note: 'FK']
-  turn_number integer [not null, unique, note: 'Positive, unique within conversation']
+  idempotency_key uuid [not null, note: 'Required; retryable write key scoped to conversation']
+  client_message_id uuid [note: 'Nullable legacy/internal client correlation ID']
+  turn_number integer [not null, note: 'Positive; no duplicates within a conversation']
   role text [not null, note: 'user, assistant, system_copy']
   content text [not null, note: 'Bounded; may contain personal free text']
   content_language text [not null, note: 'Required']
@@ -675,7 +682,9 @@ Table counselor.conversation_messages {
   created_at timestamptz [not null, note: 'Required']
 
   indexes {
-    (conversation_id, turn_number, role) [unique]
+    (conversation_id, turn_number) [unique]
+    (conversation_id, idempotency_key) [unique]
+    (conversation_id, client_message_id) [unique]
   }
 }
 
@@ -731,12 +740,14 @@ Table counselor.journey_states {
   is_safety_paused boolean [note: 'Default false']
   state_json jsonb [note: 'Minimal bounded navigation state']
   lock_version integer [note: 'Optimistic concurrency']
+  last_idempotency_key uuid [note: 'Nullable latest retryable state write']
   updated_at timestamptz [not null, note: 'Required']
 }
 
 Table counselor.journey_events {
   id uuid [pk, note: 'PK']
   user_id uuid [not null, ref: > auth.users.id, note: 'FK']
+  producer_event_id uuid [not null, unique, note: 'Unique idempotency ID']
   conversation_id uuid [ref: > counselor.conversations.id, note: 'Nullable FK']
   event_type text [not null, note: 'Approved event catalog']
   event_schema_version integer [not null, note: 'Required']
@@ -760,9 +771,11 @@ Table counselor.exploration_events {
 Table counselor.report_snapshots {
   id uuid [pk, note: 'PK']
   user_id uuid [not null, ref: > auth.users.id, note: 'FK']
+  idempotency_key uuid [not null, note: 'Required; retryable report key scoped to user']
   profile_snapshot_id uuid [not null, ref: > assessment.profile_snapshots.id, note: 'FK to assessment snapshot']
   recommendation_ids uuid[] [not null, note: 'Validated Module 2 run IDs']
   exploration_event_ids uuid[] [note: 'Selected relevant events']
+  explored_entity_ids uuid[] [not null, note: 'Frozen explored entity IDs for output']
   report_schema_version integer [not null, note: 'Required']
   language text [not null, note: 'Required']
   payload_json jsonb [not null, note: 'Complete versioned report DTO']
@@ -770,6 +783,10 @@ Table counselor.report_snapshots {
   summary_mode text [note: 'template, ai_polished']
   prompt_version text [note: 'Nullable']
   created_at timestamptz [not null, note: 'Required']
+
+  indexes {
+    (user_id, idempotency_key) [unique]
+  }
 }
 
 Table counselor.generated_assets {

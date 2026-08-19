@@ -25,6 +25,16 @@ import { PgIntakeRepository } from "./infrastructure/pg-intake-repository.js";
 import { PgJourneySessionRepository } from "./infrastructure/pg-journey-session-repository.js";
 import { PgUserProfileRepository } from "./infrastructure/pg-user-profile-repository.js";
 
+export * from "./application/profile-snapshot-reader.js";
+export * from "./application/get-profile-snapshot.js";
+export {
+  registerAssessmentRoutes as registerAssessmentProfileRoutes,
+  type AssessmentHttpDependencies,
+  type AssessmentProfileService,
+  type ResolveAssessmentUserId,
+} from "./http/register-assessment-routes.js";
+export * from "./infrastructure/postgres-profile-snapshot-reader.js";
+
 export const assessmentModule: ModuleDescriptor = {
   code: "m1",
   name: "Assessment",
