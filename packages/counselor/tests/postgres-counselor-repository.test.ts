@@ -150,13 +150,13 @@ describe("PostgresCounselorRepository", () => {
     const eventRow = {
       id: "00000000-0000-4000-8000-000000000480",
       user_id: journeyRow.user_id,
-      producer_event_id: validCreateJourneyEventRequest.producerEventId,
-      conversation_id: validCreateJourneyEventRequest.conversationId,
+      producer_event_id: validCreateJourneyEventRequest.idempotencyKey,
+      conversation_id: validJourneyState.conversationId,
       event_type: validCreateJourneyEventRequest.eventType,
-      event_schema_version: validCreateJourneyEventRequest.eventSchemaVersion,
-      related_entity_type: validCreateJourneyEventRequest.relatedEntityType,
+      event_schema_version: 1,
+      related_entity_type: null,
       related_entity_id: validCreateJourneyEventRequest.relatedEntityId,
-      metadata_json: validCreateJourneyEventRequest.metadata,
+      metadata_json: null,
       occurred_at: "2026-07-28T09:07:00.000Z",
     };
     const clientQuery = vi.fn((sql: string) => {
@@ -182,7 +182,7 @@ describe("PostgresCounselorRepository", () => {
 
     const result = await repository.applyJourneyEvent({
       userId: journeyRow.user_id,
-      producerEventId: validCreateJourneyEventRequest.producerEventId,
+      producerEventId: validCreateJourneyEventRequest.idempotencyKey,
       idempotencyKey: validCreateJourneyEventRequest.idempotencyKey,
       expectedLockVersion: validJourneyState.lockVersion,
       event: {

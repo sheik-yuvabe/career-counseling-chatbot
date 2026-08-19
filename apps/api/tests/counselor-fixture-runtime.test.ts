@@ -58,10 +58,7 @@ describe("counselor fixture runtime", () => {
 
     const journeyEventRequest = {
       ...validCreateJourneyEventRequest,
-      conversationId,
-      producerEventId: "00000000-0000-4000-8000-000000000470",
       idempotencyKey: "00000000-0000-4000-8000-000000000471",
-      expectedLockVersion: 0,
     };
     const eventResponse = await request(app)
       .post("/api/v1/journey/events")
@@ -76,22 +73,9 @@ describe("counselor fixture runtime", () => {
     expect(eventResponse.status).toBe(200);
     expect(CreateJourneyEventResponseSchema.parse(eventRetry.body as unknown)).toEqual(eventResult);
     expect(eventResult.journey.lockVersion).toBe(1);
-
-    const missingReportSource = await request(app)
-      .post("/api/v1/reports")
-      .set("Authorization", `Bearer ${fixtureToken}`)
-      .send({
-        profileSnapshotId: validProfileSnapshot.snapshotId,
-        recommendationIds: [counselorFixtureIds.recommendationId],
-        explorationEventIds: [counselorFixtureIds.explorationEventId],
-        language: "en",
-        idempotencyKey: "00000000-0000-4000-8000-000000000477",
-      });
-    expect(missingReportSource.status).toBe(404);
-    expect(missingReportSource.body).toMatchObject({
-      code: "report_source_not_found",
-      message: "One or more exploration events were not found",
-    });
+    expect(eventResult.event.conversationId).toBe(conversationId);
+    expect(eventResult.event.eventSchemaVersion).toBe(1);
+    expect(eventResult.event.relatedEntityType).toBeNull();
 
     const explorationRequest = {
       conversationId,
@@ -117,9 +101,6 @@ describe("counselor fixture runtime", () => {
 
     const reportRequest = {
       profileSnapshotId: validProfileSnapshot.snapshotId,
-      recommendationIds: [counselorFixtureIds.recommendationId],
-      explorationEventIds: [exploration.event.eventId],
-      language: "en",
       idempotencyKey: "00000000-0000-4000-8000-000000000474",
     };
     const createdReport = await request(app)
@@ -169,17 +150,6 @@ describe("counselor fixture runtime", () => {
     const shareAsset = GeneratedAssetResponseSchema.parse(share.body as unknown);
     expect(share.status).toBe(200);
     expect(shareAsset.asset.privacyClass).toBe("share_safe");
-
-    const conflict = await request(app)
-      .post("/api/v1/journey/events")
-      .set("Authorization", `Bearer ${fixtureToken}`)
-      .send({
-        ...journeyEventRequest,
-        producerEventId: "00000000-0000-4000-8000-000000000472",
-        idempotencyKey: "00000000-0000-4000-8000-000000000473",
-      });
-    expect(conflict.status).toBe(409);
-    expect(conflict.body).toMatchObject({ code: "journey_conflict" });
 
     const sent = await request(app)
       .post(`/api/v1/conversations/${conversationId}/messages`)

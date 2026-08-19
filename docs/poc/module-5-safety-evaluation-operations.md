@@ -213,6 +213,15 @@ POST /api/v1/internal/evaluations/run
 GET  /api/v1/internal/evaluations/:id
 ```
 
+Reduced POC request-body rules:
+
+- Safety check accepts sourceEventId and message; Module 5 resolves relational context from the persisted counselor message.
+- Handoff creation accepts sourceEventId and idempotencyKey; Module 5 reconstructs the handoff packet from related records.
+- Staff reads have no body; staff identity and role come from the bearer token and operations staff tables.
+- Queue action accepts actionCategory, note and idempotencyKey; actor, action type, time and correlation are server-owned.
+- Privacy export/delete accept idempotencyKey; the authenticated requester and server metadata are derived.
+- Evaluation run accepts runType and idempotencyKey; environment, revision, fixtures, time and correlation are server-owned.
+
 ## Analytics
 
 POC events use the PRD's privacy-first funnel names. Event payloads contain segment, instrument, state-machine step, counts, durations, and tier where required—not PII or answer content.

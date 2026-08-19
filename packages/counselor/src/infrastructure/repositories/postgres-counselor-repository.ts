@@ -636,6 +636,19 @@ export class PostgresCounselorRepository implements CounselorRepository {
     return result.rows.map((row) => this.mapExplorationEvent(row));
   }
 
+  async listExplorationEventsForRecommendation(
+    userId: string,
+    recommendationId: string,
+  ): Promise<ExplorationEvent[]> {
+    const result = await this.pool.query<ExplorationEventRow>(
+      `select * from counselor.exploration_events
+       where user_id = $1 and recommendation_id = $2
+       order by occurred_at asc, id asc`,
+      [userId, recommendationId],
+    );
+    return result.rows.map((row) => this.mapExplorationEvent(row));
+  }
+
   async findReport(userId: string, reportId: string): Promise<ReportSnapshot | null> {
     const result = await this.pool.query<ReportRow>(
       `select * from counselor.report_snapshots

@@ -79,6 +79,19 @@ const nextTurnNumber = (messages: ConversationMessage[]): number =>
 
 const unique = (values: string[]): string[] => [...new Set(values)];
 
+const collectGroundedNumbers = (...values: unknown[]): string[] => {
+  const uuidPattern = /\b[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\b/gi;
+  const urlPattern = /https?:\/\/[^\s<>"']+/gi;
+  const numberPattern = /\b\d+(?:\.\d+)?\b/g;
+  return unique(
+    values.flatMap((value) => {
+      const serialized = JSON.stringify(value);
+      if (!serialized) return [];
+      return serialized.replace(urlPattern, " ").replace(uuidPattern, " ").match(numberPattern) ?? [];
+    }),
+  );
+};
+
 export class SendConversationMessageService {
   constructor(private readonly dependencies: SendConversationMessageDependencies) {}
 
@@ -232,6 +245,7 @@ export class SendConversationMessageService {
       );
       await this.dependencies.safety.requestHandoff({
         idempotencyKey: deriveUuid(`${userMessage.messageId}:handoff`),
+        sourceEventId: userMessage.messageId,
         userId,
         reason: decision.tier,
         user: {
@@ -362,12 +376,7 @@ export class SendConversationMessageService {
       scope: {
         entityIds: unique(recommendation.items.map((item) => item.entityId)),
         recommendationIds: [recommendation.recommendationId],
-        numbers: unique(
-          recommendation.items.flatMap((item) => [
-            String(item.rank),
-            ...(item.fitScore === undefined ? [] : [String(item.fitScore)]),
-          ]),
-        ),
+        numbers: collectGroundedNumbers(profile, recommendation, evidence),
         urls: unique(
           evidence.flatMap(({ result }) =>
             result.entities.flatMap((entity) =>

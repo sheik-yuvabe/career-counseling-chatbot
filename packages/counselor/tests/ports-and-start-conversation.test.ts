@@ -239,10 +239,10 @@ describe("StartConversationService", () => {
       eventId: journeyEventId,
       conversationId: started.conversation.conversationId,
       eventType: validCreateJourneyEventRequest.eventType,
-      eventSchemaVersion: validCreateJourneyEventRequest.eventSchemaVersion,
-      relatedEntityType: validCreateJourneyEventRequest.relatedEntityType,
+      eventSchemaVersion: 1,
+      relatedEntityType: null,
       relatedEntityId: validCreateJourneyEventRequest.relatedEntityId,
-      metadata: validCreateJourneyEventRequest.metadata,
+      metadata: null,
       occurredAt: "2026-07-28T09:05:00.000Z",
     };
     const firstEvent = await repository.recordJourneyEvent(

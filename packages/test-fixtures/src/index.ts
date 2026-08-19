@@ -220,15 +220,9 @@ export const validJourneyState = {
 } satisfies JourneyState;
 
 export const validCreateJourneyEventRequest = {
-  conversationId: counselorFixtureIds.conversationId,
   eventType: "career_opened",
-  eventSchemaVersion: FIXTURE_SCHEMA_VERSION,
-  relatedEntityType: "career",
   relatedEntityId: counselorFixtureIds.entityId,
-  metadata: { source: "assistant_turn" },
-  producerEventId: counselorFixtureIds.producerEventId,
   idempotencyKey: counselorFixtureIds.idempotencyKey,
-  expectedLockVersion: 2,
 } satisfies CreateJourneyEventRequest;
 
 export const validExplorationEvent = {
@@ -243,9 +237,6 @@ export const validExplorationEvent = {
 
 export const validCreateReportRequest = {
   profileSnapshotId: counselorFixtureIds.profileSnapshotId,
-  recommendationIds: [counselorFixtureIds.recommendationId],
-  explorationEventIds: [counselorFixtureIds.explorationEventId],
-  language: "en",
   idempotencyKey: counselorFixtureIds.idempotencyKey,
 } satisfies CreateReportRequest;
 

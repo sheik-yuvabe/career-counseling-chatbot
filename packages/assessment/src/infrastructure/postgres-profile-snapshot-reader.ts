@@ -144,7 +144,9 @@ export class PostgresProfileSnapshotReader implements ProfileSnapshotReader {
       segment: row.segment as HandoffProfileContext["segment"],
       profileSnapshotId: row.profile_snapshot_id,
       ...(typeof riasec.code === "string" ? { code: riasec.code } : {}),
-      ...(typeof riasec.confidence === "string" ? { confidence: riasec.confidence } : {}),
+      ...(riasec.confidence === "normal" || riasec.confidence === "soft"
+        ? { confidence: riasec.confidence }
+        : {}),
       consentedContactAvailable: row.consented_contact_available,
     };
   }

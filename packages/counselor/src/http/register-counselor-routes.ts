@@ -213,7 +213,7 @@ export const registerCounselorRoutes = (
     method: "post",
     path: "/api/v1/reports",
     tags: ["Counselor"],
-    summary: "Create an immutable report snapshot from validated source snapshots",
+    summary: "Create a report from the current profile recommendation and exploration data",
     security: [{ bearerAuth: [] }],
     request: {
       body: {
@@ -378,7 +378,7 @@ export const registerCounselorRoutes = (
     method: "post",
     path: "/api/v1/journey/events",
     tags: ["Counselor"],
-    summary: "Append an idempotent journey event and advance the journey version",
+    summary: "Append an idempotent event using the authenticated user's current journey",
     security: [{ bearerAuth: [] }],
     request: {
       body: {

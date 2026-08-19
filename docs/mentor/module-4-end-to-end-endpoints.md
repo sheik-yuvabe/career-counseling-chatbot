@@ -360,23 +360,21 @@ Payload shape:
 
 ```json
 {
-  "conversationId": "CONVERSATION_UUID",
   "eventType": "recommendation_opened",
-  "eventSchemaVersion": 1,
-  "relatedEntityType": "career",
   "relatedEntityId": "ENTITY_UUID",
-  "metadata": {},
-  "producerEventId": "PRODUCER_UUID",
-  "idempotencyKey": "IDEMPOTENCY_UUID",
-  "expectedLockVersion": 0
+  "idempotencyKey": "IDEMPOTENCY_UUID"
 }
 ```
 
 Field use:
 
-- `producerEventId`: deduplicates the originating event producer.
-- `idempotencyKey`: deduplicates the state-application write.
-- `expectedLockVersion`: prevents two clients from overwriting journey progress.
+- `eventType`: identifies the product action that occurred.
+- `relatedEntityId`: optional entity connected to the action.
+- `idempotencyKey`: deduplicates the event and state-version write.
+
+The server obtains `userId` from the bearer token, reads the current conversation and lock version
+from `journey_states`, uses schema version 1, and supplies the event timestamp. The idempotency key
+is also used as the internal producer event ID.
 
 Supabase tables touched:
 
@@ -415,16 +413,14 @@ Validation: Recommendation and item ownership are checked through the Module 2 p
 
 ### POST /api/v1/reports
 
-Purpose: Creates an immutable, hashable report snapshot from the exact profile, recommendation sets and optional exploration events selected by the student.
+Purpose: Creates an immutable, hashable report snapshot for the supplied profile. The backend
+selects the current recommendation from journey state and loads its owned exploration events.
 
 Payload:
 
 ```json
 {
   "profileSnapshotId": "PROFILE_UUID",
-  "recommendationIds": ["RECOMMENDATION_UUID"],
-  "explorationEventIds": ["EXPLORATION_EVENT_UUID"],
-  "language": "en",
   "idempotencyKey": "IDEMPOTENCY_UUID"
 }
 ```
@@ -432,10 +428,12 @@ Payload:
 Field use:
 
 - `profileSnapshotId`: exact Module 1 snapshot represented in the report.
-- `recommendationIds`: one or more owned completed Module 2 runs.
-- `explorationEventIds`: optional owned exploration records; use an empty array when none are required.
-- `language`: `en` in Phase A.
 - `idempotencyKey`: prevents duplicate snapshots.
+
+The backend reads `currentRecommendationId` from `counselor.journey_states`. If it is absent, the
+Module 2 reader resolves the current recommendation for the profile. It then loads all owned
+exploration events for that recommendation. Report language is server-owned and fixed to `en` in
+Phase A.
 
 Supabase tables touched:
 
@@ -443,7 +441,8 @@ Supabase tables touched:
 - Read `counselor.exploration_events`.
 - Write `counselor.report_snapshots` and report/exploration associations.
 
-Common 404: `report_source_not_found` means an exploration ID, profile or recommendation does not exist for that authenticated user.
+Common 404: `report_source_not_found` means the profile or its current recommendation does not
+exist for that authenticated user.
 
 ## 16. Get Report Snapshot
 

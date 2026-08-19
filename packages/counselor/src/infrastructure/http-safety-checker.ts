@@ -33,23 +33,18 @@ export class HttpSafetyChecker implements SafetyChecker {
   async preCheck(input: SafetyPreCheckInput): Promise<SafetyDecision> {
     const response = await this.post("/api/v1/internal/safety/check", {
       sourceEventId: input.sourceEventId,
-      triggerType: "message",
       message: input.content,
-      occurredAt: input.occurredAt,
-      context: {
-        userId: input.userId,
-        sessionId: input.sessionId,
-        conversationId: input.conversationId,
-        profileSnapshotId: input.profileSnapshotId,
-        segment: input.segment,
-        language: input.language,
-      },
     });
     return SafetyCheckResponseSchema.parse(response).decision;
   }
 
   async requestHandoff(input: RequestHandoffInput): Promise<HandoffPacket> {
-    return HandoffResponseSchema.parse(await this.post("/api/v1/internal/handoffs", input)).packet;
+    return HandoffResponseSchema.parse(
+      await this.post("/api/v1/internal/handoffs", {
+        idempotencyKey: input.idempotencyKey,
+        sourceEventId: input.sourceEventId,
+      }),
+    ).packet;
   }
 
   private async post(path: string, body: unknown): Promise<unknown> {

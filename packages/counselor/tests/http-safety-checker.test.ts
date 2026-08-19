@@ -36,6 +36,7 @@ describe("HttpSafetyChecker", () => {
     await expect(
       checker.requestHandoff({
         idempotencyKey: "00000000-0000-4000-8000-000000000404",
+        sourceEventId: "00000000-0000-4000-8000-000000000403",
         userId: "00000000-0000-4000-8000-000000000400",
         reason: "tier_2",
         user: validHandoffPacket.user,
@@ -62,17 +63,7 @@ describe("HttpSafetyChecker", () => {
     if (typeof requestBody !== "string") throw new Error("Expected a JSON request body");
     expect(JSON.parse(requestBody)).toEqual({
       sourceEventId: "00000000-0000-4000-8000-000000000403",
-      triggerType: "message",
       message: "Synthetic message",
-      occurredAt: "2026-08-11T05:00:00.000Z",
-      context: {
-        userId: "00000000-0000-4000-8000-000000000400",
-        sessionId: "00000000-0000-4000-8000-000000000402",
-        conversationId: "00000000-0000-4000-8000-000000000401",
-        profileSnapshotId: "00000000-0000-4000-8000-000000000406",
-        segment: "pathfinder",
-        language: "en",
-      },
     });
     expect(vi.mocked(fetch).mock.calls[1]?.[1]?.headers).toEqual({
       "content-type": "application/json",
@@ -80,12 +71,9 @@ describe("HttpSafetyChecker", () => {
     const handoffBody = vi.mocked(fetch).mock.calls[1]?.[1]?.body;
     expect(typeof handoffBody).toBe("string");
     if (typeof handoffBody !== "string") throw new Error("Expected a JSON request body");
-    expect(JSON.parse(handoffBody)).toMatchObject({
+    expect(JSON.parse(handoffBody)).toEqual({
       idempotencyKey: "00000000-0000-4000-8000-000000000404",
-      userId: "00000000-0000-4000-8000-000000000400",
-      reason: "tier_2",
-      consentedContactAvailable: true,
-      requestCorrelationId: "00000000-0000-4000-8000-000000000405",
+      sourceEventId: "00000000-0000-4000-8000-000000000403",
     });
   });
 

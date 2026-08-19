@@ -14,6 +14,7 @@ export type SafetyPreCheckInput = {
 
 export type RequestHandoffInput = {
   idempotencyKey: string;
+  sourceEventId: string;
   userId: string;
   reason: HandoffReason;
   user: HandoffPacket["user"];

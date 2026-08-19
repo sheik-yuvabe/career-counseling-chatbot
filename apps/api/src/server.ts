@@ -1,19 +1,34 @@
 import process from "node:process";
-import { fileURLToPath } from "node:url";
+import { existsSync } from "node:fs";
+import { dirname, join, parse } from "node:path";
 import { createAssessmentFixtureRuntime } from "./app/create-assessment-fixture-runtime.js";
 import { createAssessmentRuntime } from "./app/create-assessment-runtime.js";
 import { createCounselorFixtureRuntime } from "./app/create-counselor-fixture-runtime.js";
 import { createCounselorRuntime } from "./app/create-counselor-runtime.js";
 import { createRecommendationFixtureRuntime } from "./app/create-recommendation-fixture-runtime.js";
 import { createRecommendationRuntime } from "./app/create-recommendation-runtime.js";
+import { createSupabaseUserResolver } from "./auth/supabase-user-resolver.js";
 
-try {
-  process.loadEnvFile(fileURLToPath(new URL("../../../.env", import.meta.url)));
-} catch (error) {
-  if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
-    throw error;
+const loadNearestEnvFile = (): void => {
+  let directory = process.cwd();
+  const root = parse(directory).root;
+
+  while (true) {
+    const candidate = join(directory, ".env");
+    if (existsSync(candidate)) {
+      process.loadEnvFile(candidate);
+      return;
+    }
+
+    if (directory === root) {
+      return;
+    }
+
+    directory = dirname(directory);
   }
-}
+};
+
+loadNearestEnvFile();
 
 const [{ createApp }, { env }, { createDatabasePool, createSupabaseServerClient }] =
   await Promise.all([
@@ -142,6 +157,7 @@ const recommendations = fixtureMode
     ? createRecommendationRuntime(databasePool, supabase)
     : undefined;
 const app = createApp({
+  database: false,
   ...(fixtureMode ? { databaseRequired: false } : {}),
   ...(databasePool
     ? {
@@ -154,10 +170,27 @@ const app = createApp({
   ...(counselor ? { counselor } : {}),
   ...(assessment ? { assessment } : {}),
   ...(recommendations ? { recommendations } : {}),
+  ...(supabase ? { resolveSafetyUserId: createSupabaseUserResolver(supabase) } : {}),
+  ...(databasePool
+    ? await (async () => {
+        const [evaluationPackage, safetyPackage] = await Promise.all([
+          import("@yuvanext/evaluation"),
+          import("@yuvanext/safety"),
+        ]);
+        return {
+          evaluationRunRepository:
+            evaluationPackage.createPostgresEvaluationRunRepository(databasePool),
+          privacyJobRepository: safetyPackage.createPostgresPrivacyJobRepository(databasePool),
+          safetyOperationsRepository:
+            safetyPackage.createPostgresSafetyOperationsRepository(databasePool),
+        };
+      })()
+    : {}),
 });
-const server = app.listen(env.PORT, () => {
-  process.stdout.write(`YuvaNext API listening on http://localhost:${env.PORT}\n`);
-  process.stdout.write(`Swagger UI: http://localhost:${env.PORT}/docs\n`);
+const displayHost = env.HOST === "0.0.0.0" ? "localhost" : env.HOST;
+const server = app.listen(env.PORT, env.HOST, () => {
+  process.stdout.write(`YuvaNext API listening on http://${displayHost}:${env.PORT}\n`);
+  process.stdout.write(`Swagger UI: http://${displayHost}:${env.PORT}/docs\n`);
 });
 
 const shutdown = (signal: string): void => {

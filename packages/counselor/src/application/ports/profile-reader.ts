@@ -11,7 +11,7 @@ export type HandoffProfileContext = {
   segment: "explorer" | "pathfinder" | "launcher";
   profileSnapshotId: string;
   code?: string;
-  confidence?: string;
+  confidence?: "normal" | "soft";
   consentedContactAvailable: boolean;
 };
 

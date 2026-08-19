@@ -85,6 +85,10 @@ export interface CounselorRepository {
   applyJourneyEvent(input: ApplyJourneyEventInput): Promise<CreateJourneyEventResponse>;
   recordExplorationEvent(userId: string, event: ExplorationEvent): Promise<ExplorationEvent>;
   listExplorationEvents(userId: string, eventIds: string[]): Promise<ExplorationEvent[]>;
+  listExplorationEventsForRecommendation(
+    userId: string,
+    recommendationId: string,
+  ): Promise<ExplorationEvent[]>;
   findReport(userId: string, reportId: string): Promise<ReportSnapshot | null>;
   saveReport(input: SaveReportInput): Promise<ReportSnapshot>;
   findGeneratedAsset(userId: string, idempotencyKey: string): Promise<GeneratedAsset | null>;

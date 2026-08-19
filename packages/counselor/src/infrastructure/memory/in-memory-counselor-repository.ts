@@ -283,6 +283,20 @@ export class InMemoryCounselorRepository implements CounselorRepository {
     );
   }
 
+  listExplorationEventsForRecommendation(
+    userId: string,
+    recommendationId: string,
+  ): Promise<ExplorationEvent[]> {
+    return Promise.resolve(
+      [...this.explorationEvents.values()]
+        .filter(
+          (owned) =>
+            owned.userId === userId && owned.value.recommendationId === recommendationId,
+        )
+        .map((owned) => clone(owned.value)),
+    );
+  }
+
   findReport(userId: string, reportId: string): Promise<ReportSnapshot | null> {
     const owned = this.reports.get(reportId);
     return Promise.resolve(owned?.userId === userId ? clone(owned.value) : null);

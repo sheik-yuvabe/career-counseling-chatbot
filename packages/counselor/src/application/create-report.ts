@@ -40,18 +40,26 @@ export class CreateReportService {
       throw new CounselorNotFoundError("Profile snapshot was not found");
     }
 
-    const recommendations = await this.loadRecommendations(
-      userId,
-      profile.snapshotId,
-      request.recommendationIds,
-    );
-    const explorationEvents = await this.dependencies.repository.listExplorationEvents(
-      userId,
-      request.explorationEventIds,
-    );
-    if (explorationEvents.length !== new Set(request.explorationEventIds).size) {
-      throw new CounselorNotFoundError("One or more exploration events were not found");
+    const journey = await this.dependencies.repository.getJourneyState(userId);
+    if (journey?.profileSnapshotId && journey.profileSnapshotId !== profile.snapshotId) {
+      throw new CounselorContractError("Profile snapshot is not the current journey profile");
     }
+    const recommendation = await this.dependencies.recommendations.getRecommendationSet({
+      userId,
+      profileSnapshotId: profile.snapshotId,
+      ...(journey?.currentRecommendationId
+        ? { recommendationId: journey.currentRecommendationId }
+        : {}),
+    });
+    if (!recommendation) {
+      throw new CounselorNotFoundError("Recommendation was not found");
+    }
+    const recommendations = [recommendation];
+    const explorationEvents =
+      await this.dependencies.repository.listExplorationEventsForRecommendation(
+        userId,
+        recommendation.recommendationId,
+      );
     this.assertExplorationReferences(recommendations, explorationEvents);
 
     const exploredEntityIds = [
@@ -75,14 +83,14 @@ export class CreateReportService {
     const report = await this.dependencies.repository.saveReport({
       userId,
       idempotencyKey: request.idempotencyKey,
-      explorationEventIds: request.explorationEventIds,
+      explorationEventIds: explorationEvents.map((event) => event.eventId),
       report: {
         reportId: (this.dependencies.createId ?? randomUUID)(),
         profileSnapshotId: profile.snapshotId,
-        recommendationIds: request.recommendationIds,
+        recommendationIds: [recommendation.recommendationId],
         exploredEntityIds,
         reportSchemaVersion: 1,
-        language: request.language,
+        language: "en",
         payload,
         payloadHash: hashPayload(payload),
         summaryMode: "template",
@@ -91,29 +99,6 @@ export class CreateReportService {
       },
     });
     return ReportResponseSchema.parse({ report });
-  }
-
-  private async loadRecommendations(
-    userId: string,
-    profileSnapshotId: string,
-    recommendationIds: string[],
-  ): Promise<RecommendationSet[]> {
-    if (new Set(recommendationIds).size !== recommendationIds.length) {
-      throw new CounselorContractError("Recommendation IDs must be unique");
-    }
-    const recommendations = await Promise.all(
-      recommendationIds.map((recommendationId) =>
-        this.dependencies.recommendations.getRecommendationSet({
-          userId,
-          profileSnapshotId,
-          recommendationId,
-        }),
-      ),
-    );
-    if (recommendations.some((recommendation) => !recommendation)) {
-      throw new CounselorNotFoundError("One or more recommendations were not found");
-    }
-    return recommendations as RecommendationSet[];
   }
 
   private assertExplorationReferences(

@@ -200,14 +200,11 @@ export const ExplorationEventResponseSchema = z
   .strict();
 export type ExplorationEventResponse = z.infer<typeof ExplorationEventResponseSchema>;
 
-export const CreateJourneyEventRequestSchema = JourneyEventSchema.omit({
-  eventId: true,
-  occurredAt: true,
-})
-  .extend({
-    producerEventId: UuidSchema,
+export const CreateJourneyEventRequestSchema = z
+  .object({
+    eventType: z.string().trim().min(1),
+    relatedEntityId: UuidSchema.nullable().optional(),
     idempotencyKey: UuidSchema,
-    expectedLockVersion: z.number().int().nonnegative(),
   })
   .strict();
 export type CreateJourneyEventRequest = z.infer<typeof CreateJourneyEventRequestSchema>;
@@ -240,9 +237,6 @@ export type ReportSnapshot = z.infer<typeof ReportSnapshotSchema>;
 export const CreateReportRequestSchema = z
   .object({
     profileSnapshotId: UuidSchema,
-    recommendationIds: z.array(UuidSchema).min(1),
-    explorationEventIds: z.array(UuidSchema),
-    language: z.literal("en").default("en"),
     idempotencyKey: UuidSchema,
   })
   .strict();

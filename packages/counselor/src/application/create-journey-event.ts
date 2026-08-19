@@ -26,21 +26,22 @@ export class CreateJourneyEventService {
     const request = CreateJourneyEventRequestSchema.parse(command.request);
     const createId = this.dependencies.createId ?? randomUUID;
     const occurredAt = (this.dependencies.now ?? (() => new Date()))().toISOString();
+    const journey = await this.dependencies.repository.getJourneyState(userId);
 
     return CreateJourneyEventResponseSchema.parse(
       await this.dependencies.repository.applyJourneyEvent({
         userId,
-        producerEventId: request.producerEventId,
+        producerEventId: request.idempotencyKey,
         idempotencyKey: request.idempotencyKey,
-        expectedLockVersion: request.expectedLockVersion,
+        expectedLockVersion: journey?.lockVersion ?? 0,
         event: {
           eventId: createId(),
-          conversationId: request.conversationId,
+          conversationId: journey?.conversationId ?? null,
           eventType: request.eventType,
-          eventSchemaVersion: request.eventSchemaVersion,
-          relatedEntityType: request.relatedEntityType,
-          relatedEntityId: request.relatedEntityId,
-          metadata: request.metadata,
+          eventSchemaVersion: 1,
+          relatedEntityType: null,
+          relatedEntityId: request.relatedEntityId ?? null,
+          metadata: null,
           occurredAt,
         },
       }),

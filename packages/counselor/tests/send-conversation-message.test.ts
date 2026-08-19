@@ -1,6 +1,7 @@
 import {
   counselorFixtureIds,
   validAssistantTurn,
+  validCatalogEntity,
   validConversation,
   validHandoffPacket,
   validJourneyState,
@@ -21,6 +22,7 @@ import {
   InMemoryCounselorRepository,
   SendConversationMessageService,
   type AiProvider,
+  type KnowledgeReader,
   type SafetyChecker,
 } from "../src/index.js";
 
@@ -67,6 +69,7 @@ const seedConversation = async (
 const createService = async (input?: {
   aiMode?: "enabled" | "degraded" | "disabled";
   ai?: AiProvider;
+  knowledge?: KnowledgeReader;
   safety?: SafetyChecker;
 }) => {
   const repository = new InMemoryCounselorRepository();
@@ -75,7 +78,7 @@ const createService = async (input?: {
     repository,
     profiles: new FixtureProfileReader([validProfileSnapshot]),
     recommendations: new FixtureRecommendationReader([validRecommendationSet]),
-    knowledge: new FixtureKnowledgeReader(validRetrievedEvidence),
+    knowledge: input?.knowledge ?? new FixtureKnowledgeReader(validRetrievedEvidence),
     safety: input?.safety ?? new FixtureSafetyChecker(validSafetyDecision, validHandoffPacket),
     ai: input?.ai ?? new FixtureAiProvider({ status: "disabled" }),
     approvedCopy: new FixtureApprovedCopyReader([
@@ -319,5 +322,41 @@ describe("SendConversationMessageService", () => {
     const messages = await repository.listMessages(userId, conversation.conversationId);
     expect(messages.at(-1)?.content).toBe(fallbackText);
     expect(messages.some((message) => message.content.includes("99"))).toBe(false);
+  });
+
+  it("accepts numeric facts present in grounded Module 3 evidence", async () => {
+    const evidence = {
+      ...validRetrievedEvidence,
+      entities: [
+        {
+          ...validCatalogEntity,
+          title: "Synthetic College 631",
+        },
+      ],
+    };
+    const generateDraft = vi.fn(() =>
+      Promise.resolve({
+        status: "completed" as const,
+        text: "Synthetic College 631 is one of your grounded recommendations.",
+        grounding: {
+          entityIds: [counselorFixtureIds.entityId],
+          recommendationIds: [counselorFixtureIds.recommendationId],
+        },
+      }),
+    );
+    const { conversation, service } = await createService({
+      aiMode: "enabled",
+      ai: { generateDraft },
+      knowledge: new FixtureKnowledgeReader(evidence),
+    });
+
+    const result = await service.execute({
+      userId,
+      conversationId: conversation.conversationId,
+      request,
+    });
+
+    expect(generateDraft).toHaveBeenCalledOnce();
+    expect(result.text).toContain("631");
   });
 });
